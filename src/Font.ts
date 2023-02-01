@@ -1,22 +1,14 @@
 /**
  * @since 1.0.0
  */
-import * as A from '@fp-ts/core/ReadonlyArray'
-import * as B from '@fp-ts/core/boolean'
 import * as O from '@fp-ts/core/Option'
-import * as RR from '@fp-ts/core/ReadonlyRecord'
-import { Compactable } from '@fp-ts/core/typeclass/Compactable'
 import { isEmpty } from '@fp-ts/core/String'
-
-import { string as monoidString, intercalate, tuple } from '@fp-ts/core/typeclass/Semigroup'
-import * as Struct from '@fp-ts/core/Struct'
 import { not } from '@fp-ts/core/Boolean'
-import { flow, constant, pipe} from '@fp-ts/core/Function'
+import { flow, constant } from '@fp-ts/core/Function'
 
 // -------------------------------------------------------------------------------------
 // model
 // -------------------------------------------------------------------------------------
-
 
 /**
  * Represents the `font-family` CSS property.
@@ -139,8 +131,11 @@ export const font = (fontFamily: FontFamily, size: number, options?: FontOptions
  * @since 1.0.0
  */
 export const showFontOptions = {
-  show: (o: FontOptions) => 
-    [o.style, o.variant, o.weight].filter(O.isSome).map(O.getOrElse(() => '')).join(' ')
+  show: (o: FontOptions) =>
+    [o.style, o.variant, o.weight]
+      .filter(O.isSome)
+      .map(O.getOrElse(constant('')))
+      .join(' ')
 }
 
 const isNotEmpty = flow(isEmpty, not)
@@ -152,9 +147,5 @@ const isNotEmpty = flow(isEmpty, not)
  */
 export const showFont = {
   show: ({ fontFamily, size, fontOptions }: Font) =>
-  [
-    showFontOptions.show(fontOptions),
-    (`${size}px`),
-    fontFamily
-  ].filter(isNotEmpty).join(' ')
+    [showFontOptions.show(fontOptions), `${size}px`, fontFamily].filter(isNotEmpty).join(' ')
 }

@@ -11,16 +11,14 @@
   "typings": "lib/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "jest-clear-cache": "jest --clearCache",
-    "jest": "jest --ci",
+    "test": "vitest",
     "prettier": "prettier --list-different \"./{src,test,example}/**/*.ts\"",
     "fix-prettier": "prettier --write \"./{src,test,example}/**/*.ts\"",
-    "test": "npm run lint && npm run prettier && npm run jest-clear-cache && npm run jest",
     "clean": "rimraf lib/* es6/*",
     "prebuild": "npm run clean",
     "build": "tsc -p ./tsconfig.build.json && tsc -p ./tsconfig.build-es6.json && npm run import-path-rewrite",
     "postbuild": "prettier --write \"./{lib,es6}/**/*.ts\"",
-    "start": "webpack-dev-server --config=example/webpack.config.js",
+    "start": "vite -c vite.config.js example/",
     "docs": "docs-ts",
     "import-path-rewrite": "import-path-rewrite"
   },
