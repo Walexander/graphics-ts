@@ -52,13 +52,12 @@
  *
  * @since 1.0.0
  */
-import * as IO from 'fp-ts/lib/IO'
-import * as M from 'fp-ts/lib/Monoid'
-import * as O from 'fp-ts/lib/Option'
-import * as RA from 'fp-ts/lib/ReadonlyArray'
-import { flow } from 'fp-ts/lib/function'
-import { pipe } from 'fp-ts/lib/pipeable'
-import * as R from 'fp-ts-contrib/lib/ReaderIO'
+import * as IO from '@effect/io/Effect'
+import * as SG from '@fp-ts/core/typeclass/Semigroup'
+import * as M from '@fp-ts/core/typeclass/Monoid'
+import * as O from '@fp-ts/core/Option'
+import * as RA from '@fp-ts/core/ReadonlyArray'
+import { flow, pipe } from '@fp-ts/core/Function'
 
 import * as C from './Canvas'
 import { toCss, Color } from './Color'
@@ -66,10 +65,10 @@ import { showFont, Font } from './Font'
 import { Point, Shape } from './Shape'
 
 const readonlyArrayMonoidDrawing = RA.getMonoid<Drawing>()
-const getFirstMonoidColor = O.getFirstMonoid<Color>()
-const getFirstMonoidNumber = O.getFirstMonoid<number>()
-const getFirstMonoidPoint = O.getFirstMonoid<Point>()
-const traverseReaderIO = RA.readonlyArray.traverse(R.readerIO)
+const firstSome = <A>() => (M.fromSemigroup(O.getFirstSomeSemigroup<A>(), O.none<A>()))
+const getFirstMonoidColor = firstSome<Color>()
+const getFirstMonoidNumber = firstSome<number>()
+const getFirstMonoidPoint = firstSome<Point>()
 
 // -------------------------------------------------------------------------------------
 // model
@@ -389,7 +388,7 @@ export const outline: (shape: Shape, style: OutlineStyle) => Drawing = (shape, s
  */
 export const outlineColor: (color: Color) => OutlineStyle = (c) => ({
   color: O.some(c),
-  lineWidth: O.none
+  lineWidth: O.none()
 })
 
 /**
@@ -399,7 +398,7 @@ export const outlineColor: (color: Color) => OutlineStyle = (c) => ({
  * @since 1.0.0
  */
 export const lineWidth: (lineWidth: number) => OutlineStyle = (w) => ({
-  color: O.none,
+  color: O.none(),
   lineWidth: O.some(w)
 })
 
@@ -493,9 +492,9 @@ export const withShadow: (shadow: Shadow, drawing: Drawing) => Drawing = (shadow
  * @since 1.0.0
  */
 export const shadowBlur: (blurRadius: number) => Shadow = (b) => ({
-  color: O.none,
+  color: O.none(),
   blur: O.some(b),
-  offset: O.none
+  offset: O.none()
 })
 
 /**
@@ -506,8 +505,8 @@ export const shadowBlur: (blurRadius: number) => Shadow = (b) => ({
  */
 export const shadowColor: (color: Color) => Shadow = (c) => ({
   color: O.some(c),
-  blur: O.none,
-  offset: O.none
+  blur: O.none(),
+  offset: O.none()
 })
 
 /**
@@ -517,8 +516,8 @@ export const shadowColor: (color: Color) => Shadow = (c) => ({
  * @since 1.0.0
  */
 export const shadowOffset: (offsetPoint: Point) => Shadow = (o) => ({
-  color: O.none,
-  blur: O.none,
+  color: O.none(),
+  blur: O.none(),
   offset: O.some(o)
 })
 
@@ -532,7 +531,10 @@ const applyStyle: <A>(
 ) => C.Render<CanvasRenderingContext2D> = (fa, f) =>
   pipe(
     fa,
-    O.fold(() => IO.of, f)
+    O.match(
+      () => IO.service(C.Tag),
+      (a) => f(a)
+    )
   )
 
 /**
@@ -542,14 +544,15 @@ const applyStyle: <A>(
  * @since 1.1.0
  */
 export const renderShape: (shape: Shape) => C.Render<CanvasRenderingContext2D> = (shape) => {
+  const empty = IO.service(C.Tag)
   switch (shape._tag) {
     case 'Arc':
       return C.arc(shape)
 
     case 'Composite':
       return pipe(
-        traverseReaderIO(shape.shapes, renderShape),
-        R.chain(() => R.ask())
+        IO.forEach(shape.shapes, renderShape),
+        IO.zipRight(empty)
       )
 
     case 'Ellipse':
@@ -558,14 +561,13 @@ export const renderShape: (shape: Shape) => C.Render<CanvasRenderingContext2D> =
     case 'Path':
       return pipe(
         shape.points,
-        RA.foldLeft(
-          () => IO.of,
-          (head, tail) =>
-            pipe(
-              C.moveTo(head),
-              R.chain(() => traverseReaderIO(tail, C.lineTo)),
-              R.chain(() => (shape.closed ? C.closePath : IO.of))
-            )
+        RA.match(
+          () => empty,
+          (head, tail) => pipe(
+            C.moveTo(head),
+            IO.zipRight(IO.forEach(tail, C.lineTo)),
+            IO.zipRight(shape.closed ? C.closePath : empty)
+          )
         )
       )
 
@@ -587,9 +589,9 @@ export const render: (drawing: Drawing) => C.Render<CanvasRenderingContext2D> = 
         return C.withContext(
           pipe(
             C.beginPath,
-            R.chain(() => renderShape(d.shape)),
-            R.chain(() => C.clip()),
-            R.chain(() => go(d.drawing))
+            IO.zipRight(renderShape(d.shape)),
+            IO.zipRight(C.clip()),
+            IO.zipRight(go(d.drawing))
           )
         )
 
@@ -597,30 +599,34 @@ export const render: (drawing: Drawing) => C.Render<CanvasRenderingContext2D> = 
         return C.withContext(
           pipe(
             applyStyle(d.style.color, flow(toCss, C.setFillStyle)),
-            R.chain(() => C.fillPath(renderShape(d.shape)))
+            IO.zipRight(C.fillPath(renderShape(d.shape)))
           )
         )
 
       case 'Many':
         return pipe(
-          traverseReaderIO(d.drawings, go),
-          R.chain(() => R.ask())
+          IO.forEachDiscard(d.drawings, (d) => go(d)),
+          IO.zipRight(IO.service(C.Tag))
         )
 
       case 'Outline':
-        return C.withContext(
-          pipe(
+        return pipe(
+
+          (IO.collectAllDiscard([
             applyStyle(d.style.color, flow(toCss, C.setStrokeStyle)),
-            R.chain(() => applyStyle(d.style.lineWidth, C.setLineWidth)),
-            R.chain(() => C.strokePath(renderShape(d.shape)))
-          )
+applyStyle(d.style.lineWidth, C.setLineWidth),
+C.strokePath(renderShape(d.shape))
+          ])
+          ),
+          C.withContext,
+          IO.zipRight(IO.service(C.Tag))
         )
 
       case 'Rotate':
         return C.withContext(
           pipe(
             C.rotate(d.angle),
-            R.chain(() => go(d.drawing))
+            IO.zipRight(go(d.drawing))
           )
         )
 
@@ -628,41 +634,41 @@ export const render: (drawing: Drawing) => C.Render<CanvasRenderingContext2D> = 
         return C.withContext(
           pipe(
             C.scale(d.scaleX, d.scaleY),
-            R.chain(() => go(d.drawing))
+            IO.zipRight(go(d.drawing))
           )
         )
 
       case 'Text':
-        return C.withContext(
-          pipe(
+        return pipe(
+          IO.collectAllDiscard([
             C.setFont(showFont.show(d.font)),
-            R.chain(() => applyStyle(d.style.color, flow(toCss, C.setFillStyle))),
-            R.chain(() => C.fillText(d.text, d.x, d.y))
-          )
+            applyStyle(d.style.color, flow(toCss, C.setFillStyle)),
+            C.fillText(d.text, d.x, d.y)
+          ]),
+          C.withContext,
+          IO.zipRight(IO.service(C.Tag))
         )
 
       case 'Translate':
         return C.withContext(
           pipe(
             C.translate(d.translateX, d.translateY),
-            R.chain(() => go(d.drawing))
+            IO.zipRight(go(d.drawing)),
           )
         )
 
       case 'WithShadow':
         return C.withContext(
           pipe(
-            applyStyle(d.shadow.color, flow(toCss, C.setShadowColor)),
-            R.chain(() => applyStyle(d.shadow.blur, C.setShadowBlur)),
-            R.chain(() =>
-              applyStyle(d.shadow.offset, (o) =>
-                pipe(
-                  C.setShadowOffsetX(o.x),
-                  R.chain(() => C.setShadowOffsetY(o.y))
-                )
-              )
-            ),
-            R.chain(() => go(d.drawing))
+            IO.collectAllDiscard([
+              applyStyle(d.shadow.color, flow(toCss, C.setShadowColor)),
+              applyStyle(d.shadow.blur, C.setShadowBlur),
+              applyStyle(d.shadow.offset, (o) => pipe(
+                C.setShadowOffsetX(o.x),
+                IO.zipRight(C.setShadowOffsetY(o.y))
+              ))
+            ]),
+            IO.zipRight(go(d.drawing))
           )
         )
     }
@@ -681,7 +687,7 @@ export const render: (drawing: Drawing) => C.Render<CanvasRenderingContext2D> = 
  * @category instances
  * @since 1.0.0
  */
-export const monoidFillStyle = M.getStructMonoid<FillStyle>({
+export const monoidFillStyle = M.struct<FillStyle>({
   color: getFirstMonoidColor
 })
 
@@ -709,7 +715,7 @@ export const monoidFillStyle = M.getStructMonoid<FillStyle>({
  * @category instances
  * @since 1.0.0
  */
-export const monoidOutlineStyle = M.getStructMonoid<OutlineStyle>({
+export const monoidOutlineStyle = M.struct<OutlineStyle>({
   color: getFirstMonoidColor,
   lineWidth: getFirstMonoidNumber
 })
@@ -720,7 +726,7 @@ export const monoidOutlineStyle = M.getStructMonoid<OutlineStyle>({
  * @category instances
  * @since 1.0.0
  */
-export const monoidShadow = M.getStructMonoid<Shadow>({
+export const monoidShadow = M.struct<Shadow>({
   color: getFirstMonoidColor,
   blur: getFirstMonoidNumber,
   offset: getFirstMonoidPoint
@@ -732,14 +738,15 @@ export const monoidShadow = M.getStructMonoid<Shadow>({
  * @category instances
  * @since 1.0.0
  */
-export const monoidDrawing: M.Monoid<Drawing> = {
-  concat: (x, y) =>
+export const monoidDrawing: M.Monoid<Drawing> = M.fromSemigroup(
+  SG.fromCombine((x, y) =>
     x._tag === 'Many' && y._tag === 'Many'
-      ? many(M.fold(readonlyArrayMonoidDrawing)([x.drawings, y.drawings]))
+      ? many(readonlyArrayMonoidDrawing.combineAll([x.drawings, y.drawings]))
       : x._tag === 'Many'
-      ? many(M.fold(readonlyArrayMonoidDrawing)([x.drawings, [y]]))
+      ? many(readonlyArrayMonoidDrawing.combineAll([x.drawings, [y]]))
       : y._tag === 'Many'
-      ? many(M.fold(readonlyArrayMonoidDrawing)([[x], y.drawings]))
-      : many([x, y]),
-  empty: many(readonlyArrayMonoidDrawing.empty)
-}
+      ? many(readonlyArrayMonoidDrawing.combineAll([[x], y.drawings]))
+      : many([x, y])
+  ),
+  many(readonlyArrayMonoidDrawing.empty)
+)

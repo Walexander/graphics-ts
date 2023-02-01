@@ -1,18 +1,22 @@
 /**
  * @since 1.0.0
  */
-import * as A from 'fp-ts/lib/Array'
-import * as B from 'fp-ts/lib/boolean'
-import * as O from 'fp-ts/lib/Option'
-import * as RR from 'fp-ts/lib/ReadonlyRecord'
-import * as S from 'fp-ts/lib/Show'
-import { monoidString } from 'fp-ts/lib/Monoid'
-import { intercalate } from 'fp-ts/lib/Foldable'
-import { pipe } from 'fp-ts/lib/pipeable'
+import * as A from '@fp-ts/core/ReadonlyArray'
+import * as B from '@fp-ts/core/boolean'
+import * as O from '@fp-ts/core/Option'
+import * as RR from '@fp-ts/core/ReadonlyRecord'
+import { Compactable } from '@fp-ts/core/typeclass/Compactable'
+import { isEmpty } from '@fp-ts/core/String'
+
+import { string as monoidString, intercalate, tuple } from '@fp-ts/core/typeclass/Semigroup'
+import * as Struct from '@fp-ts/core/Struct'
+import { not } from '@fp-ts/core/Boolean'
+import { flow, constant, pipe} from '@fp-ts/core/Function'
 
 // -------------------------------------------------------------------------------------
 // model
 // -------------------------------------------------------------------------------------
+
 
 /**
  * Represents the `font-family` CSS property.
@@ -134,34 +138,23 @@ export const font = (fontFamily: FontFamily, size: number, options?: FontOptions
  * @category instances
  * @since 1.0.0
  */
-export const showFontOptions: S.Show<FontOptions> = {
-  show: (o) => intercalate(monoidString, RR.readonlyRecord)(' ', RR.compact(RR.fromRecord(o)))
+export const showFontOptions = {
+  show: (o: FontOptions) => 
+    [o.style, o.variant, o.weight].filter(O.isSome).map(O.getOrElse(() => '')).join(' ')
 }
 
+const isNotEmpty = flow(isEmpty, not)
 /**
  * The `Show` instance for `Font`.
  *
  * @category instances
  * @since 1.0.0
  */
-export const showFont: S.Show<Font> = {
-  show: ({ fontFamily, size, fontOptions }) =>
-    intercalate(monoidString, A.array)(
-      ' ',
-      A.compact([
-        // Determine if any font options were specified
-        pipe(
-          fontOptions,
-          RR.fromRecord,
-          RR.compact,
-          RR.isEmpty,
-          B.fold(
-            () => O.some(showFontOptions.show(fontOptions)),
-            () => O.none
-          )
-        ),
-        O.some(`${size}px`),
-        O.some(fontFamily)
-      ])
-    )
+export const showFont = {
+  show: ({ fontFamily, size, fontOptions }: Font) =>
+  [
+    showFontOptions.show(fontOptions),
+    (`${size}px`),
+    fontFamily
+  ].filter(isNotEmpty).join(' ')
 }

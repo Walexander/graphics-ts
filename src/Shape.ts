@@ -3,10 +3,11 @@
  *
  * @since 1.0.0
  */
-import { HKT, Kind, Kind2, Kind3, URIS, URIS2, URIS3 } from 'fp-ts/lib/HKT'
-import { Foldable, Foldable1, Foldable2, Foldable3 } from 'fp-ts/lib/Foldable'
-import * as RA from 'fp-ts/lib/ReadonlyArray'
-import * as M from 'fp-ts/lib/Monoid'
+import { Kind, TypeLambda } from '@fp-ts/core/HKT'
+import { Foldable } from '@fp-ts/core/typeclass/Foldable'
+import * as RA from '@fp-ts/core/ReadonlyArray'
+import * as M from '@fp-ts/core/typeclass/Monoid'
+import {constant} from '@fp-ts/core/Function'
 
 // -------------------------------------------------------------------------------------
 // model
@@ -361,17 +362,12 @@ export const ellipse = (
  * @category constructors
  * @since 1.0.0
  */
-export function closed<F extends URIS3>(foldable: Foldable3<F>): <E, A>(fa: Kind3<F, E, A, Point>) => Path
-export function closed<F extends URIS2>(foldable: Foldable2<F>): <A>(fa: Kind2<F, A, Point>) => Path
-export function closed<F extends URIS>(foldable: Foldable1<F>): (fa: Kind<F, Point>) => Path
-export function closed<F>(F: Foldable<F>): (fa: HKT<F, Point>) => Path
-export function closed<F>(F: Foldable<F>): (fa: HKT<F, Point>) => Path {
-  return (fa) =>
-    F.reduce(fa, monoidPath.empty, (b, a) => ({
-      _tag: 'Path',
-      closed: true,
-      points: RA.snoc(b.points, a)
-    }))
+export function closed<F extends TypeLambda>(F: Foldable<F>): <R, O, E>(fa: Kind<F, R, O, E, Point>) => Path {
+  return F.reduce(monoidPath.empty, (b, a) => ({
+    _tag: 'Path',
+    closed: true,
+    points: RA.append(a)(b.points)
+  }))
 }
 
 /**
@@ -380,17 +376,12 @@ export function closed<F>(F: Foldable<F>): (fa: HKT<F, Point>) => Path {
  * @category constructors
  * @since 1.0.0
  */
-export function path<F extends URIS3>(foldable: Foldable3<F>): <E, A>(fa: Kind3<F, E, A, Point>) => Path
-export function path<F extends URIS2>(foldable: Foldable2<F>): <A>(fa: Kind2<F, A, Point>) => Path
-export function path<F extends URIS>(foldable: Foldable1<F>): (fa: Kind<F, Point>) => Path
-export function path<F>(F: Foldable<F>): (fa: HKT<F, Point>) => Path
-export function path<F>(F: Foldable<F>): (fa: HKT<F, Point>) => Path {
-  return (fa) =>
-    F.reduce(fa, monoidPath.empty, (b, a) => ({
-      _tag: 'Path',
-      closed: false,
-      points: RA.snoc(b.points, a)
-    }))
+export function path<F extends TypeLambda>(F: Foldable<F>): <R, O, E>(fa: Kind<F, R, O, E,Point>) => Path {
+  return F.reduce(monoidPath.empty, (b, a) => ({
+    _tag: 'Path',
+    closed: false,
+    points: RA.append(a)(b.points)
+  }))
 }
 
 /**
@@ -417,8 +408,8 @@ export const rect = (x: number, y: number, width: number, height: number): Rect 
  * @category instances
  * @since 1.0.0
  */
-export const monoidPath: M.Monoid<Path> = M.getStructMonoid({
-  _tag: { concat: () => 'Path', empty: 'Path' },
-  closed: M.monoidAny,
+export const monoidPath: M.Monoid<Path> = M.struct({
+  _tag: { combineAll: constant('Path'), combineMany: constant('Path'), combine: constant('Path'), empty: 'Path' },
+  closed: M.booleanAny,
   points: RA.getMonoid<Point>()
 })
