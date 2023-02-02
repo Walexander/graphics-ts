@@ -409,7 +409,11 @@ export const rect = (x: number, y: number, width: number, height: number): Rect 
  * @since 1.0.0
  */
 export const monoidPath: M.Monoid<Path> = M.struct({
-  _tag: { combineAll: constant('Path'), combineMany: constant('Path'), combine: constant('Path'), empty: 'Path' },
+  _tag: {
+    combineAll: constant('Path'),
+    combineMany: constant('Path'),
+    combine: constant('Path'), empty: 'Path'
+  },
   closed: M.booleanAny,
   points: RA.getMonoid<Point>()
 })

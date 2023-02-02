@@ -1,13 +1,14 @@
 import * as IO from '@effect/io/Effect'
 import { pipe } from '@fp-ts/core/Function'
+import { testM, testCanvas } from './utils'
+import type { Mock } from 'vitest'
+import { assert, beforeEach, describe, expect } from 'vitest'
 
 import * as C from '../src/Canvas'
 import * as S from '../src/Shape'
 
-import { assert, beforeEach, describe, expect, it as vit, Mock } from 'vitest'
+const it = testM
 
-const it = (label: string, test: () => IO.Effect<CanvasRenderingContext2D, never, unknown>) =>
-  vit(label, () => pipe(test(), IO.provideLayer(pipe(C.fromId('canvas'))), IO.runPromise))
 const CANVAS_ID = 'canvas'
 const TEST_CANVAS_ID = 'test-canvas'
 const FOCUS_TARGET = 'focus-target'
@@ -134,21 +135,7 @@ describe('Canvas', () => {
       ))
     it('setglobalAlpha', () =>
       pipe(
-        Canvas.setglobalAlpha(0.5),
-        Effect.zipRight(Canvas.globalAlpha),
-        Effect.map((globalAlpha) => assert.equal(globalAlpha, 0.5))
-      ))
-  })
-
-  describe('globalAlpha', () => {
-    it('globalAlpha', () =>
-      pipe(
-        Canvas.globalAlpha,
-        Effect.map((globalAlpha) => assert.equal(globalAlpha, 1))
-      ))
-    it('setglobalAlpha', () =>
-      pipe(
-        Canvas.setglobalAlpha(0.5),
+        Canvas.setGlobalAlpha(0.5),
         Effect.zipRight(Canvas.globalAlpha),
         Effect.map((globalAlpha) => assert.equal(globalAlpha, 0.5))
       ))
@@ -161,7 +148,7 @@ describe('Canvas', () => {
       ))
     it('setglobalCompositeOperation', () =>
       pipe(
-        Canvas.setglobalCompositeOperation('color-burn'),
+        Canvas.setGlobalCompositeOperation('color-burn'),
         Effect.zipRight(Canvas.globalCompositeOperation),
         Effect.map((globalCompositeOperation) => assert.equal(globalCompositeOperation, 'color-burn'))
       ))
@@ -173,22 +160,22 @@ describe('Canvas', () => {
         Canvas.imageSmoothingEnabled,
         Effect.map((imageSmoothingEnabled) => assert.equal(imageSmoothingEnabled, true))
       ))
-    it('setimageSmoothingEnabled', () =>
+    it('setImageSmoothingEnabled', () =>
       pipe(
-        Canvas.setimageSmoothingEnabled(false),
+        Canvas.setImageSmoothingEnabled(false),
         Effect.zipRight(Canvas.imageSmoothingEnabled),
         Effect.map((imageSmoothingEnabled) => assert.equal(imageSmoothingEnabled, false))
       ))
   })
   it('moveTo', () =>
     pipe(
-      Canvas.moveTo(S.point(0, 0)),
+      Canvas.moveTo(0, 0),
       Effect.flatMap((_) => Effect.service(Canvas.Tag)),
       Effect.map((ctx) => expect(ctx.moveTo as Mock).to.have.toHaveBeenCalledWith(0, 0))
     ))
   it('lineTo', () =>
     pipe(
-      Canvas.lineTo(S.point(0, 0)),
+      Canvas.lineTo(0, 0),
       Effect.flatMap((_) => Effect.service(Canvas.Tag)),
       Effect.map((ctx) => expect(ctx.lineTo as Mock).to.have.toHaveBeenCalledWith(0, 0))
     ))
@@ -243,284 +230,267 @@ describe('Canvas', () => {
     })
   })
 
-  // describe('setGlobalAlpha', () => {
-  //   it('should set the current global alpha', () => {
-  //     const globalAlpha = 0.5
-
-  //     render(C.setGlobalAlpha(globalAlpha))()
-
-  //     assert.strictEqual(ctx.globalAlpha, globalAlpha)
-  //   })
-  // })
-
-  // describe('setGlobalCompositeOperation', () => {
-  //   it('should set the current global composite operation', () => {
-  //     const globalCompositeOperation = 'multiply'
-
-  //     render(C.setGlobalCompositeOperation(globalCompositeOperation))()
-
-  //     assert.strictEqual(ctx.globalCompositeOperation, globalCompositeOperation)
-  //   })
-  // })
-
-  // describe('setImageSmoothingEnabled', () => {
-  //   it('should set the image smoothing property', () => {
-  //     const imageSmoothingEnabled = true
-
-  //     render(C.setImageSmoothingEnabled(imageSmoothingEnabled))()
-
-  //     assert.strictEqual(ctx.imageSmoothingEnabled, imageSmoothingEnabled)
-  //   })
-  // })
-
-  // describe('setLineCap', () => {
-  //   it('should set the current line cap', () => {
-  //     const lineCap = 'round'
-
-  //     render(C.setLineCap(lineCap))()
-
-  //     assert.strictEqual(ctx.lineCap, lineCap)
-  //   })
-  // })
-
-  // describe('setLineDashOffset', () => {
-  //   it('should set the current line dash offset', () => {
-  //     const lineDashOffset = 4
-
-  //     render(C.setLineDashOffset(lineDashOffset))()
-
-  //     assert.strictEqual(ctx.lineDashOffset, lineDashOffset)
-  //   })
-  // })
-
-  // describe('setLineJoin', () => {
-  //   it('should set the current line join', () => {
-  //     const lineJoin = 'round'
-
-  //     render(C.setLineJoin(lineJoin))()
-
-  //     assert.strictEqual(ctx.lineJoin, lineJoin)
-  //   })
-  // })
-
-  // describe('setLineWidth', () => {
-  //   it('should set the current line width', () => {
-  //     const lineWidth = 5
-
-  //     render(C.setLineWidth(lineWidth))()
-
-  //     assert.strictEqual(ctx.lineWidth, lineWidth)
-  //   })
-  // })
-
-  // describe('setMiterLimit', () => {
-  //   it('should set the current miter limit', () => {
-  //     const miterLimit = 10
-
-  //     render(C.setMiterLimit(miterLimit))()
-
-  //     assert.strictEqual(ctx.miterLimit, miterLimit)
-  //   })
-  // })
-
-  // describe('setShadowBlur', () => {
-  //   it('should set the current shadow blur', () => {
-  //     const blur = 10
-
-  //     render(C.setShadowBlur(blur))()
-
-  //     assert.strictEqual(ctx.shadowBlur, blur)
-  //   })
-  // })
-
-  // describe('setShadowColor', () => {
-  //   it('should set the current shadow color', () => {
-  //     const shadowColor = '#00f'
-
-  //     render(C.setShadowColor(shadowColor))()
-
-  //     assert.strictEqual(ctx.shadowColor, shadowColor)
-  //   })
-  // })
-
-  // describe('setShadowOffsetX', () => {
-  //   it('should set the current x-axis shadow offset', () => {
-  //     const shadowOffsetX = 20
-
-  //     render(C.setShadowOffsetX(shadowOffsetX))()
-
-  //     assert.strictEqual(ctx.shadowOffsetX, shadowOffsetX)
-  //   })
-  // })
-
-  // describe('setShadowOffsetY', () => {
-  //   it('should set the current y-axis shadow offset', () => {
-  //     const shadowOffsetY = 20
-
-  //     render(C.setShadowOffsetY(shadowOffsetY))()
-
-  //     assert.strictEqual(ctx.shadowOffsetY, shadowOffsetY)
-  //   })
-  // })
-
-  // describe('setStrokeStyle', () => {
-  //   it('should set the current stroke style', () => {
-  //     const strokeStyle = '#00f'
-
-  //     render(C.setStrokeStyle(strokeStyle))()
-
-  //     assert.strictEqual(ctx.strokeStyle, strokeStyle)
-  //   })
-  // })
-
-  // describe('getTextAlign', () => {
-  //   it('should get the current text align', () => {
-  //     assert.strictEqual(render(C.getTextAlign)(), ctx.textAlign)
-  //   })
-  // })
-
-  // describe('setTextAlign', () => {
-  //   it('should set the current text align', () => {
-  //     const textAlign = 'center'
-
-  //     render(C.setTextAlign(textAlign))()
-
-  //     assert.strictEqual(ctx.textAlign, textAlign)
-  //   })
-  // })
-
-  // describe('getTextBaseline', () => {
-  //   it('should get the current text baseline', () => {
-  //     assert.strictEqual(render(C.getTextBaseline)(), ctx.textBaseline)
-  //   })
-  // })
-
-  // describe('setTextBaseline', () => {
-  //   it('should set the current text baseline', () => {
-  //     const textBaseline = 'top'
-
-  //     render(C.setTextBaseline(textBaseline))()
-
-  //     assert.strictEqual(ctx.textBaseline, textBaseline)
-  //   })
-  // })
-
-  // describe('arc', () => {
-  //   it('should render an arc to the canvas', () => {
-  //     const arc = S.arc(100, 75, 50, S.radians(0), S.radians(2 * Math.PI))
-
-  //     // Test
-  //     render(C.strokePath(C.arc(arc)))()
-
-  //     // Actual
-  //     testCtx.beginPath()
-  //     testCtx.arc(arc.x, arc.y, arc.r, arc.start, arc.end)
-  //     testCtx.stroke()
-
-  //     assertCalledWith(ctx.arc as jest.Mock, arc.x, arc.y, arc.r, arc.start, arc.end, arc.anticlockwise)
-
-  //     assert.deepStrictEqual(ctx.__getDrawCalls(), testCtx.__getDrawCalls())
-  //   })
-  // })
-
-  // describe('arcTo', () => {
-  //   it('should render an arc that is automatically connected to the latest point in the path', () => {
-  //     const x1 = 200
-  //     const y1 = 130
-  //     const x2 = 50
-  //     const y2 = 20
-  //     const r = 40
-  //     const lineWidth = 5
-  //     const point = S.point(200, 20)
-  //     const strokeStyle = pipe(Color.black, Color.toCss)
-
-  //     // Test
-  //     render(
-  //       C.strokePath(
-  //         pipe(
-  //           C.setStrokeStyle(strokeStyle),
-  //           R.chain(() => C.setLineWidth(5)),
-  //           R.chain(() => C.moveTo(S.point(200, 20))),
-  //           R.chain(() => C.arcTo(x1, y1, x2, y2, r))
-  //         )
-  //       )
-  //     )()
-
-  //     // Actual
-  //     testCtx.beginPath()
-  //     testCtx.strokeStyle = strokeStyle
-  //     testCtx.lineWidth = lineWidth
-  //     testCtx.moveTo(point.x, point.y)
-  //     testCtx.arcTo(x1, y1, x2, y2, r)
-  //     testCtx.stroke()
-
-  //     assertCalledWith(ctx.arcTo as jest.Mock, x1, y1, x2, y2, r)
-
-  //     assert.deepStrictEqual(ctx.__getEvents(), testCtx.__getEvents())
-  //   })
-  // })
-
-  // describe('beginPath', () => {
-  //   it('should begin drawing a path', () => {
-  //     // Test
-  //     render(C.beginPath)()
-
-  //     // Actual
-  //     testCtx.beginPath()
-
-  //     assertCalledWith(ctx.beginPath as jest.Mock)
-
-  //     assert.deepStrictEqual(ctx.__getEvents(), testCtx.__getEvents())
-  //   })
-  // })
-
-  // describe('bezierCurveTo', () => {
-  //   it('should render a cubic Bezier curve', () => {
-  //     const point = S.point(50, 20)
-  //     const cpx1 = 230
-  //     const cpy1 = 30
-  //     const cpx2 = 150
-  //     const cpy2 = 80
-  //     const x = 250
-  //     const y = 100
-
-  //     // Test
-  //     render(
-  //       C.strokePath(
-  //         pipe(
-  //           C.moveTo(point),
-  //           R.chain(() => C.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, x, y))
-  //         )
-  //       )
-  //     )()
-
-  //     // Actual
-  //     testCtx.beginPath()
-  //     testCtx.moveTo(point.x, point.y)
-  //     testCtx.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, x, y)
-  //     testCtx.stroke()
-
-  //     assertCalledWith(ctx.bezierCurveTo as jest.Mock, cpx1, cpy1, cpx2, cpy2, x, y)
-
-  //     assert.deepStrictEqual(ctx.__getDrawCalls(), testCtx.__getDrawCalls())
-  //   })
-  // })
-
-  // describe('clearRect', () => {
-  //   it('should render a filled rectangle to the canvas', () => {
-  //     const rect = S.rect(10, 20, 150, 100)
-
-  //     // Test
-  //     render(C.clearRect(rect))()
-
-  //     // Actual
-  //     testCtx.clearRect(rect.x, rect.y, rect.width, rect.height)
-
-  //     assertCalledWith(ctx.clearRect as jest.Mock, rect.x, rect.y, rect.width, rect.height)
-
-  //     assert.deepStrictEqual(ctx.__getDrawCalls(), testCtx.__getDrawCalls())
-  //   })
-  // })
+  describe('globalAlpha', () => {
+    testM('should set the current global alpha', () => {
+      const globalAlpha = 0.5
+      return pipe(
+        C.setGlobalAlpha(globalAlpha),
+        IO.zipRight(IO.service(C.Tag)),
+        IO.map((ctx) => assert.strictEqual(ctx.globalAlpha, globalAlpha))
+      )
+    })
+  })
+
+  describe('globalCompositeOperation', () => {
+    testM('should set the current global composite operation', () => {
+      const globalCompositeOperation = 'multiply'
+      return pipe(
+        C.setGlobalCompositeOperation(globalCompositeOperation),
+        IO.zipRight(C.globalCompositeOperation),
+        IO.map((op) => assert.strictEqual(op, globalCompositeOperation))
+      )
+    })
+  })
+
+  describe('imageSmoothingEnabled', () => {
+    it('should set the image smoothing property', () => {
+      const imageSmoothingEnabled = true
+      return pipe(
+        C.setImageSmoothingEnabled(imageSmoothingEnabled),
+        IO.zipRight(C.imageSmoothingEnabled),
+        IO.map((op) => assert.strictEqual(op, imageSmoothingEnabled))
+      )
+    })
+  })
+  describe('lineCap', () => {
+    it('should set the current line cap', () => {
+      const lineCap = 'round'
+      return pipe(
+        C.setLineCap(lineCap),
+        IO.zipRight(C.lineCap),
+        IO.map((op) => assert.strictEqual(op, lineCap))
+      )
+    })
+  })
+
+  describe('setLineDashOffset', () => {
+    testM('should set the current line dash offset', () => {
+      const expected = 4
+      return pipe(
+        C.setLineDashOffset(expected),
+        IO.zipRight(C.lineDashOffset),
+        IO.map((actual) => assert.strictEqual(actual, expected))
+      )
+    })
+  })
+
+  describe('setLineJoin', () => {
+    testM('should set the current line join', () => {
+      const expected = 'round'
+      return pipe(
+        C.setLineJoin(expected),
+        IO.zipRight(C.lineJoin),
+        IO.map((actual) => assert.strictEqual(actual, expected))
+      )
+    })
+  })
+
+  describe('setLineWidth', () => {
+    testM('should set the current line width', () => {
+      const expected = 5
+      return pipe(
+        C.setLineWidth(expected),
+        IO.zipRight(C.lineWidth),
+        IO.map((actual) => assert.strictEqual(actual, expected))
+      )
+    })
+  })
+
+
+  describe('setShadowBlur', () => {
+    testM('should set the current shadow blur', () => {
+      const expected = 10
+      return pipe(
+        C.setShadowBlur(expected),
+        IO.zipRight(C.shadowBlur),
+        IO.map((actual) => assert.strictEqual(actual, expected))
+      )
+    })
+  })
+  describe('setShadowColor', () => {
+    testM('should set the current shadow Color', () => {
+      const expected = '#0000ff'
+      return pipe(
+        C.setShadowColor(expected),
+        IO.zipRight(C.shadowColor),
+        IO.map((actual) => assert.strictEqual(actual, expected))
+      )
+    })
+  })
+
+  describe('setShadowOffsetX', () => {
+    testM('should set the current shadow OffsetX', () => {
+      const expected = 20
+      return pipe(
+        C.setShadowOffsetX(expected),
+        IO.zipRight(C.shadowOffsetX),
+        IO.map((actual) => assert.strictEqual(actual, expected))
+      )
+    })
+  })
+
+  describe('setShadowOffsetY', () => {
+    testM('should set the current shadow OffsetY', () => {
+      const expected = 20
+      return pipe(
+        C.setShadowOffsetY(expected),
+        IO.zipRight(C.shadowOffsetY),
+        IO.map((actual) => assert.strictEqual(actual, expected))
+      )
+    })
+  })
+
+  describe('setStrokeStyle', () => {
+    testM('should set the current stroke style', () => {
+      const expected = '#0000ff'
+      return pipe(
+        C.setStrokeStyle(expected),
+        IO.zipRight(C.strokeStyle),
+        IO.map((actual) => assert.strictEqual(actual, expected))
+      )
+    })
+  })
+
+  describe('textAlign', () => {
+    testM('should get the current text align', () => {
+      return pipe(
+        C.textAlign,
+        IO.zip(IO.service(C.Tag)),
+        IO.map(([actual, ctx]) => assert.strictEqual(actual, ctx.textAlign))
+      )
+    })
+    testM('should set the current text align', () => {
+      const expected = 'center'
+      return pipe(
+        C.setTextAlign(expected),
+        IO.zipRight(C.textAlign),
+        IO.map((actual) => assert.strictEqual(actual, expected))
+      )
+    })
+  })
+
+  describe('textBaseline', () => {
+    testM('should get the current text baseline', () =>
+      pipe(
+        C.textBaseline,
+        IO.zip(IO.service(C.Tag)),
+        IO.map(([actual, ctx]) => assert.strictEqual(actual, ctx.textBaseline))
+      )
+    )
+    testM('should set', () => {
+      const expected = 'hanging'
+      return pipe(
+        C.setTextBaseline(expected),
+        IO.zipRight(C.textBaseline),
+        IO.map((actual) => assert.strictEqual(actual, expected))
+      )
+    })
+  })
+
+  describe('painting', () => {
+    let testCtx: CanvasRenderingContext2D
+    beforeEach(() => {
+      document.body.innerHTML = `
+<canvas
+id="${CANVAS_ID}"
+width="${CANVAS_WIDTH}"
+height="${CANVAS_HEIGHT}"
+/>
+<canvas
+id="${TEST_CANVAS_ID}"
+width="${CANVAS_WIDTH}"
+height="${CANVAS_HEIGHT}"
+/>
+`
+      const testCanvas = document.getElementById(TEST_CANVAS_ID) as HTMLCanvasElement
+      testCtx = testCanvas.getContext('2d') as CanvasRenderingContext2D
+    })
+    describe('arc', () => {
+      testM('should render an arc to the canvas', () => {
+        const arc = S.arc(100, 75, 50, S.radians(0), S.radians(2 * Math.PI))
+        // Test
+        const expected = IO.sync(() => {
+          // Actual
+          testCtx.arc(arc.x, arc.y, arc.r, arc.start, arc.end)
+          return (testCtx as any).__getEvents()
+        })
+
+        return testCanvas(C.arc(arc.x, arc.y, arc.r, arc.start, arc.end), expected)
+      })
+    })
+
+    describe('arcTo', () => {
+      testM('should render an arc that is automatically connected to the latest point in the path', () => {
+        const x1 = 200
+        const y1 = 130
+        const x2 = 50
+        const y2 = 20
+        const r = 40
+        // Actual
+        const expected = Effect.sync(() => {
+          testCtx.arcTo(x1, y1, x2, y2, r)
+          return (testCtx as any).__getEvents()
+        })
+        return testCanvas(C.arcTo(x1, y1, x2, y2, r), expected)
+      })
+    })
+
+    describe('beginPath', () => {
+      testM('should begin drawing a path', () => {
+        const expected = Effect.sync(() => {
+          testCtx.beginPath()
+          return (testCtx as any).__getEvents()
+        })
+        return testCanvas(C.beginPath, expected)
+      })
+    })
+
+    describe('bezierCurveTo', () => {
+      it('should render a cubic Bezier curve', () => {
+        const point = S.point(50, 20)
+        const cpx1 = 230
+        const cpy1 = 30
+        const cpx2 = 150
+        const cpy2 = 80
+        const x = 250
+        const y = 100
+
+        // Test
+        const test = pipe(
+          C.strokePath(
+            IO.collectAllDiscard([
+              C.beginPath,
+              C.moveTo(point.x, point.y),
+              C.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, x, y)
+            ])
+          ),
+          IO.zipRight(IO.service(C.Tag)),
+          IO.map((ctx) => expect(ctx.bezierCurveTo as Mock).toHaveBeenCalledWith(cpx1, cpy1, cpx2, cpy2, x, y))
+        )
+        return test
+      })
+    })
+
+    describe('clearRect', () => {
+      testM('should render a filled rectangle to the canvas', () => {
+        const rect = S.rect(10, 20, 150, 100)
+        return pipe(
+          C.clearRect(rect.x, rect.y, rect.width, rect.height),
+          IO.map((ctx) => expect(ctx.clearRect as Mock).toHaveBeenCalledWith(rect.x, rect.y, rect.width, rect.height))
+        )
+      })
+    })
+  })
 
   // describe('clip', () => {
   //   it('should clip a path', () => {

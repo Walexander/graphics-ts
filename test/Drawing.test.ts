@@ -4,25 +4,11 @@ import * as O from '@fp-ts/core/Option'
 import * as ROA from '@fp-ts/core/ReadonlyArray'
 import { pipe } from '@fp-ts/core/Function'
 
-import * as C from '../src/Canvas'
 import * as Color from '../src/Color'
 import * as D from '../src/Drawing'
 import * as F from '../src/Font'
 import * as S from '../src/Shape'
-import { it as vit } from 'vitest'
-const testM = (label: string, test: () => IO.Effect<CanvasRenderingContext2D, never, unknown>) =>
-  vit(label, () => pipe(test(), IO.provideLayer(pipe(C.fromId('canvas'))), IO.runPromise))
-
-const testCanvas = (
-  eff: IO.Effect<CanvasRenderingContext2D, never, CanvasRenderingContext2D>,
-  actual: IO.Effect<never, never, any>
-) =>
-  pipe(
-    eff,
-    IO.map((ctx) => (ctx as any).__getEvents()),
-    IO.zip(actual),
-    IO.map(([a, b]) => assert.deepStrictEqual(a, b))
-  )
+import { testM, testCanvas } from './utils'
 
 describe('Drawing', () => {
   describe('fillStyle', () => {
@@ -120,24 +106,6 @@ describe('Drawing', () => {
       })
     })
   })
-
-  // describe('monoidShadow', () => {
-  //   it('should combine shadow styles', () => {
-  //     const color = Color.hsla(140, 0.3, 0.5, 0.9)
-  //     const blur = 5
-  //     const offset = S.point(5, 5)
-
-  //     assert.deepStrictEqual(
-  //       M.fold(D.monoidShadow)([D.shadowColor(color), D.shadowBlur(blur), D.shadowOffset(offset)]),
-  //       {
-  //         color: O.some(color),
-  //         blur: O.some(blur),
-  //         offset: O.some(offset)
-  //       }
-  //     )
-  //   })
-  // })
-
   describe('clipped', () => {
     it('should construct a clipped drawing', () => {
       const shape = S.rect(50, 50, 100, 100)
@@ -308,7 +276,6 @@ describe('Drawing', () => {
     const CANVAS_HEIGHT = 600
 
     let testCtx: CanvasRenderingContext2D
-
     beforeEach(() => {
       document.body.innerHTML = `
         <canvas
