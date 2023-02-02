@@ -10,7 +10,6 @@ import * as Color from '../src/Color'
 import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
 import * as S from '../src/Shape'
-import { offscreenFlake, makeFlakes } from './snowflake'
 
 const CANVAS_ONE_ID = 'canvas1'
 const CANVAS_TWO_ID = 'canvas2'
@@ -47,7 +46,7 @@ const makeClipped = pipe(
         ([, circle]) =>
           pipe(
             IO.unit(),
-            IO.zipRight(C.clearRect(S.rect(0, 0, 600, 600))),
+            IO.zipRight(C.clearRect(0, 0, 600, 600)),
             IO.zipRight(clippedRect(circle)),
             IO.delay(Duration.millis(50)),
             IO.zipRight(pipe(IO.delay(Duration.millis(16))(IO.unit())))
@@ -78,7 +77,7 @@ const snowflakeWorker = pipe(
     (error) => new Error(error + '')
   )),
   IO.zip(worker),
-  IO.tap(([canvas, worker]) => IO.sync(() => worker.postMessage({ hello: 'world', canvas }, [canvas]))),
+  IO.tap(([canvas, worker]) => IO.sync(() => worker.postMessage({ iters: 5, canvas }, [canvas]))),
   IO.tap(_ => IO.log(`finished posting message`)),
   IO.catchAll((e) => IO.logError(`Error getting canvas: ${e.message}`)),
 )
