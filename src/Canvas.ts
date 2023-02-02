@@ -67,7 +67,6 @@ import { Arc, Ellipse, Point, Rect } from './Shape'
 
 export const Effect = IO
 export const Tag: Context.Tag<CanvasRenderingContext2D> = Context.Tag<CanvasRenderingContext2D>()
-type RIO<R, A> = IO.Effect<R, never, A>
 // -------------------------------------------------------------------------------------
 // model
 // -------------------------------------------------------------------------------------
@@ -370,7 +369,7 @@ export function fromId(id: string): Layer.Layer<never, CanvasError, CanvasRender
 export declare const getContext2D: Html<O.None, HTMLCanvasElement>
 
 const fromOption = flow(O.fromNullable, Effect.fromOption)
-function getContext(element: HTMLCanvasElement) {
+export function getContext(element: HTMLCanvasElement) {
   return pipe(
     Effect.sync(() => element.getContext('2d')),
     Effect.flatMap(fromOption),
@@ -1431,6 +1430,16 @@ export const withContext: <A>(f: Render<A>) => Render<A> = (f) =>
 // -------------------------------------------------------------------------------------
 // utils
 // -------------------------------------------------------------------------------------
+/**
+ * Executes a `Render` effect for the given canvas
+ *
+ * @since 1.0.0
+ */
+export const renderToCanvas =
+  (canvas: CanvasRenderingContext2D) =>
+  <A>(r: Render<A>): IO.Effect<never, never, void> =>
+    IO.provideLayer(r, Layer.succeed(Tag, canvas))
+
 
 /**
  * Executes a `Render` effect for a canvas with the specified `canvasId`, or `onCanvasNotFound()` if a canvas with
@@ -1464,15 +1473,16 @@ export function fromElement(element: HTMLElement): Layer.Layer<never, CanvasErro
 export function getContextById(id: string): IO.Effect<never, CanvasError, CanvasRenderingContext2D> {
   return pipe(
     elementById(id),
-    IO.flatMap(isCanvas),
     IO.flatMap(getContext)
   )
 }
-function elementById(id: string): IO.Effect<never, CanvasError, HTMLElement> {
+
+export function elementById(id: string): IO.Effect<never, CanvasError, HTMLCanvasElement> {
   return pipe(
     Effect.sync(() => document.getElementById(id)),
     Effect.flatMap(fromOption),
-    Effect.mapError(() => new CanvasError(`No such element with id ${id} exists`))
+    Effect.mapError(() => new CanvasError(`No such element with id ${id} exists`)),
+    IO.flatMap(isCanvas),
   )
 }
 
