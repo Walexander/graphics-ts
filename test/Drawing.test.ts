@@ -1,6 +1,5 @@
 import * as assert from 'assert'
 import * as IO from '@effect/io/Effect'
-import * as M from '@fp-ts/core/typeclass/Monoid'
 import * as O from '@fp-ts/core/Option'
 import * as ROA from '@fp-ts/core/ReadonlyArray'
 import { pipe } from '@fp-ts/core/Function'
@@ -143,7 +142,7 @@ describe('Drawing', () => {
     it('should construct a clipped drawing', () => {
       const shape = S.rect(50, 50, 100, 100)
       const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
-      const clipped = D.clipped(shape, drawing)
+      const clipped = D.clipped(shape)(drawing)
 
       assert.deepStrictEqual(clipped, {
         _tag: 'Clipped',
@@ -197,7 +196,7 @@ describe('Drawing', () => {
   describe('rotate', () => {
     it('should construct a rotated drawing', () => {
       const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
-      const rotate = D.rotate(90, drawing)
+      const rotate = D.rotate(90)(drawing)
 
       assert.deepStrictEqual(rotate, {
         _tag: 'Rotate',
@@ -210,7 +209,7 @@ describe('Drawing', () => {
   describe('scale', () => {
     it('should construct a scaled drawing', () => {
       const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
-      const scale = D.scale(10, 20, drawing)
+      const scale = D.scale(10, 20)(drawing)
 
       assert.deepStrictEqual(scale, {
         _tag: 'Scale',
@@ -240,7 +239,7 @@ describe('Drawing', () => {
   describe('translate', () => {
     it('should construct a translated drawing', () => {
       const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
-      const translate = D.translate(10, 20, drawing)
+      const translate = D.translate(10, 20)(drawing)
 
       assert.deepStrictEqual(translate, {
         _tag: 'Translate',
@@ -259,7 +258,7 @@ describe('Drawing', () => {
         D.shadowOffset(S.point(5, 5))
       ])
       const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
-      const withShadow = D.withShadow(shadow, drawing)
+      const withShadow = D.withShadow(shadow)(drawing)
 
       assert.deepStrictEqual(withShadow, {
         _tag: 'WithShadow',
@@ -334,7 +333,7 @@ describe('Drawing', () => {
       const outline = S.rect(10, 20, 20, 20)
       const color = D.outlineColor(Color.black)
       const outlineRect = D.outline(outline, color)
-      const drawing = D.clipped(mask, outlineRect)
+      const drawing = D.clipped(mask)(outlineRect)
       const actual = IO.sync(() => {
         testCtx.save()
         testCtx.beginPath()
@@ -377,7 +376,7 @@ describe('Drawing', () => {
 
     testM('should render a rotated drawing', () => {
       const shape = S.rect(50, 50, 100, 100)
-      const drawing = D.rotate(90, D.outline(shape, D.outlineColor(Color.white)))
+      const drawing = D.rotate(90)(D.outline(shape, D.outlineColor(Color.white)))
 
       // Test
 
@@ -406,8 +405,7 @@ describe('Drawing', () => {
       const scaleX = 5
       const scaleY = 5
       const shape = S.arc(10, 20, 5, S.degrees(100), S.degrees(200))
-      const drawing = D.scale(scaleX, scaleY, D.outline(shape, D.outlineColor(Color.white)))
-
+      const drawing = pipe(D.outline(shape, D.outlineColor(Color.white)), D.scale(scaleX, scaleY))
       // Test
       const actual = IO.sync(() => {
         // Actual
@@ -456,7 +454,7 @@ describe('Drawing', () => {
       const translateX = 5
       const translateY = 5
       const shape = S.rect(50, 50, 100, 100)
-      const drawing = D.translate(translateX, translateY, D.outline(shape, D.outlineColor(Color.white)))
+      const drawing = D.translate(translateX, translateY)(D.outline(shape, D.outlineColor(Color.white)))
 
       // Test
 
@@ -487,7 +485,7 @@ describe('Drawing', () => {
         D.shadowBlur(blurRadius),
         D.shadowOffset(offset)
       ])
-      const drawing = D.withShadow(shadow, D.outline(shape, D.outlineColor(Color.white)))
+      const drawing = D.withShadow(shadow)(D.outline(shape, D.outlineColor(Color.white)))
 
       // Test
 

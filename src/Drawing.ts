@@ -346,7 +346,7 @@ export type Drawing = Clipped | Fill | Outline | Many | Rotate | Scale | Text | 
  * @category constructors
  * @since 1.0.0
  */
-export const clipped: (shape: Shape, drawing: Drawing) => Drawing = (shape, drawing) => ({
+export const clipped = (shape: Shape) => (drawing: Drawing): Drawing => ({
   _tag: 'Clipped',
   shape,
   drawing
@@ -416,25 +416,27 @@ export const many: (drawings: ReadonlyArray<Drawing>) => Drawing = (drawings) =>
  * @category constructors
  * @since 1.0.0
  */
-export const rotate: (angle: number, drawing: Drawing) => Drawing = (angle, drawing) => ({
-  _tag: 'Rotate',
-  angle,
-  drawing
-})
-
+export function rotate(angle: number): (drawing: Drawing) => Drawing {
+  return (drawing) => ({
+    _tag: 'Rotate',
+    angle,
+    drawing
+  })
+}
 /**
  * Applies scale to the transform of a `Drawing`.
  *
  * @category constructors
  * @since 1.0.0
  */
-export const scale: (scaleX: number, scaleY: number, drawing: Drawing) => Drawing = (scaleX, scaleY, drawing) => ({
-  _tag: 'Scale',
-  scaleX,
-  scaleY,
-  drawing
-})
-
+export function scale (scaleX: number, scaleY: number): (drawing: Drawing) => Drawing {
+  return (drawing) => ({
+    _tag: 'Scale',
+    scaleX,
+    scaleY,
+    drawing
+  })
+}
 /**
  * Constructs a `Drawing` from `Text`.
  *
@@ -462,16 +464,13 @@ export const text: (font: Font, x: number, y: number, style: FillStyle, text: st
  * @category constructors
  * @since 1.0.0
  */
-export const translate: (translateX: number, translateY: number, drawing: Drawing) => Drawing = (
-  translateX,
-  translateY,
-  drawing
-) => ({
-  _tag: 'Translate',
-  translateX,
-  translateY,
-  drawing
-})
+export function translate(translateX: number, translateY: number): (drawing: Drawing) => Drawing {
+  return (drawing) => ({ _tag: 'Translate',
+    translateX,
+    translateY,
+    drawing
+  })
+}
 
 /**
  * Applies `Shadow` to a `Drawing`.
@@ -479,12 +478,15 @@ export const translate: (translateX: number, translateY: number, drawing: Drawin
  * @category constructors
  * @since 1.0.0
  */
-export const withShadow: (shadow: Shadow, drawing: Drawing) => Drawing = (shadow, drawing) => ({
+export function withShadow(shadow: Shadow): (drawing: Drawing) => Drawing {
+
+
+return (drawing) => ({
   _tag: 'WithShadow',
   shadow,
   drawing
 })
-
+}
 /**
  * Constructs a `Shadow` from a blur radius.
  *
@@ -591,9 +593,9 @@ export const render: (drawing: Drawing) => C.Render<CanvasRenderingContext2D> = 
             C.beginPath,
             IO.zipRight(renderShape(d.shape)),
             IO.zipRight(C.clip()),
-            IO.zipRight(go(d.drawing))
+            IO.zipRight(IO.suspendSucceed(() => go(d.drawing))
           )
-        )
+        ))
 
       case 'Fill':
         return C.withContext(
@@ -605,36 +607,36 @@ export const render: (drawing: Drawing) => C.Render<CanvasRenderingContext2D> = 
 
       case 'Many':
         return pipe(
-          IO.forEachDiscard(d.drawings, (d) => go(d)),
-          IO.zipRight(IO.service(C.Tag))
+          IO.service(C.Tag),
+          IO.zipLeft(IO.forEachDiscard(d.drawings, go))
         )
 
       case 'Outline':
         return pipe(
-
-          (IO.collectAllDiscard([
-            applyStyle(d.style.color, flow(toCss, C.setStrokeStyle)),
-applyStyle(d.style.lineWidth, C.setLineWidth),
-C.strokePath(renderShape(d.shape))
-          ])
-          ),
-          C.withContext,
-          IO.zipRight(IO.service(C.Tag))
+          IO.service(C.Tag),
+          IO.zipLeft(pipe(
+            IO.collectAllDiscard([
+              applyStyle(d.style.color, flow(toCss, C.setStrokeStyle)),
+              applyStyle(d.style.lineWidth, C.setLineWidth),
+              C.strokePath(renderShape(d.shape))
+            ]),
+            C.withContext,
+          )),
         )
 
       case 'Rotate':
         return C.withContext(
           pipe(
             C.rotate(d.angle),
-            IO.zipRight(go(d.drawing))
+            IO.zipRight(IO.suspendSucceed(() => go(d.drawing))
           )
-        )
+        ))
 
       case 'Scale':
         return C.withContext(
           pipe(
             C.scale(d.scaleX, d.scaleY),
-            IO.zipRight(go(d.drawing))
+            IO.zipRight(IO.suspendSucceed(() => go(d.drawing)))
           )
         )
 
@@ -653,7 +655,7 @@ C.strokePath(renderShape(d.shape))
         return C.withContext(
           pipe(
             C.translate(d.translateX, d.translateY),
-            IO.zipRight(go(d.drawing)),
+            IO.zipRight(IO.suspendSucceed(() => go(d.drawing)))
           )
         )
 
@@ -668,7 +670,7 @@ C.strokePath(renderShape(d.shape))
                 IO.zipRight(C.setShadowOffsetY(o.y))
               ))
             ]),
-            IO.zipRight(go(d.drawing))
+            IO.zipRight(IO.suspendSucceed(() => go(d.drawing)))
           )
         )
     }
