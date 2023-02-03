@@ -49,11 +49,8 @@ const canvasDemo =
     ),
     snowFlakes(CANVAS_ONE_ID, 6)
   ])
+void IO.runPromise(canvasDemo)
 
-void pipe(
-  canvasDemo,
-  IO.runPromise
-)
 function clippedRect(clip: S.Shape): C.Render<CanvasRenderingContext2D> {
   return pipe(
     D.many([

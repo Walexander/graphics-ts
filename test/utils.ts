@@ -18,7 +18,7 @@ export const assertCalledWith = (fn: Mock, ...params: ReadonlyArray<any>): void 
   })
 }
 export const testM = (label: string, test: () => IO.Effect<CanvasRenderingContext2D, never, unknown>) =>
-  vit(label, () => pipe(test(), IO.provideLayer(pipe(C.fromId('canvas'))), IO.runPromise))
+  vit(label, () => pipe(test(), C.renderTo('canvas'), IO.runPromise))
 
 export const testCanvas = (
   eff: IO.Effect<CanvasRenderingContext2D, never, CanvasRenderingContext2D>,
