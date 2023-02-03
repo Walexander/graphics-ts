@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
     "noEmit": true,
     "outDir": "./lib",
-    "target": "es2020",
+    "target": "esnext",
     "moduleResolution": "node",
-    "module": "es2020",
+    "module": "esnext",
     "lib": ["es6", "dom"],
     "sourceMap": false,
     "declaration": true,

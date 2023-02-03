@@ -1,6 +1,6 @@
-import * as assert from 'assert'
 import * as ROA from '@fp-ts/core/ReadonlyArray'
 import { pipe } from '@fp-ts/core/Function'
+import { assert, describe, it } from 'vitest'
 
 import * as S from '../src/Shape'
 

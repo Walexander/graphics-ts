@@ -1,8 +1,8 @@
-import * as assert from 'assert'
 import * as IO from '@effect/io/Effect'
 import * as O from '@fp-ts/core/Option'
 import * as ROA from '@fp-ts/core/ReadonlyArray'
 import { pipe } from '@fp-ts/core/Function'
+import { beforeEach, describe, it, assert } from 'vitest'
 
 import * as Color from '../src/Color'
 import * as D from '../src/Drawing'

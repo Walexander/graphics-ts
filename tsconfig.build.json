@@ -1,7 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "noEmit": false
+    "noEmit": false,
+    "outDir": "build/cjs",
+    "module": "commonjs",
+    "target": "es5",
+    "rootDir": "./src"
   },
-  "include": ["./src"]
+  "include": ["./src/**/*.ts"]
 }

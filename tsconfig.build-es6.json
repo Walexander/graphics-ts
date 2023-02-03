@@ -1,7 +1,10 @@
 {
-  "extends": "./tsconfig.build.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./es6",
-    "module": "es6"
-  }
+    "noEmit": false,
+    "outDir": "build/esm",
+    "declarationDir": "build/dts",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts"]
 }

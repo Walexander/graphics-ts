@@ -3,11 +3,12 @@ import { pipe } from '@fp-ts/core/Function'
 import * as assert from 'assert'
 import { it as vit } from 'vitest'
 import * as C from '../src/Canvas'
+import type {Mock} from 'vitest'
 
 /**
  * Asserts that the specified `fn` was called with the parameters specified in `params`.
  */
-export const assertCalledWith = (fn: jest.Mock, ...params: ReadonlyArray<any>): void => {
+export const assertCalledWith = (fn: Mock, ...params: ReadonlyArray<any>): void => {
   const { calls } = fn.mock
 
   assert.deepStrictEqual(calls.length, 1)

@@ -1,6 +1,6 @@
-import * as assert from 'assert'
 import * as O from '@fp-ts/core/Option'
 import { pipe } from '@fp-ts/core/Function'
+import { it, assert, describe } from 'vitest'
 
 import * as F from '../src/Font'
 

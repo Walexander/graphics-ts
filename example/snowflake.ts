@@ -2,18 +2,13 @@ import * as IO from '@effect/io/Effect'
 import * as Layer from '@effect/io/Layer'
 import * as RA from '@fp-ts/core/ReadonlyArray'
 import * as Duration from '@fp-ts/data/Duration'
-import * as O from '@fp-ts/core/Option'
 import { pipe } from '@fp-ts/core/Function'
 
 import * as Color from '../src/Color'
 import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
 import * as S from '../src/Shape'
-import * as Either from '@fp-ts/core/Either'
 const SCALE = 0.375
-
-const closedPath = S.closed(RA.Foldable)
-
 const colors: ReadonlyArray<Color.Color> = [
   Color.hsla(60, 0.6, 0.5, 1),
   Color.hsla(55, 0.65, 0.55, 1),
@@ -24,91 +19,111 @@ const colors: ReadonlyArray<Color.Color> = [
   Color.hsla(240, 1, 0.01, 1)
 ]
 
-const pentagon: S.Path = pipe(
-  RA.range(0, 5),
-  RA.map((n) => {
-    const theta = (Math.PI / 2.5) * n
-    return S.point(Math.sin(theta), Math.cos(theta))
-  }),
-  closedPath
-)
-const makeDrawing = (n: number): D.Drawing => {
-  return n > 0 ? makeNext(n) : D.monoidDrawing.empty
 
-  function makeNext(n: number) {
-    return pipe(
-      makeDrawing(n-1),
-      D.scale(SCALE, SCALE),
-      pentaganolInception(colors[n % colors.length]),
-      D.monoidDrawing.combineAll
-    )
-  }
+// this is exported to our main thread and will return either
+// an Effect that either uses a Worker or runs on the main thread
+export const snowFlakes = (canvasId: string, iters: number) =>
+  navigator.userAgent.indexOf('Chrome') > 0 // 🙁 requires
+                                            // module workers and OffscreenCanvas
+    ? snowflakeWorker(canvasId, iters)
+    : pipe(makeFlakes(iters), C.renderTo(canvasId))
 
-  function pentaganolInception(color: Color.Color): (child: D.Drawing) => D.Drawing[] {
-    return (child: D.Drawing) =>
-      pipe(
-        RA.range(0, 4),
-        RA.map((j) =>
-          pipe(child, D.translate(0, Math.cos(Math.PI / 5) * (1 + SCALE)), D.rotate((Math.PI / 2.5) * (j + 0.5)))
-        ),
-        RA.prepend(D.fill(pentagon, D.fillStyle(color)))
-      )
-  }
+// this is exported for rendering within a service worker
+export const runFlakes = (canvas: CanvasRenderingContext2D, iters: number) =>
+  pipe(IO.provideLayer(makeFlakes(iters), Layer.succeed(C.Tag, canvas)), IO.runPromise)
 
-}
-
-const snowflake = (iterations: number) => pipe(
-  D.monoidShadow.combine(D.shadowColor(Color.black), D.shadowBlur(10)),
-  (o) => pipe(
-    makeDrawing(iterations),
-    D.scale(150, 150),
-    D.translate(300, 300),
-    D.withShadow(o)
-  ),
-  D.render,
-  IO.timed,
-  IO.tap(([duration]) => IO.logInfo(`snowflake(${iterations}) took ${duration.millis}ms`)),
-)
-
-export const makeFlakes = (total: number) =>
-  pipe(
+// this is our main rendering loop.
+// it iteratively draws a new `snowflake(1..total)` every `1/iteration` seconds
+function makeFlakes (total: number) {
+  return pipe(
     IO.loopDiscard(
       1,
       (z) => z <= total,
       (z) => z + 1,
       (z) => pipe(
         snowflake(z),
+        D.render, // render the `Drawing`
+        IO.timed, // time the rendering effect
+        IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration.millis}ms`)),
+        // zipLeft sequences an effect, keeping the previous effect's
+        // return value
         IO.zipLeft(
-          pipe(
-            IO.unit(),
-            IO.delay(Duration.seconds(1 / z))
-          )
-        )
+          // this will pause *after* we draw
+          pipe(IO.unit(), IO.delay(Duration.seconds(1 / z))))
       )
     )
   )
+}
+function snowflake (iterations: number) {
+  return pipe(
+    D.monoidShadow.combine(D.shadowColor(Color.black), D.shadowBlur(10)),
+    (o) => pipe(makeDrawing(iterations), D.scale(150, 150), D.translate(300, 300), D.withShadow(o)),
+  )
+}
+// this function recursively creates a new drawing, scales it to 0.375
+// and makes 5 `moar` copies. 
+// each new drawing is placed on the edge of a pentagon at scale 1.0
+//
+function makeDrawing(n: number): D.Drawing {
+  const pentagon: S.Path = pipe(
+    RA.range(0, 5),
+    RA.map((n) => pipe(
+      Math.PI/2.5 * n,
+      theta => [Math.sin(theta), Math.cos(theta)] as const,
+      _ => S.point(..._)
+    )),
+    S.closed(RA.Foldable)
+  )
+  return n > 0 ? makeNext(n) : D.monoidDrawing.empty
 
-export const runFlakes = (canvas: CanvasRenderingContext2D, iters: number) => pipe(
-  IO.provideLayer(makeFlakes(iters), Layer.succeed(C.Tag, canvas)),
-  IO.runPromise,
-)
-const offscreen = <A>(f: C.Render<A>) => pipe(
-  IO.sync(() => new OffscreenCanvas(600, 600)),
-  IO.map((canvas) =>
-    Either.liftPredicate(
-      (u: unknown): u is CanvasRenderingContext2D => u != null,
-      () => `Cannot get canvas context`
-    )(canvas.getContext('2d'))
-  ),
-  IO.absolve,
-  IO.flatMap((a) => C.renderToCanvas(a)(f))
-)
+  function makeNext(n: number) {
+    return pipe(
+      makeDrawing(n - 1),
+      D.scale(SCALE, SCALE),
+      moar(colors[n % colors.length]),
+      D.monoidDrawing.combineAll
+    )
+  }
 
-export const offscreenFlake = pipe(
-  makeFlakes(3),
-  offscreen,
-  IO.timed,
-  IO.tap(([d]) => IO.log(`Finished offscreen in ${d.millis}ms`)),
-  IO.catchAll((e) => IO.logError(`OffscreenCanvas failed: ${e}`)),
-)
+  function moar(color: Color.Color): (child: D.Drawing) => D.Drawing[] {
+    return (child: D.Drawing) =>
+      pipe(
+        RA.range(0, 4),
+        RA.map((j) =>
+          pipe(
+            child,
+            D.translate(0, Math.cos(Math.PI / 5) * (1 + SCALE)),
+            D.rotate((Math.PI / 2.5) * (j + 0.5))
+          )
+        ),
+        RA.prepend(D.fill(pentagon, D.fillStyle(color)))
+      )
+  }
+}
 
+function makeWorker() {
+  return pipe(
+    IO.attempt(
+      () =>
+        new Worker(new URL('./snowflake.worker.ts?worker&inline', import.meta.url), {
+          type: 'module'
+        })
+    ),
+    IO.tapError((_) => IO.logError(`ERROR opening worker`)),
+    IO.orDie
+  )
+}
+function snowflakeWorker(canvasId: string, iters: number) {
+  return pipe(
+    C.elementById(canvasId),
+    IO.flatMap((a) =>
+      IO.tryCatch(
+        () => a.transferControlToOffscreen(),
+        (error) => new Error(error + '')
+      )
+    ),
+    IO.zip(makeWorker()),
+    IO.tap(([canvas, worker]) => IO.sync(() => worker.postMessage({ iters, canvas }, [canvas]))),
+    IO.catchAll((e) => IO.logError(`Error getting canvas: ${e.message}`))
+  )
+}

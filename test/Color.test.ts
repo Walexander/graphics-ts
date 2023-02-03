@@ -1,6 +1,5 @@
-import * as assert from 'assert'
-
 import * as Color from '../src/Color'
+import { it, assert, describe } from 'vitest'
 
 describe('Color', () => {
   describe('hsla', () => {
