@@ -33,6 +33,7 @@
   },
   "homepage": "https://github.com/gcanti/graphics-ts",
   "devDependencies": {
+    "@effect/language-service": "^0.0.19",
     "babel": "^6.23.0",
     "docs-ts": "^0.5.1",
     "dtslint": "github:gcanti/dtslint",

@@ -15,7 +15,9 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "plugins": [{ "name": "@effect/language-service" }],
+    "transformers": [{ "name": "@effect/language-service/transformer" }]
   },
   "include": ["./src/", "./test"]
 }
