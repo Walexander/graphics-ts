@@ -18,13 +18,16 @@ const colors: ReadonlyArray<Color.Color> = [
   Color.hsla(268, 1, 0.18, 1),
   Color.hsla(240, 1, 0.01, 1)
 ]
-
+const pentagon: S.Path = pipe(
+  RA.range(0, 5),
+  RA.map((n) => pipe((Math.PI / 2.5) * n, (theta) => S.point(Math.sin(theta), Math.cos(theta)))),
+  S.closed(RA.Foldable)
+)
 
 // this is exported to our main thread and will return either
 // an Effect that either uses a Worker or runs on the main thread
 export const snowFlakes = (canvasId: string, iters: number) =>
-  navigator.userAgent.indexOf('Chrome') > 0 // 🙁 requires
-                                            // module workers and OffscreenCanvas
+  navigator.userAgent.indexOf('Chrome') > 0 // 🙁 requires module workers and OffscreenCanvas
     ? snowflakeWorker(canvasId, iters)
     : pipe(makeFlakes(iters), C.renderTo(canvasId))
 
@@ -34,73 +37,58 @@ export const runFlakes = (canvas: CanvasRenderingContext2D, iters: number) =>
 
 // this is our main rendering loop.
 // it iteratively draws a new `snowflake(1..total)` every `1/iteration` seconds
-function makeFlakes (total: number) {
-  return pipe(
-    IO.loopDiscard(
-      1,
-      (z) => z <= total,
-      (z) => z + 1,
-      (z) => pipe(
+function makeFlakes(total: number) {
+  return IO.loopDiscard(
+    1,
+    (z) => z <= total,
+    (z) => z + 1,
+    (z) =>
+      pipe(
+        // generate our snowflake drawing for the new iteration
         snowflake(z),
-        D.render, // render the `Drawing`
-        IO.timed, // time the rendering effect
+        D.scale(150, 150),
+        D.translate(300, 300),
+        D.withShadow(D.monoidShadow.combine(D.shadowColor(Color.black), D.shadowBlur(10))),
+        // render the `Drawing` - this is effectual
+        D.render,
+        // get the resulting effect's duration
+        IO.timed,
         IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration.millis}ms`)),
-        // zipLeft sequences an effect, keeping the previous effect's
-        // return value
+        // a little delay
         IO.zipLeft(
           // this will pause *after* we draw
-          pipe(IO.unit(), IO.delay(Duration.seconds(1 / z))))
+          pipe(IO.unit(), IO.delay(Duration.seconds(1 / z)))
+        )
       )
-    )
   )
+
 }
-function snowflake (iterations: number) {
-  return pipe(
-    D.monoidShadow.combine(D.shadowColor(Color.black), D.shadowBlur(10)),
-    (o) => pipe(makeDrawing(iterations), D.scale(150, 150), D.translate(300, 300), D.withShadow(o)),
-  )
-}
+
 // this function recursively creates a new drawing, scales it to 0.375
-// and makes 5 `moar` copies. 
-// each new drawing is placed on the edge of a pentagon at scale 1.0
+// and makes 5 more copies, each placed on the edge of a unit pentagon,
+// which is then prepended to the Drawing
 //
-function makeDrawing(n: number): D.Drawing {
-  const pentagon: S.Path = pipe(
-    RA.range(0, 5),
-    RA.map((n) => pipe(
-      Math.PI/2.5 * n,
-      theta => [Math.sin(theta), Math.cos(theta)] as const,
-      _ => S.point(..._)
-    )),
-    S.closed(RA.Foldable)
+function snowflake(n: number): D.Drawing {
+  return n <= 0 ? D.monoidDrawing.empty : pipe(
+    snowflake(n - 1),
+    D.scale(SCALE, SCALE),
+    makeMore,
+    RA.prepend(D.fill(pentagon, D.fillStyle(colors[n % colors.length]))),
+    D.monoidDrawing.combineAll
   )
-  return n > 0 ? makeNext(n) : D.monoidDrawing.empty
-
-  function makeNext(n: number) {
-    return pipe(
-      makeDrawing(n - 1),
-      D.scale(SCALE, SCALE),
-      moar(colors[n % colors.length]),
-      D.monoidDrawing.combineAll
-    )
-  }
-
-  function moar(color: Color.Color): (child: D.Drawing) => D.Drawing[] {
-    return (child: D.Drawing) =>
-      pipe(
-        RA.range(0, 4),
-        RA.map((j) =>
-          pipe(
-            child,
-            D.translate(0, Math.cos(Math.PI / 5) * (1 + SCALE)),
-            D.rotate((Math.PI / 2.5) * (j + 0.5))
-          )
-        ),
-        RA.prepend(D.fill(pentagon, D.fillStyle(color)))
-      )
-  }
 }
-
+function makeMore(child: D.Drawing): D.Drawing[] {
+  return pipe(
+    RA.range(0, 4),
+    RA.map((j) =>
+      pipe(
+        child,
+        D.translate(0, Math.cos(Math.PI / 5) * (1 + SCALE)),
+        D.rotate((Math.PI / 2.5) * (j + 0.5))
+      )
+    )
+  )
+}
 function makeWorker() {
   return pipe(
     IO.attempt(

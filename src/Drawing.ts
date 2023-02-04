@@ -525,17 +525,11 @@ export const shadowOffset: (offsetPoint: Point) => Shadow = (o) => ({
 // combinators
 // -------------------------------------------------------------------------------------
 
-const applyStyle: <A>(
-  fa: O.Option<A>,
-  f: (a: A) => C.Render<CanvasRenderingContext2D>
-) => C.Render<CanvasRenderingContext2D> = (fa, f) =>
-  pipe(
-    fa,
-    O.match(
-      () => IO.service(C.Tag),
-      (a) => f(a)
-    )
-  )
+const applyStyle = <A>(o: O.Option<A>, f: (a:A) => IO.Effect<CanvasRenderingContext2D, never, unknown>) => pipe(
+  IO.fromOption(o),
+  IO.flatMap(f),
+  IO.orElse(IO.unit)
+)
 
 /**
  * Renders a `Shape`.
@@ -543,7 +537,7 @@ const applyStyle: <A>(
  * @category combinators
  * @since 1.1.0
  */
-export const renderShape: (shape: Shape) => C.Render<CanvasRenderingContext2D> = (shape) => {
+export const renderShape: (shape: Shape) => IO.Effect<CanvasRenderingContext2D, never, CanvasRenderingContext2D> = (shape) => {
   const empty = IO.service(C.Tag)
   switch (shape._tag) {
     case 'Arc':
@@ -588,7 +582,7 @@ export const renderShape: (shape: Shape) => C.Render<CanvasRenderingContext2D> =
  * @category combinators
  * @since 1.0.0
  */
-export function render(drawing: Drawing): C.Render<CanvasRenderingContext2D> {
+export function render(drawing: Drawing): IO.Effect<CanvasRenderingContext2D, never, CanvasRenderingContext2D> {
   switch (drawing._tag) {
     case 'Clipped':
       return C.withContext(

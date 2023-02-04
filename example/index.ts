@@ -51,7 +51,7 @@ const canvasDemo =
   ])
 void IO.runPromise(canvasDemo)
 
-function clippedRect(clip: S.Shape): C.Render<CanvasRenderingContext2D> {
+function clippedRect(clip: S.Shape) {
   return pipe(
     D.many([
       D.fill(S.rect(0, 0, 600, 600), D.fillStyle(Color.hsl(240, 1, 0.5))),

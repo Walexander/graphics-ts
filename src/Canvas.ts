@@ -100,7 +100,7 @@ export const Html: Context.Tag<HTMLCanvasElement> = Context.Tag<HTMLCanvasElemen
  * @category model
  * @since 1.0.0
  */
-export interface Render<A, E = never> extends IO.Effect<CanvasRenderingContext2D, E, A> {}
+export interface Render<A, E = never, R = unknown> extends IO.Effect<R | CanvasRenderingContext2D, E, A> {}
 
 /**
  * Represents the dimensions of the HTML canvas.
@@ -414,7 +414,7 @@ export function setHeight(height: number) {
  * @category combinators
  * @since 1.0.0
  */
-export const dimensions: Render<CanvasDimensions> = Effect.struct({
+export const dimensions = Effect.struct({
   width,
   height
 })
@@ -425,7 +425,7 @@ export const dimensions: Render<CanvasDimensions> = Effect.struct({
  * @category combinators
  * @since 1.0.0
  */
-export function setDimensions(dims: CanvasDimensions): Render<CanvasDimensions> {
+export function setDimensions(dims: CanvasDimensions) {
   return pipe(
     [setWidth(dims.width), setHeight(dims.height)],
     Effect.collectAllDiscard,
@@ -439,7 +439,7 @@ export function setDimensions(dims: CanvasDimensions): Render<CanvasDimensions> 
  * @category combinators
  * @since 1.0.0
  */
-export const toDataURL: Render<string> = withCanvas((ctx) =>
+export const toDataURL = withCanvas((ctx) =>
   Effect.sync(() => ctx.canvas.toDataURL())
 )
 
@@ -449,12 +449,11 @@ export const toDataURL: Render<string> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export const setFillStyle: (
-  style: string | CanvasGradient | CanvasPattern
-) => Render<CanvasRenderingContext2D> = (s) =>
+  
+export const setFillStyle = (style: string | CanvasGradient | CanvasPattern) =>
   withCanvas((ctx) =>
     pipe(
-      Effect.sync(() => (ctx.fillStyle = s)),
+      Effect.sync(() => (ctx.fillStyle = style)),
       Effect.as(ctx)
     )
   )
@@ -465,7 +464,7 @@ export const setFillStyle: (
  * @category combinators
  * @since 1.0.0
  */
-export const font: Render<string> = withCanvas((ctx) => Effect.sync(() => ctx.font))
+export const font = withCanvas((ctx) => Effect.sync(() => ctx.font))
 export const getFont = font
 
 /**
@@ -474,7 +473,7 @@ export const getFont = font
  * @category combinators
  * @since 1.0.0
  */
-export function setFont(font: string): Render<CanvasRenderingContext2D> {
+export function setFont(font: string) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.font = font)),
@@ -489,14 +488,14 @@ export function setFont(font: string): Render<CanvasRenderingContext2D> {
  * @category combinators
  * @since 1.1.0
  */
-export const globalAlpha: Render<number> = withCanvas((ctx) => Effect.sync(() => ctx.globalAlpha))
+export const globalAlpha = withCanvas((ctx) => Effect.sync(() => ctx.globalAlpha))
 /**
  * Sets the current global alpha for the canvas context.
  *
  * @category combinators
  * @since 1.0.0
  */
-export function setGlobalAlpha(globalAlpha: number): Render<void> {
+export function setGlobalAlpha(globalAlpha: number) {
   return withCanvas((ctx) => Effect.sync(() => (ctx.globalAlpha = globalAlpha)))
 }
 
@@ -506,7 +505,7 @@ export function setGlobalAlpha(globalAlpha: number): Render<void> {
  * @category combinators
  * @since 1.0.0
  */
-export const globalCompositeOperation: Render<GlobalCompositeOperation> = withCanvas((ctx) =>
+export const globalCompositeOperation = withCanvas((ctx) =>
   Effect.sync(() => ctx.globalCompositeOperation)
 )
 
@@ -518,7 +517,7 @@ export const globalCompositeOperation: Render<GlobalCompositeOperation> = withCa
  */
 export function setGlobalCompositeOperation(
   globalCompositeOperation: GlobalCompositeOperation
-): Render<CanvasRenderingContext2D> {
+) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.globalCompositeOperation = globalCompositeOperation)),
@@ -534,7 +533,7 @@ export function setGlobalCompositeOperation(
  * @since 1.1.0
  */
 
-export const imageSmoothingEnabled: Render<boolean> = withCanvas((ctx) =>
+export const imageSmoothingEnabled = withCanvas((ctx) =>
   Effect.sync(() => ctx.imageSmoothingEnabled)
 )
 
@@ -545,7 +544,7 @@ export const imageSmoothingEnabled: Render<boolean> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export function setImageSmoothingEnabled(enable: boolean): Render<CanvasRenderingContext2D> {
+export function setImageSmoothingEnabled(enable: boolean) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.imageSmoothingEnabled = enable)),
@@ -560,7 +559,7 @@ export function setImageSmoothingEnabled(enable: boolean): Render<CanvasRenderin
  * @category combinators
  * @since 1.0.0
  */
-export function setLineCap(cap: LineCap): Render<CanvasRenderingContext2D> {
+export function setLineCap(cap: LineCap) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.lineCap = cap)),
@@ -574,7 +573,7 @@ export function setLineCap(cap: LineCap): Render<CanvasRenderingContext2D> {
  * @category combinators
  * @since 1.0.0
  */
-export const lineCap: Render<LineCap> = withCanvas((ctx) => pipe(Effect.sync(() => ctx.lineCap)))
+export const lineCap = withCanvas((ctx) => pipe(Effect.sync(() => ctx.lineCap)))
 
 /**
  * Sets the current line dash offset, or "phase", for the canvas context.
@@ -582,7 +581,7 @@ export const lineCap: Render<LineCap> = withCanvas((ctx) => pipe(Effect.sync(() 
  * @category combinators
  * @since 1.0.0
  */
-export function setLineDashOffset(offset: number): Render<CanvasRenderingContext2D> {
+export function setLineDashOffset(offset: number) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.lineDashOffset = offset)),
@@ -596,7 +595,7 @@ export function setLineDashOffset(offset: number): Render<CanvasRenderingContext
  * @category combinators
  * @since 1.0.0
  */
-export const lineDashOffset: Render<number> = withCanvas((ctx) =>
+export const lineDashOffset = withCanvas((ctx) =>
   pipe(Effect.sync(() => ctx.lineDashOffset))
 )
 
@@ -606,7 +605,7 @@ export const lineDashOffset: Render<number> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export function setLineJoin(join: LineJoin): Render<CanvasRenderingContext2D> {
+export function setLineJoin(join: LineJoin) {
   return withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.lineJoin = join
@@ -614,7 +613,7 @@ export function setLineJoin(join: LineJoin): Render<CanvasRenderingContext2D> {
     })
   )
 }
-export const lineJoin: Render<CanvasLineJoin> = withCanvas((ctx) =>
+export const lineJoin = withCanvas((ctx) =>
   pipe(Effect.sync(() => ctx.lineJoin))
 )
 
@@ -624,7 +623,7 @@ export const lineJoin: Render<CanvasLineJoin> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export function setLineWidth(lineWidth: number): Render<CanvasRenderingContext2D> {
+export function setLineWidth(lineWidth: number) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.lineWidth = lineWidth)),
@@ -632,7 +631,7 @@ export function setLineWidth(lineWidth: number): Render<CanvasRenderingContext2D
     )
   )
 }
-export const lineWidth: Render<number> = withCanvas((ctx) => pipe(Effect.sync(() => ctx.lineWidth)))
+export const lineWidth = withCanvas((ctx) => pipe(Effect.sync(() => ctx.lineWidth)))
 
 /**
  * Sets the current miter limit for the canvas context.
@@ -640,7 +639,7 @@ export const lineWidth: Render<number> = withCanvas((ctx) => pipe(Effect.sync(()
  * @category combinators
  * @since 1.0.0
  */
-export function setMiterLimit(miterLimit: number): Render<CanvasRenderingContext2D> {
+export function setMiterLimit(miterLimit: number) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.miterLimit = miterLimit)),
@@ -648,7 +647,7 @@ export function setMiterLimit(miterLimit: number): Render<CanvasRenderingContext
     )
   )
 }
-export const miterLimit: Render<number> = withCanvas((ctx) =>
+export const miterLimit = withCanvas((ctx) =>
   pipe(Effect.sync(() => ctx.miterLimit))
 )
 
@@ -658,7 +657,7 @@ export const miterLimit: Render<number> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export function setShadowBlur(blur: number): Render<CanvasRenderingContext2D> {
+export function setShadowBlur(blur: number) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.shadowBlur = blur)),
@@ -666,7 +665,7 @@ export function setShadowBlur(blur: number): Render<CanvasRenderingContext2D> {
     )
   )
 }
-export const shadowBlur: Render<number> = withCanvas((ctx) =>
+export const shadowBlur = withCanvas((ctx) =>
   pipe(Effect.sync(() => ctx.shadowBlur))
 )
 
@@ -676,7 +675,7 @@ export const shadowBlur: Render<number> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export function setShadowColor(color: string): Render<CanvasRenderingContext2D> {
+export function setShadowColor(color: string) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.shadowColor = color)),
@@ -684,7 +683,7 @@ export function setShadowColor(color: string): Render<CanvasRenderingContext2D> 
     )
   )
 }
-export const shadowColor: Render<string> = withCanvas((ctx) =>
+export const shadowColor = withCanvas((ctx) =>
   pipe(Effect.sync(() => ctx.shadowColor))
 )
 
@@ -694,7 +693,7 @@ export const shadowColor: Render<string> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export function setShadowOffsetX(offsetX: number): Render<CanvasRenderingContext2D> {
+export function setShadowOffsetX(offsetX: number) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.shadowOffsetX = offsetX)),
@@ -702,7 +701,7 @@ export function setShadowOffsetX(offsetX: number): Render<CanvasRenderingContext
     )
   )
 }
-export const shadowOffsetX: Render<number> = withCanvas((ctx) =>
+export const shadowOffsetX = withCanvas((ctx) =>
   pipe(Effect.sync(() => ctx.shadowOffsetX))
 )
 
@@ -712,7 +711,7 @@ export const shadowOffsetX: Render<number> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export function setShadowOffsetY(offsetY: number): Render<CanvasRenderingContext2D> {
+export function setShadowOffsetY(offsetY: number) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.shadowOffsetY = offsetY)),
@@ -720,7 +719,7 @@ export function setShadowOffsetY(offsetY: number): Render<CanvasRenderingContext
     )
   )
 }
-export const shadowOffsetY: Render<number> = withCanvas((ctY) =>
+export const shadowOffsetY = withCanvas((ctY) =>
   pipe(Effect.sync(() => ctY.shadowOffsetY))
 )
 
@@ -730,7 +729,7 @@ export const shadowOffsetY: Render<number> = withCanvas((ctY) =>
  * @category combinators
  * @since 1.0.0
  */
-export function setStrokeStyle(style: string): Render<CanvasRenderingContext2D> {
+export function setStrokeStyle(style: string) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.strokeStyle = style)),
@@ -738,7 +737,7 @@ export function setStrokeStyle(style: string): Render<CanvasRenderingContext2D> 
     )
   )
 }
-export const strokeStyle: Render<string | CanvasGradient | CanvasPattern> = withCanvas((ctx) =>
+export const strokeStyle = withCanvas((ctx) =>
   pipe(Effect.sync(() => ctx.strokeStyle))
 )
 
@@ -748,7 +747,7 @@ export const strokeStyle: Render<string | CanvasGradient | CanvasPattern> = with
  * @category combinators
  * @since 1.0.0
  */
-export const textAlign: Render<TextAlign> = withCanvas((ctx) => Effect.sync(() => ctx.textAlign))
+export const textAlign = withCanvas((ctx) => Effect.sync(() => ctx.textAlign))
 
 /**
  * Sets the current text alignment.
@@ -756,7 +755,7 @@ export const textAlign: Render<TextAlign> = withCanvas((ctx) => Effect.sync(() =
  * @category combinators
  * @since 1.0.0
  */
-export function setTextAlign(textAlign: TextAlign): Render<CanvasRenderingContext2D> {
+export function setTextAlign(textAlign: TextAlign) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.textAlign = textAlign)),
@@ -771,7 +770,7 @@ export function setTextAlign(textAlign: TextAlign): Render<CanvasRenderingContex
  * @category combinators
  * @since 1.0.0
  */
-export const textBaseline: Render<TextBaseline> = withCanvas((ctx) =>
+export const textBaseline = withCanvas((ctx) =>
   Effect.sync(() => ctx.textBaseline)
 )
 
@@ -781,7 +780,7 @@ export const textBaseline: Render<TextBaseline> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export function setTextBaseline(textBaseline: TextBaseline): Render<CanvasRenderingContext2D> {
+export function setTextBaseline(textBaseline: TextBaseline) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => (ctx.textBaseline = textBaseline)),
@@ -803,7 +802,7 @@ export function arc(
   start: number,
   end: number,
   counterclockwise = false
-): Render<CanvasRenderingContext2D> {
+) {
   return withCanvas((ctx) =>
     pipe(
       Effect.sync(() => ctx.arc(x, y, radius, start, end, counterclockwise)),
@@ -817,27 +816,27 @@ export function arc(
  * @category combinators
  * @since 1.0.0
  */
-export const arcTo: (
+export function arcTo (
   x1: number,
   y1: number,
   x2: number,
   y2: number,
   radius: number
-) => Render<CanvasRenderingContext2D> = (x1, y1, x2, y2, r) =>
-  withCanvas((ctx) =>
+) {
+  return withCanvas((ctx) =>
     Effect.sync(() => {
-      ctx.arcTo(x1, y1, x2, y2, r)
+      ctx.arcTo(x1, y1, x2, y2, radius)
       return ctx
     })
   )
-
+}
 /**
  * Begin a path on the canvas.
  *
  * @category combinators
  * @since 1.0.0
  */
-export const beginPath: Render<CanvasRenderingContext2D> = withCanvas((ctx) =>
+export const beginPath = withCanvas((ctx) =>
   pipe(
     Effect.sync(() => ctx.beginPath()),
     Effect.as(ctx)
@@ -850,21 +849,21 @@ export const beginPath: Render<CanvasRenderingContext2D> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export const bezierCurveTo: (
+export function bezierCurveTo(
   cpx1: number,
   cpy1: number,
   cpx2: number,
   cpy2: number,
   x: number,
   y: number
-) => Render<CanvasRenderingContext2D> = (cpx1, cpy1, cpx2, cpy2, x, y) =>
-  withCanvas((ctx) =>
+){
+  return withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, x, y)
       return ctx
     })
   )
-
+}
 /**
  * Set the pixels in the specified rectangle back to transparent black.
  *
@@ -876,7 +875,7 @@ export function clearRect(
   y: number,
   width: number,
   height: number
-): Render<CanvasRenderingContext2D> {
+) {
   return withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.clearRect(x, y, width, height)
@@ -891,30 +890,27 @@ export function clearRect(
  * @category combinators
  * @since 1.0.0
  */
-export const clip: (fillRule?: FillRule, path?: Path2D) => Render<CanvasRenderingContext2D> = (
-  f,
-  p
-) =>
-  withCanvas((ctx) =>
+export function clip(fillRule?: FillRule, path?: Path2D)  {
+  return withCanvas((ctx) =>
     Effect.sync(() => {
-      if (typeof p !== 'undefined') {
-        ctx.clip(p, f)
-      } else if (typeof f !== 'undefined') {
-        ctx.clip(f)
+      if (typeof path !== 'undefined') {
+        ctx.clip(path, fillRule)
+      } else if (typeof fillRule !== 'undefined') {
+        ctx.clip(fillRule)
       } else {
         ctx.clip()
       }
       return ctx
     })
   )
-
+}
 /**
  * Closes the current canvas path.
  *
  * @category combinators
  * @since 1.0.0
  */
-export const closePath: Render<CanvasRenderingContext2D> = withCanvas((ctx) =>
+export const closePath =  withCanvas((ctx) =>
   Effect.sync(() => {
     ctx.closePath()
     return ctx
@@ -927,7 +923,7 @@ export const closePath: Render<CanvasRenderingContext2D> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export const createImageData: (sw: number, sh: number) => Render<ImageData> = (sw, sh) =>
+export const createImageData = (sw: number, sh: number) =>
   withCanvas((ctx) => Effect.sync(() => ctx.createImageData(sw, sh)))
 
 /**
@@ -936,8 +932,8 @@ export const createImageData: (sw: number, sh: number) => Render<ImageData> = (s
  * @category combinators
  * @since 1.0.0
  */
-export const createImageDataCopy: (imageData: ImageData) => Render<ImageData> = (data) =>
-  withCanvas((ctx) => Effect.sync(() => ctx.createImageData(data)))
+export const createImageDataCopy = (imageData: ImageData) =>
+  withCanvas((ctx) => Effect.sync(() => ctx.createImageData(imageData)))
 
 /**
  * Creates a linear `CanvasGradient` object.
@@ -945,12 +941,12 @@ export const createImageDataCopy: (imageData: ImageData) => Render<ImageData> = 
  * @category combinators
  * @since 1.0.0
  */
-export const createLinearGradient: (
+export const createLinearGradient = (
   x0: number,
   y0: number,
   x1: number,
   y1: number
-) => Render<CanvasGradient> = (x0, y0, x1, y1) =>
+) =>
   withCanvas((ctx) => Effect.sync(() => ctx.createLinearGradient(x0, y0, x1, y1)))
 
 /**
@@ -959,11 +955,10 @@ export const createLinearGradient: (
  * @category combinators
  * @since 1.0.0
  */
-export const createPattern: (
-  imageSource: ImageSource,
+export const createPattern = (
+  source: ImageSource,
   repetition: PatternRepetition
-) => Render<O.Option<CanvasPattern>> = (s, r) =>
-  withCanvas((ctx) => Effect.sync(() => O.fromNullable(ctx.createPattern(s, r))))
+) => withCanvas((ctx) => Effect.sync(() => O.fromNullable(ctx.createPattern(source, repetition))))
 
 /**
  * Creates a radial `CanvasGradient` object.
@@ -971,15 +966,14 @@ export const createPattern: (
  * @category combinators
  * @since 1.0.0
  */
-export const createRadialGradient: (
+export const createRadialGradient= (
   x0: number,
   y0: number,
   r0: number,
   x1: number,
   y1: number,
   r1: number
-) => Render<CanvasGradient> = (x0, y0, r0, x1, y1, r1) =>
-  withCanvas((ctx) => Effect.sync(() => ctx.createRadialGradient(x0, y0, r0, x1, y1, r1)))
+) => withCanvas((ctx) => Effect.sync(() => ctx.createRadialGradient(x0, y0, r0, x1, y1, r1)))
 
 /**
  * Draws a focus ring around the current or given path, if the specified element is focused.
@@ -987,16 +981,16 @@ export const createRadialGradient: (
  * @category combinators
  * @since 1.0.0
  */
-export const drawFocusIfNeeded: (
+export const drawFocusIfNeeded= (
   element: HTMLElement,
-  path?: Path2D
-) => Render<CanvasRenderingContext2D> = (el, p) =>
+  path2d?: Path2D
+) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
-      if (typeof p !== 'undefined') {
-        ctx.drawFocusIfNeeded(p, el)
+      if (typeof path2d !== 'undefined') {
+        ctx.drawFocusIfNeeded(path2d, element)
       } else {
-        ctx.drawFocusIfNeeded(el)
+        ctx.drawFocusIfNeeded(element)
       }
       return ctx
     })
@@ -1008,14 +1002,14 @@ export const drawFocusIfNeeded: (
  * @category combinators
  * @since 1.0.0
  */
-export const drawImage: (
+export const drawImage= (
   imageSource: ImageSource,
   offsetX: number,
   offsetY: number
-) => Render<CanvasRenderingContext2D> = (s, ox, oy) =>
+) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
-      ctx.drawImage(s, ox, oy)
+      ctx.drawImage(imageSource, offsetX, offsetY)
       return ctx
     })
   )
@@ -1026,16 +1020,16 @@ export const drawImage: (
  * @category combinators
  * @since 1.0.0
  */
-export const drawImageScale: (
+export const drawImageScale = (
   imageSource: ImageSource,
   offsetX: number,
   offsetY: number,
   width: number,
   height: number
-) => Render<CanvasRenderingContext2D> = (s, ox, oy, w, h) =>
+) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
-      ctx.drawImage(s, ox, oy, w, h)
+      ctx.drawImage(imageSource, offsetX, offsetY, width, height)
       return ctx
     })
   )
@@ -1079,7 +1073,7 @@ export function ellipse(
   start: number,
   end: number,
   anticlockwise = false
-): Render<CanvasRenderingContext2D> {
+) {
   return withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.ellipse(x, y, rx, ry, rotation, start, end, anticlockwise)
@@ -1093,9 +1087,9 @@ export function ellipse(
  * @category combinators
  * @since 1.0.0
  */
-export const fill: (fillRule?: FillRule, path?: Path2D) => Render<CanvasRenderingContext2D> = (
-  f,
-  p
+export const fill = (
+  f?: FillRule,
+  p?: Path2D
 ) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
@@ -1121,7 +1115,7 @@ export function fillRect(
   y: number,
   width: number,
   height: number
-): Render<CanvasRenderingContext2D> {
+) {
   return withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.fillRect(x, y, width, height)
@@ -1135,12 +1129,12 @@ export function fillRect(
  * @category combinators
  * @since 1.0.0
  */
-export const fillText: (
-  text: string,
+export const fillText= (
+  t: string,
   x: number,
   y: number,
-  maxWidth?: number
-) => Render<CanvasRenderingContext2D> = (t, x, y, mw) =>
+  mw?: number
+) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
       if (typeof mw !== 'undefined') {
@@ -1163,7 +1157,7 @@ export function getImageData(
   y: number,
   width: number,
   height: number
-): Render<ImageData> {
+) {
   return withCanvas((ctx) => Effect.sync(() => ctx.getImageData(x, y, width, height)))
 }
 
@@ -1231,7 +1225,7 @@ export const isPointInStroke: (x: number, y: number, path?: Path2D) => Render<bo
  * @category combinators
  * @since 1.0.0
  */
-export const lineTo: (x: number, y: number) => Render<CanvasRenderingContext2D> = (x, y) =>
+export const lineTo = (x: number, y: number) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.lineTo(x, y)
@@ -1254,7 +1248,7 @@ export const measureText: (text: string) => Render<TextMetrics> = (t) =>
  * @category combinators
  * @since 1.0.0
  */
-export function moveTo(x: number, y: number): Render<CanvasRenderingContext2D> {
+export function moveTo(x: number, y: number) {
   return withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.moveTo(x, y)
@@ -1269,14 +1263,14 @@ export function moveTo(x: number, y: number): Render<CanvasRenderingContext2D> {
  * @category combinators
  * @since 1.0.0
  */
-export const putImageData: (
+export const putImageData= (
   imageData: ImageData,
   dx: number,
   dy: number
-) => Render<CanvasRenderingContext2D> = (data, dx, dy) =>
+) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
-      ctx.putImageData(data, dx, dy)
+      ctx.putImageData(imageData, dx, dy)
       return ctx
     })
   )
@@ -1287,15 +1281,15 @@ export const putImageData: (
  * @category combinators
  * @since 1.0.0
  */
-export const putImageDataFull: (
-  imageData: ImageData,
+export const putImageDataFull= (
+  data: ImageData,
   dx: number,
   dy: number,
   dirtyX: number,
   dirtyY: number,
-  dirtyWidth: number,
-  dirtyHeight: number
-) => Render<CanvasRenderingContext2D> = (data, dx, dy, dirtyX, dirtyY, dirtyW, dirtyH) =>
+  dirtyW: number,
+  dirtyH: number
+) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.putImageData(data, dx, dy, dirtyX, dirtyY, dirtyW, dirtyH)
@@ -1309,12 +1303,12 @@ export const putImageDataFull: (
  * @category combinators
  * @since 1.0.0
  */
-export const quadraticCurveTo: (
+export const quadraticCurveTo= (
   cpx: number,
   cpy: number,
   x: number,
   y: number
-) => Render<CanvasRenderingContext2D> = (cpx, cpy, x, y) =>
+) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.quadraticCurveTo(cpx, cpy, x, y)
@@ -1333,7 +1327,7 @@ export function rect(
   y: number,
   width: number,
   height: number
-): Render<CanvasRenderingContext2D> {
+) {
   return withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.rect(x, y, width, height)
@@ -1347,7 +1341,7 @@ export function rect(
  * @category combinators
  * @since 1.0.0
  */
-export const restore: Render<CanvasRenderingContext2D> = withCanvas((ctx) =>
+export const restore = withCanvas((ctx) =>
   Effect.sync(() => {
     ctx.restore()
     return ctx
@@ -1360,10 +1354,10 @@ export const restore: Render<CanvasRenderingContext2D> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export const rotate: (angle: number) => Render<CanvasRenderingContext2D> = (a) =>
+export const rotate = (angle: number) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
-      ctx.rotate(a)
+      ctx.rotate(angle)
       return ctx
     })
   )
@@ -1374,7 +1368,7 @@ export const rotate: (angle: number) => Render<CanvasRenderingContext2D> = (a) =
  * @category combinators
  * @since 1.0.0
  */
-export const save: Render<CanvasRenderingContext2D> = withCanvas((ctx) =>
+export const save = withCanvas((ctx) =>
   Effect.sync(() => {
     ctx.save()
     return ctx
@@ -1387,10 +1381,10 @@ export const save: Render<CanvasRenderingContext2D> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export const scale: (scaleX: number, scaleY: number) => Render<CanvasRenderingContext2D> = (x, y) =>
+export const scale = (scaleX: number, scaleY: number) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
-      ctx.scale(x, y)
+      ctx.scale(scaleX, scaleY)
       return ctx
     })
   )
@@ -1529,10 +1523,7 @@ export const transform: (
  * @category combinators
  * @since 1.0.0
  */
-export const translate: (
-  translateX: number,
-  translateY: number
-) => Render<CanvasRenderingContext2D> = (x, y) =>
+export const translate = (x: number, y: number) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.translate(x, y)
@@ -1560,7 +1551,7 @@ export const addColorStop: (offset: number, color: string) => Gradient<CanvasGra
  * @category combinators
  * @since 1.0.0
  */
-export const fillPath: <A>(f: Render<A>) => Render<A> = (f) =>
+export const fillPath= <R, E, A>(f: Render<A, E, R>): Render<A, E, R> =>
   pipe(beginPath, IO.zipRight(f), IO.zipLeft(fill()))
 
 /**
@@ -1569,7 +1560,7 @@ export const fillPath: <A>(f: Render<A>) => Render<A> = (f) =>
  * @category combinators
  * @since 1.0.0
  */
-export const strokePath: <A>(f: Render<A>) => Render<A> = (f) =>
+export const strokePath = <R, E, A>(f: IO.Effect<R, E, A>) =>
   pipe(beginPath, IO.zipRight(f), IO.zipLeft(stroke()))
 
 /**
@@ -1579,14 +1570,14 @@ export const strokePath: <A>(f: Render<A>) => Render<A> = (f) =>
  * @category combinators
  * @since 1.0.0
  */
-export const withContext: <A>(effect: Render<A>) => Render<A> = (effect) =>
-  IO.scoped(
-    IO.acquireUseRelease(
+export function withContext<R, E, A>(effect: Render<A,E,R>): Render<A, E, R> {
+   const aur =  IO.acquireUseRelease(
       save,
-      (_) => effect,
-      (_) => restore
+      _ => effect,
+      _ => restore
     )
-  )
+  return IO.scoped(aur)
+}
 // -------------------------------------------------------------------------------------
 // utils
 // -------------------------------------------------------------------------------------
@@ -1603,7 +1594,7 @@ export function renderTo(canvas: string | HTMLElement | CanvasRenderingContext2D
       : canvas instanceof HTMLElement
       ? fromElement(canvas)
       : fromCanvas(canvas)
-  return <A>(r: Render<A>): IO.Effect<never, CanvasError, void> => IO.provideLayer(r, layer)
+  return <R, E, A>(r: IO.Effect<R, E, A>) => IO.provideSomeLayer(r, layer)
 }
 
 /**
@@ -1612,9 +1603,7 @@ export function renderTo(canvas: string | HTMLElement | CanvasRenderingContext2D
  * @since 1.0.0
  */
 export const renderToCanvas =
-  (canvas: CanvasRenderingContext2D) =>
-  <A>(r: Render<A>): IO.Effect<never, never, void> =>
-    IO.provideLayer(r, Layer.succeed(Tag, canvas))
+  (canvas: CanvasRenderingContext2D) => renderTo(canvas)
 
 const isCanvas = flow(
   Either.liftPredicate(
