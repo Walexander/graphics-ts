@@ -78,7 +78,7 @@ export const Tag: Context.Tag<CanvasRenderingContext2D> = Context.Tag<CanvasRend
  * @category model
  * @since 1.0.0
  */
-export interface Gradient<A> extends IO.Effect<CanvasGradient, never, A> {}
+export interface Gradient<A> extends Render<A> {}
 
 /**
  * Represents the management of an `HTMLCanvasElement` as *reading* from the `HTMLCanvasElement`
@@ -309,6 +309,11 @@ export interface TextMetrics_ {
   readonly width: number
 }
 
+
+export class CanvasError {
+  readonly _tag = 'CanvasError'
+  constructor(readonly message: string) {}
+}
 export function withCanvas<R, E, A>(
   f: (ctx: CanvasRenderingContext2D) => IO.Effect<R, E, A>
 ): IO.Effect<R | CanvasRenderingContext2D, E, A> {
@@ -316,34 +321,7 @@ export function withCanvas<R, E, A>(
 }
 declare function withGradient<R, E, A>(
   f: (gradient: CanvasGradient) => IO.Effect<R, E, A>
-): IO.Effect<R | CanvasGradient, E, A>
-// -------------------------------------------------------------------------------------
-// constructors
-// -------------------------------------------------------------------------------------
-
-/**
- * **[UNSAFE]** Gets a canvas element by id.
- *
- * @category constructors
- * @since 1.0.0
- */
-export function unsafeGetCanvasElementById(id: string) {
-  return document.getElementById(id) as HTMLCanvasElement
-}
-
-/**
- * **[UNSAFE]** Gets the 2D graphics context for a canvas element.
- *
- * @category constructors
- * @since 1.0.0
- */
-export const unsafeGetContext2D: (canvas: HTMLCanvasElement) => CanvasRenderingContext2D = (c) =>
-  c.getContext('2d') as CanvasRenderingContext2D
-
-export class CanvasError {
-  readonly _tag = 'CanvasError'
-  constructor(readonly message: string) {}
-}
+): Render<A, E, R>
 // -------------------------------------------------------------------------------------
 // combinators
 // -------------------------------------------------------------------------------------
@@ -353,9 +331,6 @@ export class CanvasError {
  * @category combinators
  * @since 1.0.0
  */
-export declare const getContext2D: Html<O.None, HTMLCanvasElement>
-
-const fromOption = flow(O.fromNullable, Effect.fromOption)
 export function getContext(element: HTMLCanvasElement) {
   return pipe(
     Effect.sync(() => element.getContext('2d')),
@@ -363,6 +338,7 @@ export function getContext(element: HTMLCanvasElement) {
     Effect.mapError((_) => new CanvasError(`${element.id} is not an instance of HTMLCanvasElement`))
   )
 }
+const fromOption = flow(O.fromNullable, Effect.fromOption)
 /**
  * Gets the canvas width in pixels.
  *
@@ -414,7 +390,7 @@ export function setHeight(height: number) {
  * @category combinators
  * @since 1.0.0
  */
-export const dimensions = Effect.struct({
+export const dimensions: IO.Effect<CanvasRenderingContext2D, never, CanvasDimensions> = Effect.struct({
   width,
   height
 })
@@ -1040,7 +1016,7 @@ export const drawImageScale = (
  * @category combinators
  * @since 1.0.0
  */
-export const drawImageFull: (
+export const drawImageFull = (
   imageSource: ImageSource,
   offsetX: number,
   offsetY: number,
@@ -1050,10 +1026,20 @@ export const drawImageFull: (
   canvasOffsetY: number,
   canvasImageWidth: number,
   canvasImageHeight: number
-) => Render<CanvasRenderingContext2D> = (s, ox, oy, w, h, cox, coy, ciw, cih) =>
+) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
-      ctx.drawImage(s, ox, oy, w, h, cox, coy, ciw, cih)
+      ctx.drawImage(
+        imageSource,
+        offsetX,
+        offsetY,
+        width,
+        height,
+        canvasOffsetX,
+        canvasOffsetY,
+        canvasImageWidth,
+        canvasImageHeight
+      )
       return ctx
     })
   )
@@ -1167,7 +1153,7 @@ export function getImageData(
  * @category combinators
  * @since 1.0.0
  */
-export const lineDash: Render<ReadonlyArray<number>> = withCanvas((ctx) =>
+export const lineDash = withCanvas((ctx) =>
   Effect.sync(() => ctx.getLineDash())
 )
 
@@ -1177,7 +1163,7 @@ export const lineDash: Render<ReadonlyArray<number>> = withCanvas((ctx) =>
  * @category combinators
  * @since 1.0.0
  */
-export const getTransform: Render<DOMMatrix> = withCanvas((ctx) =>
+export const getTransform = withCanvas((ctx) =>
   Effect.sync(() => ctx.getTransform())
 )
 
@@ -1192,7 +1178,7 @@ export function isPointInPath(
   y: number,
   fillRule?: FillRule,
   path?: Path2D
-): Render<boolean> {
+) {
   return withCanvas((ctx) =>
     Effect.sync(() => {
       return typeof path !== 'undefined'
@@ -1209,10 +1195,10 @@ export function isPointInPath(
  * @category combinators
  * @since 1.0.0
  */
-export const isPointInStroke: (x: number, y: number, path?: Path2D) => Render<boolean> = (
-  x,
-  y,
-  path
+export const isPointInStroke = (
+  x: number,
+  y: number,
+  path?: Path2D
 ) =>
   withCanvas((ctx) =>
     Effect.sync(() =>
@@ -1239,8 +1225,8 @@ export const lineTo = (x: number, y: number) =>
  * @category combinators
  * @since 1.0.0
  */
-export const measureText: (text: string) => Render<TextMetrics> = (t) =>
-  withCanvas((ctx) => Effect.sync(() => ctx.measureText(t)))
+export const measureText = (text: string) =>
+  withCanvas((ctx) => Effect.sync(() => ctx.measureText(text)))
 
 /**
  * Move the canvas path to the specified point without drawing a line segment.
@@ -1417,7 +1403,7 @@ export function setTransform(
   d: number,
   e: number,
   f: number
-): Render<CanvasRenderingContext2D> {
+) {
   return withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.setTransform(a, b, c, d, e, f)
@@ -1432,7 +1418,7 @@ export function setTransform(
  * @category combinators
  * @since 1.0.0
  */
-export function setTransformMatrix(matrix: DOMMatrix): Render<CanvasRenderingContext2D> {
+export function setTransformMatrix(matrix: DOMMatrix) {
   return withCanvas((ctx) => Effect.sync(() => {
     ctx.setTransform(matrix)
     return ctx
@@ -1484,7 +1470,7 @@ export function strokeText(
   x: number,
   y: number,
   maxWidth?: number
-): Render<CanvasRenderingContext2D> {
+) {
   return withCanvas((ctx) =>
     Effect.sync(() => {
       if (typeof maxWidth !== 'undefined') {
@@ -1502,14 +1488,7 @@ export function strokeText(
  * @category combinators
  * @since 1.0.0
  */
-export const transform: (
-  m11: number,
-  m12: number,
-  m21: number,
-  m22: number,
-  m31: number,
-  m32: number
-) => Render<CanvasRenderingContext2D> = (m11, m12, m21, m22, m31, m32) =>
+export const transform = (m11: number, m12: number, m21: number, m22: number, m31: number, m32: number) =>
   withCanvas((ctx) =>
     Effect.sync(() => {
       ctx.transform(m11, m12, m21, m22, m31, m32)
@@ -1551,7 +1530,7 @@ export const addColorStop: (offset: number, color: string) => Gradient<CanvasGra
  * @category combinators
  * @since 1.0.0
  */
-export const fillPath= <R, E, A>(f: Render<A, E, R>): Render<A, E, R> =>
+export const fillPath = <R, E, A>(f: Render<A, E, R>): Render<A, E, R> =>
   pipe(beginPath, IO.zipRight(f), IO.zipLeft(fill()))
 
 /**
@@ -1560,7 +1539,7 @@ export const fillPath= <R, E, A>(f: Render<A, E, R>): Render<A, E, R> =>
  * @category combinators
  * @since 1.0.0
  */
-export const strokePath = <R, E, A>(f: IO.Effect<R, E, A>) =>
+export const strokePath = <R, E, A>(f: Render<A, E, R>) =>
   pipe(beginPath, IO.zipRight(f), IO.zipLeft(stroke()))
 
 /**
@@ -1570,13 +1549,12 @@ export const strokePath = <R, E, A>(f: IO.Effect<R, E, A>) =>
  * @category combinators
  * @since 1.0.0
  */
-export function withContext<R, E, A>(effect: Render<A,E,R>): Render<A, E, R> {
-   const aur =  IO.acquireUseRelease(
-      save,
-      _ => effect,
-      _ => restore
-    )
-  return IO.scoped(aur)
+export function withContext<R, E, A>(effect: Render<A, E, R>): Render<A, E, R> {
+  return IO.scoped(IO.acquireUseRelease(
+    save,
+    (_) => effect,
+    (_) => restore
+  ))
 }
 // -------------------------------------------------------------------------------------
 // utils

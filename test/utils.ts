@@ -27,7 +27,10 @@ export const testCanvas = (
   pipe(
     eff,
     IO.map((ctx) => (ctx as any).__getEvents()),
-    IO.zip(actual),
+    IO.zip(pipe(
+      actual,
+      IO.map(ctx => '__getEvents' in ctx ? ctx.__getEvents() : ctx)
+    )),
     IO.map(([a, b]) => assert.deepStrictEqual(a, b))
   )
 

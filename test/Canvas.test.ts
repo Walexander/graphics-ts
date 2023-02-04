@@ -427,7 +427,7 @@ height="${CANVAS_HEIGHT}"
 
         return testCanvas(C.arc(arc.x, arc.y, arc.r, arc.start, arc.end), expected)
       })
-    })
+      })
 
     describe('arcTo', () => {
       testM('should render an arc that is automatically connected to the latest point in the path', () => {
@@ -449,14 +449,14 @@ height="${CANVAS_HEIGHT}"
       testM('should begin drawing a path', () => {
         const expected = Effect.sync(() => {
           testCtx.beginPath()
-          return (testCtx as any).__getEvents()
+          return testCtx
         })
         return testCanvas(C.beginPath, expected)
       })
     })
 
     describe('bezierCurveTo', () => {
-      it('should render a cubic Bezier curve', () => {
+      testM('should render a cubic Bezier curve', () => {
         const point = S.point(50, 20)
         const cpx1 = 230
         const cpy1 = 30
@@ -490,179 +490,158 @@ height="${CANVAS_HEIGHT}"
         )
       })
     })
-  })
+    describe('clip', () => {
+      testM('should clip a path', () => {
+        // Test
+        const sut = pipe(
+          C.beginPath,
+          IO.zipRight(C.clip()),
+        )
 
-  // describe('clip', () => {
-  //   it('should clip a path', () => {
-  //     // Test
-  //     render(
-  //       pipe(
-  //         C.beginPath,
-  //         R.chain(() => C.clip())
-  //       )
-  //     )()
+        // Actual
+        const expected = IO.sync( () => {
+          testCtx.beginPath()
+          testCtx.clip()
+          return (testCtx as any).__getEvents()
+        })
+        return testCanvas(sut, expected)
+      })
 
-  //     // Actual
-  //     testCtx.beginPath()
-  //     testCtx.clip()
+      testM('should clip a path with a specified fill rule', () => {
+        const fillRule = 'evenodd'
+        // Test
+        const sut = pipe(
+          C.beginPath,
+          IO.zipRight(C.clip(fillRule)),
+        )
 
-  //     assertCalledWith(ctx.clip as jest.Mock)
+        // Actual
+        const expected = IO.sync( () => {
+          testCtx.beginPath()
+          testCtx.clip(fillRule)
+          return (testCtx as any).__getEvents()
+          // return testCtx
+        })
+        return testCanvas(sut, expected)
+      })
 
-  //     assert.deepStrictEqual(ctx.__getDrawCalls(), testCtx.__getDrawCalls())
-  //   })
+      testM('should clip a specified path', () => {
+        const fillRule = 'nonzero'
+        const path = new Path2D()
+        path.rect(10, 10, 100, 100)
+        const sut = pipe(C.beginPath, IO.zipRight(C.clip(fillRule, path)))
+        const expected = IO.sync(() => {
+          testCtx.beginPath()
+          testCtx.clip(path, fillRule)
+          return testCtx
+        })
+        return testCanvas(sut, expected)
+      })
+    })
 
-  //   it('should clip a path with a specified fill rule', () => {
-  //     const fillRule = 'nonzero'
 
-  //     // Test
-  //     render(
-  //       pipe(
-  //         C.beginPath,
-  //         R.chain(() => C.clip(fillRule))
-  //       )
-  //     )()
+    describe('closePath', () => {
+      testM('should close the current path', () => {
+        const sut = pipe(
+          C.beginPath,
+          IO.zipRight(C.stroke()),
+          IO.zipRight(C.closePath)
+        )
+        const expected = IO.sync(() => {
+          testCtx.beginPath()
+          testCtx.stroke()
+          testCtx.closePath()
+          return testCtx
+        })
+        return testCanvas(sut, expected)
+      })
+    })
 
-  //     // Actual
-  //     testCtx.beginPath()
-  //     testCtx.clip(fillRule)
+    describe('createImageData', () => {
+      testM('should create a new ImageData object', () => {
+        const sw = 100
+        const sh = 50
+        const sut = C.createImageData(sw, sh)
+        const expected = IO.sync(() => {
+          return testCtx.createImageData(sw, sh)
+        })
+        return pipe(
+          sut,
+          IO.zip(expected),
+          IO.map(([sut, expected]) => assert.deepStrictEqual(sut, expected))
+        )
+      })
+    })
 
-  //     assertCalledWith(ctx.clip as jest.Mock, fillRule)
+    describe('createImageDataCopy', () => {
+      testM('should create a copy of an ImageData object', () => {
+        const sw = 100
+        const sh = 50
+        return pipe(
+          C.createImageData(sw, sh),
+          IO.flatMap((d) => pipe(C.createImageDataCopy(d), IO.zip(IO.succeed(d)))),
+          IO.map(([copy, original]) => assert.deepStrictEqual(copy, original))
+        )
+      })
+    })
 
-  //     assert.deepStrictEqual(ctx.__getDrawCalls(), testCtx.__getDrawCalls())
-  //   })
+    // describe('createLinearGradient', () => {
+    //   it('should create a linear gradient, set its fill style, and add color stops', () => {
+    //     const x0 = 20
+    //     const y0 = 0
+    //     const x1 = 220
+    //     const y1 = 0
+    //     const acqua = pipe(Color.hsl(180, 1, 0.5), Color.toCss)
+    //     const green = pipe(Color.hsl(120, 1, 0.25), Color.toCss)
+    //     const rect = S.rect(20, 20, 200, 100)
 
-  //   it('should clip a specified path', () => {
-  //     const fillRule = 'nonzero'
-  //     const path = new Path2D()
-  //     path.rect(10, 10, 100, 100)
+    //     // Test
+    //     const g: C.Gradient<CanvasGradient> = pipe(
+    //       C.addColorStop(0, acqua),
+    //       R.chain(() => C.addColorStop(0.5, green)),
+    //       R.chain(() => C.addColorStop(1, green))
+    //     )
 
-  //     // Test
-  //     render(
-  //       pipe(
-  //         C.beginPath,
-  //         R.chain(() => C.clip(fillRule, path))
-  //       )
-  //     )()
+    //     const r: C.Render<CanvasRenderingContext2D> = pipe(
+    //       C.createLinearGradient(x0, y0, x1, y1),
+    //       R.chain((cg) => R.fromIO(g(cg))),
+    //       R.chain(C.setFillStyle),
+    //       R.chain(() => C.fillRect(rect))
+    //     )
 
-  //     // Actual
-  //     testCtx.beginPath()
-  //     testCtx.clip(path, fillRule)
+    //     render(r)()
 
-  //     assertCalledWith(ctx.clip as jest.Mock, path, fillRule)
+    //     // Actual
+    //     const testGradient = testCtx.createLinearGradient(x0, y0, x1, y1)
+    //     testGradient.addColorStop(0, acqua)
+    //     testGradient.addColorStop(0.5, green)
+    //     testGradient.addColorStop(1, green)
+    //     testCtx.fillStyle = testGradient
+    //     testCtx.fillRect(rect.x, rect.y, rect.width, rect.height)
 
-  //     assert.deepStrictEqual(ctx.__getDrawCalls(), testCtx.__getDrawCalls())
-  //   })
-  // })
+    //     assertCalledWith(ctx.createLinearGradient as jest.Mock, x0, y0, x1, y1)
 
-  // describe('closePath', () => {
-  //   it('should close the current path', () => {
-  //     // Test
-  //     render(
-  //       pipe(
-  //         C.beginPath,
-  //         R.chain(() => C.stroke()),
-  //         R.chain(() => C.closePath)
-  //       )
-  //     )()
+    //     assert.deepStrictEqual(ctx.__getDrawCalls(), testCtx.__getDrawCalls())
+    //   })
+    // })
 
-  //     // Actual
-  //     testCtx.beginPath()
-  //     testCtx.stroke()
-  //     testCtx.closePath()
+    // describe('createPattern', () => {
+    //   it('should create a new canvas pattern', () => {
+    //     const height = 220
+    //     const width = 440
+    //     const repetition = 'repeat'
+    //     const rect = S.rect(0, 0, 300, 300)
+    //     const image = new Image()
+    //     image.src = 'https://mdn.mozillademos.org/files/222/Canvas_createpattern.png'
+    //     image.height = height
+    //     image.width = width
 
-  //     assertCalledWith(ctx.closePath as jest.Mock)
+    //     // Test
+    //     const pattern = render(pipe(C.createPattern(image, repetition), R.map(O.getOrElseW(() => ''))))()
 
-  //     assert.deepStrictEqual(ctx.__getDrawCalls(), testCtx.__getDrawCalls())
-  //   })
-  // })
-
-  // describe('createImageData', () => {
-  //   it('should create a new ImageData object', () => {
-  //     const sw = 100
-  //     const sh = 50
-
-  //     // Test
-  //     const imageData = render(C.createImageData(sw, sh))()
-
-  //     // Actual
-  //     const testImageData = testCtx.createImageData(sw, sh)
-
-  //     assertCalledWith(ctx.createImageData as jest.Mock, sw, sh)
-
-  //     assert.deepStrictEqual(imageData, testImageData)
-  //   })
-  // })
-
-  // describe('createImageDataCopy', () => {
-  //   it('should create a copy of an ImageData object', () => {
-  //     const sw = 100
-  //     const sh = 50
-
-  //     const imageData = render(C.createImageData(sw, sh))()
-  //     const imageDataCopy = render(C.createImageDataCopy(imageData))()
-
-  //     assert.notStrictEqual(imageData, imageDataCopy)
-  //     assert.deepStrictEqual(imageData, imageDataCopy)
-  //   })
-  // })
-
-  // describe('createLinearGradient', () => {
-  //   it('should create a linear gradient, set its fill style, and add color stops', () => {
-  //     const x0 = 20
-  //     const y0 = 0
-  //     const x1 = 220
-  //     const y1 = 0
-  //     const acqua = pipe(Color.hsl(180, 1, 0.5), Color.toCss)
-  //     const green = pipe(Color.hsl(120, 1, 0.25), Color.toCss)
-  //     const rect = S.rect(20, 20, 200, 100)
-
-  //     // Test
-  //     const g: C.Gradient<CanvasGradient> = pipe(
-  //       C.addColorStop(0, acqua),
-  //       R.chain(() => C.addColorStop(0.5, green)),
-  //       R.chain(() => C.addColorStop(1, green))
-  //     )
-
-  //     const r: C.Render<CanvasRenderingContext2D> = pipe(
-  //       C.createLinearGradient(x0, y0, x1, y1),
-  //       R.chain((cg) => R.fromIO(g(cg))),
-  //       R.chain(C.setFillStyle),
-  //       R.chain(() => C.fillRect(rect))
-  //     )
-
-  //     render(r)()
-
-  //     // Actual
-  //     const testGradient = testCtx.createLinearGradient(x0, y0, x1, y1)
-  //     testGradient.addColorStop(0, acqua)
-  //     testGradient.addColorStop(0.5, green)
-  //     testGradient.addColorStop(1, green)
-  //     testCtx.fillStyle = testGradient
-  //     testCtx.fillRect(rect.x, rect.y, rect.width, rect.height)
-
-  //     assertCalledWith(ctx.createLinearGradient as jest.Mock, x0, y0, x1, y1)
-
-  //     assert.deepStrictEqual(ctx.__getDrawCalls(), testCtx.__getDrawCalls())
-  //   })
-  // })
-
-  // describe('createPattern', () => {
-  //   it('should create a new canvas pattern', () => {
-  //     const height = 220
-  //     const width = 440
-  //     const repetition = 'repeat'
-  //     const rect = S.rect(0, 0, 300, 300)
-  //     const image = new Image()
-  //     image.src = 'https://mdn.mozillademos.org/files/222/Canvas_createpattern.png'
-  //     image.height = height
-  //     image.width = width
-
-  //     // Test
-  //     const pattern = render(pipe(C.createPattern(image, repetition), R.map(O.getOrElseW(() => ''))))()
-
-  //     render(
-  //       pipe(
-  //         C.setFillStyle(pattern),
+    //     render(
+    //       pipe(
+//         C.setFillStyle(pattern),
   //         R.chain(() => C.fillRect(rect))
   //       )
   //     )()
@@ -1806,4 +1785,5 @@ height="${CANVAS_HEIGHT}"
   //     assert.strictEqual(mockClickHandler.mock.calls.length, 1)
   //   })
   // })
+  })
 })
