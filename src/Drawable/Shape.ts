@@ -6,10 +6,8 @@ import * as Drawable from '../Drawable'
 import * as C from '../Canvas'
 import { Shape } from '../Shape'
 import * as Context from '@fp-ts/data/Context'
-import * as Schedule from '@effect/io/Schedule'
 import * as Duration from '@fp-ts/data/Duration'
 
-const jitter = IO.schedule(Schedule.jittered(Schedule.fromDelay(Duration.millis(100))))
 export const drawShape = (shape: Shape) => IO.serviceWithEffect(Tag, (drawer) => drawer.draw(shape))
 /**
  * The `Drawable` instance for `Shape`

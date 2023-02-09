@@ -6,6 +6,8 @@ import * as RA from '@fp-ts/core/ReadonlyArray'
 import * as Duration from '@fp-ts/data/Duration'
 import { pipe } from '@fp-ts/core/Function'
 
+import { Live as DrawsShapesLive } from '../src/Drawable/Shape'
+import { Live as DrawsDrawingsLive } from '../src/Drawable/Drawing'
 import * as Color from '../src/Color'
 import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
@@ -38,17 +40,23 @@ const clippingDemo = pipe(
   IO.zipLeft(IO.log(`Finished clipping demonstration`))
 )
 // The `clippingDemo` in parallel with our `snowflake` animation Effect
-const canvasDemo =
+const canvasDemo = pipe(
   IO.collectAllParDiscard([
     pipe(
-      clippingDemo,
+     clippingDemo,
       // Provide our clipping demo with an actual canvas
       C.renderTo(CANVAS_TWO_ID),
       // log any errors retrieving the canvas
-      IO.catchAll((e) => IO.logError(`Error finding ${CANVAS_TWO_ID}: ${e.message}`))
+      IO.catchAll((e) => IO.logError(`Error finding ${CANVAS_TWO_ID}: ${e.message}`)),
+      // give our program a way to draw `Drawing`
+      IO.provideSomeLayer(DrawsDrawingsLive),
+      // give that a way to draw `Shape`
+      IO.provideSomeLayer(DrawsShapesLive),
     ),
-    snowFlakes(CANVAS_ONE_ID, 6)
-  ])
+    snowFlakes(CANVAS_ONE_ID, 5),
+  ]),
+)
+
 void IO.runPromise(canvasDemo)
 
 function clippedRect(clip: S.Shape) {

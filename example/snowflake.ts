@@ -3,7 +3,8 @@ import * as Layer from '@effect/io/Layer'
 import * as RA from '@fp-ts/core/ReadonlyArray'
 import * as Duration from '@fp-ts/data/Duration'
 import { pipe } from '@fp-ts/core/Function'
-
+import { Live as DrawsShapesLive, withDelay } from '../src/Drawable/Shape'
+import { Live as DrawsDrawingsLive } from '../src/Drawable/Drawing'
 import * as Color from '../src/Color'
 import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
@@ -23,72 +24,104 @@ const pentagon: S.Path = pipe(
   RA.map((n) => pipe((Math.PI / 2.5) * n, (theta) => S.point(Math.sin(theta), Math.cos(theta)))),
   S.closed(RA.Foldable)
 )
-
-// this is exported to our main thread and will return either
+// this is exported to our main thread and will return
 // an Effect that either uses a Worker or runs on the main thread
-export const snowFlakes = (canvasId: string, iters: number) =>
-  navigator.userAgent.indexOf('Chrome') > 0 // 🙁 requires module workers and OffscreenCanvas
+export function snowFlakes(canvasId: string, iters: number) {
+  return navigator.userAgent.indexOf('Chrome') >= 0 // 🙁 requires module workers and OffscreenCanvas
     ? snowflakeWorker(canvasId, iters)
-    : pipe(makeFlakes(iters), C.renderTo(canvasId))
+    : snowflakeMain(canvasId, iters)
+}
 
 // this is exported for rendering within a service worker
-export const runFlakes = (canvas: CanvasRenderingContext2D, iters: number) =>
-  pipe(IO.provideLayer(makeFlakes(iters), Layer.succeed(C.Tag, canvas)), IO.runPromise)
+export function runFlakes(canvas: CanvasRenderingContext2D, iters: number) {
+  return pipe(
+    makeFlakes(iters),
+    IO.provideSomeLayer(Layer.succeed(C.Tag, canvas)),
+    IO.provideSomeLayer(DrawsDrawingsLive),
+    IO.provideSomeLayer(DrawsShapesLive),
+    IO.runPromise
+  )
+}
 
 // this is our main rendering loop.
 // it iteratively draws a new `snowflake(1..total)` every `1/iteration` seconds
 function makeFlakes(total: number) {
-  return IO.loopDiscard(
-    1,
-    (z) => z <= total,
-    (z) => z + 1,
-    (z) =>
-      pipe(
-        // generate our snowflake drawing for the new iteration
-        snowflake(z),
-        D.scale(150, 150),
-        D.translate(300, 300),
-        D.withShadow(D.monoidShadow.combine(D.shadowColor(Color.black), D.shadowBlur(10))),
-        // render the `Drawing` - this is effectual
-        D.render,
-        // get the resulting effect's duration
-        IO.timed,
-        IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration.millis}ms`)),
-        // a little delay
-        IO.zipLeft(
-          // this will pause *after* we draw
-          pipe(IO.unit(), IO.delay(Duration.seconds(1 / z)))
-        )
-      )
+  return pipe(
+    IO.loopDiscard(
+      2,
+      (z) => z <= total,
+      (z) => z + 1,
+      (z) => drawFlakes(z)
+    ),
   )
 
 }
+// draw the flakes at `z` iteration
+function drawFlakes(z: number) {
+  return pipe(
+    // generate our snowflake drawing for the new iteration
+    snowflake(z),
+    // its built from a `unit` pentagon so scale it up
+    D.scale(150, 150),
+    // we cheat here -- this is the middle of our 600x600 canvas
+    D.translate(300, 300),
+    // little shadow ... looks nice
+    D.withShadow(D.monoidShadow.combine(D.shadowColor(Color.black), D.shadowBlur(10))),
+    // render the whole `Drawing` - this is effectual
+    D.render,
+    // get the resulting effect's duration
+    IO.timed,
+    IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration.millis}ms`)),
+    // a little delay
+    IO.zipLeft(
+      // pause *after* this unit effect, ie after we draw,
+      pipe(IO.unit(), IO.delay(Duration.seconds(1 / z)))
+    )
+  )
+}
 
-// this function recursively creates a new drawing, scales it to 0.375
-// and makes 5 more copies, each placed on the edge of a unit pentagon,
+// this function recursively creates a new drawing,
+// makes 5 more copies, each scaled down 0.375 and
+// placed on the edge of a unit pentagon,
 // which is then prepended to the Drawing
 //
 function snowflake(n: number): D.Drawing {
   return n <= 0 ? D.monoidDrawing.empty : pipe(
     snowflake(n - 1),
     D.scale(SCALE, SCALE),
-    makeMore,
+    _ => makeMore(_, 5),
     RA.prepend(D.fill(pentagon, D.fillStyle(colors[n % colors.length]))),
     D.monoidDrawing.combineAll
   )
 }
-function makeMore(child: D.Drawing): D.Drawing[] {
+
+// this will make 5 copies of a drawing and place each
+// equally around a circle
+function makeMore(child: D.Drawing, size = 5): D.Drawing[] {
   return pipe(
-    RA.range(0, 4),
+    RA.range(0, size - 1),
     RA.map((j) =>
       pipe(
         child,
-        D.translate(0, Math.cos(Math.PI / 5) * (1 + SCALE)),
-        D.rotate((Math.PI / 2.5) * (j + 0.5))
+        D.translate(0, Math.cos(Math.PI / size) * (1 + SCALE)),
+        D.rotate((Math.PI / (size / 2)) * (j + 0.5))
       )
     )
   )
 }
+
+// On the main thread we delay all calls to `draw` our shapes,
+// yielding CPU and providing an animated effect
+function snowflakeMain(id: string, iters: number) {
+  return pipe(
+    makeFlakes(iters),
+    C.renderTo(id),
+    IO.provideSomeLayer(DrawsDrawingsLive),
+    withDelay(Duration.millis(1)),
+    IO.provideLayer(DrawsShapesLive)
+  )
+}
+
 function makeWorker() {
   return pipe(
     IO.attempt(

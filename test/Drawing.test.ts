@@ -6,9 +6,10 @@ import { beforeEach, describe, it, assert } from 'vitest'
 
 import * as Color from '../src/Color'
 import * as D from '../src/Drawing'
+import * as C from '../src/Canvas'
 import * as F from '../src/Font'
 import * as S from '../src/Shape'
-import { testM, testCanvas } from './utils'
+import { testM, testDrawing } from './utils'
 
 describe('Drawing', () => {
   describe('fillStyle', () => {
@@ -293,8 +294,6 @@ describe('Drawing', () => {
       testCtx = testCanvas.getContext('2d') as CanvasRenderingContext2D
     })
 
-    // const render: <A>(fa: C.Render<A>) => IO.IO<A> = (fa) => pipe(canvas, C.getContext2D, IO.chain(fa))
-
     testM('should render a clipped drawing', () => {
       const mask = S.rect(50, 50, 50, 50)
       const outline = S.rect(10, 20, 20, 20)
@@ -315,7 +314,7 @@ describe('Drawing', () => {
         testCtx.restore()
         return (testCtx as any).__getEvents()
       })
-      return testCanvas(D.render(drawing), actual)
+      return testDrawing(IO.zipRight(IO.service(C.Tag))(D.render(drawing)), actual)
     })
 
     testM('should render an outlined drawing', () => {
@@ -414,7 +413,7 @@ describe('Drawing', () => {
         testCtx.restore()
         return (testCtx as any).__getEvents()
       })
-      return testCanvas(D.render(drawing), actual)
+      return testDrawing(pipe(D.render(drawing), IO.zipRight(IO.service(C.Tag))), actual)
     })
 
     testM('should render a translated drawing', () => {
@@ -438,7 +437,9 @@ describe('Drawing', () => {
         testCtx.restore()
         return (testCtx as any).__getEvents()
       })
-      return testCanvas(D.render(drawing), actual)
+      return testDrawing(
+        IO.zipRight(IO.service(C.Tag))(D.render(drawing)),
+        actual)
     })
 
     testM('should render a drawing with a shadow', () => {
@@ -475,7 +476,7 @@ describe('Drawing', () => {
         testCtx.restore()
         return (testCtx as any).__getEvents()
       })
-      return testCanvas(D.render(drawing), actual)
+      return testDrawing(IO.zipRight(IO.service(C.Tag))(D.render(drawing)), actual)
     })
   })
 })

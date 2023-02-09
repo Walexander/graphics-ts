@@ -59,11 +59,12 @@ import * as SG from '@fp-ts/core/typeclass/Semigroup'
 import * as M from '@fp-ts/core/typeclass/Monoid'
 import * as O from '@fp-ts/core/Option'
 import * as RA from '@fp-ts/core/ReadonlyArray'
-import { flow, pipe } from '@fp-ts/core/Function'
 
-import * as C from './Canvas'
-import { toCss, Color } from './Color'
-import { showFont, Font } from './Font'
+import { drawShape } from './Drawable/Shape'
+import { renderDrawing } from './Drawable/Drawing'
+import { Drawable } from './Drawable'
+import { Color } from './Color'
+import { Font } from './Font'
 import { Point, Shape } from './Shape'
 
 const readonlyArrayMonoidDrawing = RA.getMonoid<Drawing>()
@@ -525,143 +526,24 @@ export const shadowOffset: (offsetPoint: Point) => Shadow = (o) => ({
 // combinators
 // -------------------------------------------------------------------------------------
 
-const applyStyle = <A>(o: O.Option<A>, f: (a:A) => IO.Effect<CanvasRenderingContext2D, never, unknown>) => pipe(
-  IO.fromOption(o),
-  IO.flatMap(f),
-  IO.orElse(IO.unit)
-)
-
 /**
  * Renders a `Shape`.
  *
  * @category combinators
  * @since 1.1.0
  */
-export const renderShape: (shape: Shape) => IO.Effect<CanvasRenderingContext2D, never, CanvasRenderingContext2D> = (shape) => {
-  const empty = IO.service(C.Tag)
-  switch (shape._tag) {
-    case 'Arc':
-      return C.arc(shape.x, shape.y, shape.r, shape.start, shape.end, shape.anticlockwise)
-
-    case 'Composite':
-      return pipe(IO.forEach(shape.shapes, renderShape), IO.zipRight(empty))
-
-    case 'Ellipse':
-      return C.ellipse(
-        shape.x,
-        shape.y,
-        shape.rx,
-        shape.ry,
-        shape.rotation,
-        shape.start,
-        shape.end,
-        shape.anticlockwise
-      )
-
-    case 'Path':
-      return pipe(
-        shape.points,
-        RA.match(
-          () => empty,
-          (head, tail) =>
-            pipe(
-              C.moveTo(head.x, head.y),
-              IO.zipRight(IO.forEach(tail, ({ x, y }) => C.lineTo(x, y))),
-              IO.zipRight(shape.closed ? C.closePath : empty)
-            )
-        )
-      )
-    case 'Rect':
-      return C.rect(shape.x, shape.y, shape.width, shape.height)
-  }
-}
-
+export const renderShape: (
+  shape: Shape
+) => IO.Effect<CanvasRenderingContext2D | Drawable<Shape>, never, void> = drawShape
 /**
  * Renders a `Drawing`.
  *
  * @category combinators
  * @since 1.0.0
  */
-export function render(drawing: Drawing): IO.Effect<CanvasRenderingContext2D, never, CanvasRenderingContext2D> {
-  switch (drawing._tag) {
-    case 'Clipped':
-      return C.withContext(
-        pipe(
-          C.beginPath,
-          IO.zipRight(renderShape(drawing.shape)),
-          IO.zipRight(C.clip()),
-          IO.zipRight(IO.suspendSucceed(() => render(drawing.drawing)))
-        )
-      )
-
-    case 'Fill':
-      return C.withContext(
-        pipe(
-          applyStyle(drawing.style.color, flow(toCss, C.setFillStyle)),
-          IO.zipRight(C.fillPath(renderShape(drawing.shape)))
-        )
-      )
-
-    case 'Many':
-      return pipe(IO.service(C.Tag), IO.zipLeft(IO.forEachDiscard(drawing.drawings, render)))
-
-    case 'Outline':
-      return pipe(
-        IO.service(C.Tag),
-        IO.zipLeft(
-          pipe(
-            IO.collectAllDiscard([
-              applyStyle(drawing.style.color, flow(toCss, C.setStrokeStyle)),
-              applyStyle(drawing.style.lineWidth, C.setLineWidth),
-              C.strokePath(renderShape(drawing.shape))
-            ]),
-            C.withContext
-          )
-        )
-      )
-
-    case 'Rotate':
-      return C.withContext(pipe(C.rotate(drawing.angle), IO.zipRight(IO.suspendSucceed(() => render(drawing.drawing)))))
-
-    case 'Scale':
-      return C.withContext(
-        pipe(C.scale(drawing.scaleX, drawing.scaleY), IO.zipRight(IO.suspendSucceed(() => render(drawing.drawing))))
-      )
-
-    case 'Text':
-      return pipe(
-        IO.collectAllDiscard([
-          C.setFont(showFont.show(drawing.font)),
-          applyStyle(drawing.style.color, flow(toCss, C.setFillStyle)),
-          C.fillText(drawing.text, drawing.x, drawing.y)
-        ]),
-        C.withContext,
-        IO.zipRight(IO.service(C.Tag))
-      )
-
-    case 'Translate':
-      return C.withContext(
-        pipe(
-          C.translate(drawing.translateX, drawing.translateY),
-          IO.zipRight(IO.suspendSucceed(() => render(drawing.drawing)))
-        )
-      )
-
-    case 'WithShadow':
-      return C.withContext(
-        pipe(
-          IO.collectAllDiscard([
-            applyStyle(drawing.shadow.color, flow(toCss, C.setShadowColor)),
-            applyStyle(drawing.shadow.blur, C.setShadowBlur),
-            applyStyle(drawing.shadow.offset, (o) =>
-              pipe(C.setShadowOffsetX(o.x), IO.zipRight(C.setShadowOffsetY(o.y)))
-            )
-          ]),
-          IO.zipRight(IO.suspendSucceed(() => render(drawing.drawing)))
-        )
-      )
-  }
-}
+export const render: (
+  drawing: Drawing
+) => IO.Effect<CanvasRenderingContext2D | Drawable<Drawing>, never, void> = renderDrawing
 
 // -------------------------------------------------------------------------------------
 // instances
