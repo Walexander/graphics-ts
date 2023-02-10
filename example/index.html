@@ -4,12 +4,37 @@
     <meta charset="utf8" />
     <title>graphics-ts</title>
     <script type="module" src="./index.ts"></script>
+<style>
+#root {
+display: flex;
+flex-wrap: wrap;
+justify-content: space-between;
+}
+#root > * {
+  flex-basis: 100%;
+  min-width: 300px;
+}
+@media(min-width: 768px) {
+  #root > * {
+    flex-basis: 50%;
+  }
+}
+canvas {
+  width: 100%;
+}
+</style>
   </head>
   <body>
-    <div id="root"></div>
-    <h1>Offscreen Canvas</h1>
-    <canvas id="canvas1" width="600" height="600" style="border: 1px solid black;"></canvas>
-    <h1>Main Thread Canvas</h1>
-    <canvas id="canvas2" width="600" height="600" style="border: 1px solid black;"></canvas>
+    <button id="restart">Restart</button>
+    <div id="root">
+      <div>
+        <h1>Offscreen Canvas</h1>
+        <canvas id="canvas1" width="600" height="600" style="border: 1px solid black;"></canvas>
+      </div>
+      <div>
+        <h1>Main Thread Canvas</h1>
+        <canvas id="canvas2" width="600" height="600" style="border: 1px solid black;"></canvas>
+      </div>
+    </div>
   </body>
 </html>

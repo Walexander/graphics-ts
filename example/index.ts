@@ -19,7 +19,20 @@ const CANVAS_TWO_ID = 'canvas2'
 
 /**
  * Example of a clipped canvas from [MDN Web Docs](https://mzl.la/3e0mKKx).
- * and a simple animation loop of the clipped region
+ */
+function clippedRect(clip: S.Shape) {
+  return pipe(
+    D.many([
+      D.fill(S.rect(0, 0, 600, 600), D.fillStyle(Color.hsl(240, 1, 0.5))),
+      D.translate(25, 25)(D.many(backgroundSquares))
+    ]),
+    D.clipped(clip),
+    D.render
+  )
+}
+/**
+ * A simple animation loop that grows a circle 1px / 16ms
+ * and then renders a clipped rect drawing
  */
 const clippingDemo = pipe(
   IO.log(`Starting clipping demonstration`),
@@ -30,45 +43,50 @@ const clippingDemo = pipe(
       nextCircle,
       ([, circle]) =>
         pipe(
-          IO.unit(),
-          IO.zipRight(C.clearRect(0, 0, 600, 600)),
+          C.clearRect(0, 0, 600, 600),
           IO.zipRight(clippedRect(circle)),
-          IO.zipRight(pipe(IO.delay(Duration.millis(16))(IO.unit())))
+          IO.zipRight((IO.delay(Duration.millis(16))(IO.unit())))
         )
     )
   ),
-  IO.zipLeft(IO.log(`Finished clipping demonstration`))
+  IO.zipLeft(IO.log(`Finished clipping animation loop`)),
+  IO.forever
 )
 // The `clippingDemo` in parallel with our `snowflake` animation Effect
 const canvasDemo = pipe(
-  IO.collectAllParDiscard([
-    pipe(
-     clippingDemo,
-      // Provide our clipping demo with an actual canvas
-      C.renderTo(CANVAS_TWO_ID),
-      // log any errors retrieving the canvas
-      IO.catchAll((e) => IO.logError(`Error finding ${CANVAS_TWO_ID}: ${e.message}`)),
-      // give our program a way to draw `Drawing`
-      IO.provideSomeLayer(DrawsDrawingsLive),
-      // give that a way to draw `Shape`
-      IO.provideSomeLayer(DrawsShapesLive),
-    ),
-    snowFlakes(CANVAS_ONE_ID, 5),
-  ]),
-)
+  // some button management
+  IO.sync(() => {
+    (document.getElementById('restart') as HTMLButtonElement).disabled = true;
+    (document.getElementById('restart') as HTMLButtonElement).removeEventListener('click', main);
+  }),
+  IO.zipRight(
+    // our clipping demo runs forever but `raceAll`
+    // will interrupt it once our `snowFlakes` are done
+    IO.raceAll([
+      pipe(
+        clippingDemo,
+        // Provide our clipping demo with an actual canvas
+        C.renderTo(CANVAS_TWO_ID),
+        // log any errors retrieving the canvas
+        IO.catchAll((e) => IO.logError(`Error finding ${CANVAS_TWO_ID}: ${e.message}`)),
+        // give our program a way to draw `Drawing`
+        IO.provideSomeLayer(DrawsDrawingsLive),
+        // give that a way to draw `Shape`
+        IO.provideSomeLayer(DrawsShapesLive),
+      ),
+      snowFlakes(CANVAS_ONE_ID, 5),
+    ])),
+  IO.zipLeft(IO.sync(() => {
+    (document.getElementById('restart') as HTMLButtonElement).disabled = false;
+    (document.getElementById('restart') as HTMLButtonElement).addEventListener('click', main)
+  })
+))
 
+function main() { void IO.runPromise(canvasDemo) }
+// The only left to do is *run* the thing.
+// Now it's someone else's problem 🤣
 void IO.runPromise(canvasDemo)
 
-function clippedRect(clip: S.Shape) {
-  return pipe(
-    D.many([
-      D.fill(S.rect(0, 0, 600, 600), D.fillStyle(Color.hsl(240, 1, 0.5))),
-      D.translate(25, 25)(D.many(backgroundSquares()))
-    ]),
-    D.clipped(clip),
-    D.render
-  )
-}
 function nextCircle([loops, circle]: [number, S.Arc]): [number, S.Arc] {
   return [
     loops % 2 == 0 ? (circle.r >= 300 ? loops + 1 : loops) : circle.r <= 100 ? loops + 1 : loops,
@@ -77,8 +95,7 @@ function nextCircle([loops, circle]: [number, S.Arc]): [number, S.Arc] {
       : S.circle(circle.x, circle.y, Math.max(circle.r - 1, 0))
   ]
 }
-function backgroundSquares() {
-  return pipe(
+const backgroundSquares = pipe(
     RA.range(0, 2),
     RA.flatMap((row) =>
       pipe(
@@ -87,4 +104,3 @@ function backgroundSquares() {
       )
     )
   )
-}

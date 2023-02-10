@@ -44,8 +44,9 @@
  * either `triangle` can be rendered via
  * ```ts
  * pipe(
- *   triangle, C.renderTo(canvasId),
- *   IO.catchAll(e => Effect.logError(`error opening #${canvasId}: ${e.message}`))
+ *   triangle,
+ *   C.renderTo(canvasId),
+ *   IO.catchAll(e => Effect.logError(`error opening #${canvasId}: ${e.message}`)),
  *   IO.runPromise
  * )
  * ```
