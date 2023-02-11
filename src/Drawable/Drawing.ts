@@ -21,12 +21,10 @@ export const renderDrawing = (drawing: Drawing) =>
   IO.serviceWithEffect(Tag, (drawer) => drawer.draw(drawing))
 
 class DrawingDrawableImpl implements Drawable<Drawing> {
-  constructor(readonly drawsShapes: Drawable<Shape>) { }
+  constructor(readonly drawsShapes: Drawable<Shape>) {}
 
   draw(drawing: Drawing): IO.Effect<CanvasRenderingContext2D, never, void> {
-    return pipe(
-      this.render_(drawing),
-    )
+    return pipe(this.render_(drawing))
   }
 
   render_(drawing: Drawing) {
@@ -52,7 +50,7 @@ class DrawingDrawableImpl implements Drawable<Drawing> {
       case 'Many':
         return pipe(
           IO.service(C.Tag),
-          IO.zipLeft(IO.forEachDiscard(drawing.drawings, (_) => this.draw(_)))
+          IO.zipLeft(IO.forEachDiscard(drawing.drawings, _ => this.draw(_)))
         )
 
       case 'Outline':
@@ -110,7 +108,7 @@ class DrawingDrawableImpl implements Drawable<Drawing> {
             IO.collectAllDiscard([
               applyStyle(drawing.shadow.color, flow(toCss, C.setShadowColor)),
               applyStyle(drawing.shadow.blur, C.setShadowBlur),
-              applyStyle(drawing.shadow.offset, (o) =>
+              applyStyle(drawing.shadow.offset, o =>
                 pipe(C.setShadowOffsetX(o.x), IO.zipRight(C.setShadowOffsetY(o.y)))
               )
             ]),
