@@ -50,7 +50,7 @@ function DrawsShapesImpl(canvas: Surface): Drawable.Drawable<Shape> {
         return canvas.arc(shape.x, shape.y, shape.r, shape.start, shape.end, shape.anticlockwise)
 
       case 'Composite':
-        return pipe(IO.forEachParDiscard(shape.shapes, s => draw(s)))
+        return IO.forEachParDiscard(shape.shapes, s => draw(s))
 
       case 'Ellipse':
         return canvas.ellipse(

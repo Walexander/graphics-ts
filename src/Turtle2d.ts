@@ -21,7 +21,7 @@ export function Live(state: TurtleState) {
   return IO.toLayer(
     IO.gen(function* ($) {
       const ref = yield* $(Ref.make(state))
-      const draw = yield *$(IO.service(DrawsTurtlesTag))
+      const draw = yield* $(IO.service(DrawsTurtlesTag))
       return new Turtle2dImpl(ref, draw)
     }),
     Tag
@@ -29,24 +29,28 @@ export function Live(state: TurtleState) {
 }
 
 export type TurtleMove = [TurtleState['position'], TurtleState['position']]
-export const fromOrigin = Live({theta: 0, position: [0, 0]})
+export const fromOrigin = Live({ theta: 0, position: [0, 0] })
 
 export class Turtle2dImpl implements Turtle2d {
-  constructor(readonly state: Ref.Ref<TurtleState>,
-    readonly draw: Drawable<TurtleMove>
-  ) {}
+  constructor(readonly state: Ref.Ref<TurtleState>, readonly draw: Drawable<TurtleMove>) {}
   drawForward(length: number): IO.Effect<never, never, TurtleState> {
     return pipe(
       Ref.get(this.state),
-      IO.map((state0) => [state0, <TurtleState>{
-        theta: state0.theta,
-        position: [
-          state0.position[0] + length * Math.cos(state0.theta),
-          state0.position[1] + length * Math.sin(state0.theta)
-        ]
-      }] as const),
+      IO.map(
+        state0 =>
+          [
+            state0,
+            <TurtleState>{
+              theta: state0.theta,
+              position: [
+                state0.position[0] + length * Math.cos(state0.theta),
+                state0.position[1] + length * Math.sin(state0.theta)
+              ]
+            }
+          ] as const
+      ),
       IO.tap(([s1, s2]) => this.draw(<TurtleMove>[s1.position, s2.position])),
-      IO.flatMap(([, state1]) => IO.as(Ref.set(this.state, state1), state1)),
+      IO.flatMap(([, state1]) => IO.as(Ref.set(this.state, state1), state1))
     )
   }
   turn(angle: number): IO.Effect<never, never, TurtleState> {
