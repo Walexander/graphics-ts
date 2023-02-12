@@ -13,29 +13,32 @@ import {showFont} from '../Font'
 export const Tag = Context.Tag<Drawable<Drawing>>()
 export const Live = pipe(
   IO.service(ShapeTag),
-  IO.map((draws) => new DrawingDrawableImpl(draws)),
+  IO.zip(IO.service(C.Tag)),
+  IO.map(([draws, canvas]) => DrawDrawingImpl(draws, canvas)),
   IO.toLayer(Tag)
 )
 
-export const renderDrawing = (drawing: Drawing) =>
-  IO.serviceWithEffect(Tag, (drawer) => drawer.draw(drawing))
+export const renderDrawing = (drawing: Drawing) => IO.serviceWithEffect(Tag, (drawer) => drawer(drawing))
 
-class DrawingDrawableImpl implements Drawable<Drawing> {
-  constructor(readonly drawsShapes: Drawable<Shape>) {}
+function DrawDrawingImpl(
+  drawShape: Drawable<Shape>,
+  canvas: CanvasRenderingContext2D
+): Drawable<Drawing> {
+  return draw
 
-  draw(drawing: Drawing): IO.Effect<CanvasRenderingContext2D, never, void> {
-    return pipe(this.render_(drawing))
+  function draw(drawing: Drawing): IO.Effect<never, never, void> {
+    return IO.provideService(render_(drawing), C.Tag, canvas)
   }
 
-  render_(drawing: Drawing) {
+  function render_(drawing: Drawing) {
     switch (drawing._tag) {
       case 'Clipped':
         return C.withContext(
           pipe(
             C.beginPath,
-            IO.zipRight(this.drawsShapes.draw(drawing.shape)),
+            IO.zipRight(drawShape(drawing.shape)),
             IO.zipRight(C.clip()),
-            IO.zipRight(IO.suspendSucceed(() => this.draw(drawing.drawing)))
+            IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing)))
           )
         )
 
@@ -43,14 +46,14 @@ class DrawingDrawableImpl implements Drawable<Drawing> {
         return C.withContext(
           pipe(
             applyStyle(drawing.style.color, flow(toCss, C.setFillStyle)),
-            IO.zipRight(C.fillPath(this.drawsShapes.draw(drawing.shape)))
+            IO.zipRight(C.fillPath(drawShape(drawing.shape)))
           )
         )
 
       case 'Many':
         return pipe(
           IO.service(C.Tag),
-          IO.zipLeft(IO.forEachDiscard(drawing.drawings, _ => this.draw(_)))
+          IO.zipLeft(IO.forEachDiscard(drawing.drawings, _ => draw(_)))
         )
 
       case 'Outline':
@@ -61,7 +64,7 @@ class DrawingDrawableImpl implements Drawable<Drawing> {
               IO.collectAllDiscard([
                 applyStyle(drawing.style.color, flow(toCss, C.setStrokeStyle)),
                 applyStyle(drawing.style.lineWidth, C.setLineWidth),
-                C.strokePath(this.drawsShapes.draw(drawing.shape))
+                C.strokePath(drawShape(drawing.shape))
               ]),
               C.withContext
             )
@@ -69,17 +72,14 @@ class DrawingDrawableImpl implements Drawable<Drawing> {
         )
       case 'Rotate':
         return C.withContext(
-          pipe(
-            C.rotate(drawing.angle),
-            IO.zipRight(IO.suspendSucceed(() => this.draw(drawing.drawing)))
-          )
+          pipe(C.rotate(drawing.angle), IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing))))
         )
 
       case 'Scale':
         return C.withContext(
           pipe(
             C.scale(drawing.scaleX, drawing.scaleY),
-            IO.zipRight(IO.suspendSucceed(() => this.draw(drawing.drawing)))
+            IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing)))
           )
         )
 
@@ -98,7 +98,7 @@ class DrawingDrawableImpl implements Drawable<Drawing> {
         return C.withContext(
           pipe(
             C.translate(drawing.translateX, drawing.translateY),
-            IO.zipRight(IO.suspendSucceed(() => this.draw(drawing.drawing)))
+            IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing)))
           )
         )
 
@@ -112,7 +112,7 @@ class DrawingDrawableImpl implements Drawable<Drawing> {
                 pipe(C.setShadowOffsetX(o.x), IO.zipRight(C.setShadowOffsetY(o.y)))
               )
             ]),
-            IO.zipRight(IO.suspendSucceed(() => this.draw(drawing.drawing)))
+            IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing)))
           )
         )
     }

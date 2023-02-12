@@ -41,6 +41,7 @@ export function runFlakes(canvas: CanvasRenderingContext2D, iters: number) {
     IO.provideSomeLayer(DrawsDrawingsLive),
     withDelay(Duration.millis(1)),
     IO.provideSomeLayer(DrawsShapesLive),
+    C.renderToCanvas(canvas),
     IO.runPromise
   )
 }
@@ -125,10 +126,10 @@ function makeMore(child: D.Drawing, size = 5): D.Drawing[] {
 function snowflakeMain(id: string, iters: number) {
   return pipe(
     makeFlakes(iters),
-    C.renderTo(id),
     IO.provideSomeLayer(DrawsDrawingsLive),
     withDelay(Duration.millis(1)),
-    IO.provideLayer(DrawsShapesLive)
+    IO.provideSomeLayer(DrawsShapesLive),
+    C.renderTo(id),
   )
 }
 

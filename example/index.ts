@@ -13,6 +13,8 @@ import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
 import * as S from '../src/Shape'
 import { snowFlakes } from './snowflake'
+import { main as mainTurtle } from './turtles'
+
 
 const CANVAS_ONE_ID = 'canvas1'
 const CANVAS_TWO_ID = 'canvas2'
@@ -65,16 +67,14 @@ const canvasDemo = pipe(
     IO.raceAll([
       pipe(
         clippingDemo,
-        // Provide our clipping demo with an actual canvas
-        C.renderTo(CANVAS_TWO_ID),
-        // log any errors retrieving the canvas
-        IO.catchAll((e) => IO.logError(`Error finding ${CANVAS_TWO_ID}: ${e.message}`)),
         // give our program a way to draw `Drawing`
-        IO.provideSomeLayer(DrawsDrawingsLive),
+        IO.provideSomeLayer( DrawsDrawingsLive),
         // give that a way to draw `Shape`
         IO.provideSomeLayer(DrawsShapesLive),
+        // finally, provide our an actual canvas
+        C.renderTo(CANVAS_TWO_ID),
       ),
-      snowFlakes(CANVAS_ONE_ID, 5),
+      snowFlakes(CANVAS_ONE_ID, 6)
     ])),
   IO.zipLeft(IO.sync(() => {
     (document.getElementById('restart') as HTMLButtonElement).disabled = false;
@@ -85,7 +85,8 @@ const canvasDemo = pipe(
 function main() { void IO.runPromise(canvasDemo) }
 // The only left to do is *run* the thing.
 // Now it's someone else's problem 🤣
-void IO.runPromise(canvasDemo)
+// void IO.runPromise(mainTurtle)
+main()
 
 function nextCircle([loops, circle]: [number, S.Arc]): [number, S.Arc] {
   return [

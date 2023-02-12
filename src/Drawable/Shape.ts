@@ -9,54 +9,51 @@ import { Shape } from '../Shape'
 import * as Context from '@fp-ts/data/Context'
 import * as Duration from '@fp-ts/data/Duration'
 
-export const drawShape = (shape: Shape) => IO.serviceWithEffect(Tag, (drawer) => drawer.draw(shape))
+export const drawShape = (shape: Shape) => IO.serviceWithEffect(Tag, drawer => drawer(shape))
 
 export interface Surface
   extends Pick<Canvas, 'arc' | 'rect' | 'ellipse' | 'moveTo' | 'lineTo' | 'closePath'> {}
 export const SurfaceTag = Context.Tag<Surface>()
-export const CanvasSurface = IO.toLayer(IO.serviceWith(C.Tag, canvas => ShapeCanvasImpl(canvas)), SurfaceTag)
-
-function ShapeCanvasImpl(canvas: CanvasRenderingContext2D): Surface {
-  const provide = IO.provideService(C.Tag, canvas)
-  return {
-    moveTo: flow(C.moveTo, provide),
-    lineTo: flow(C.lineTo, provide),
-    closePath: provide(C.closePath),
-    ellipse: flow(C.ellipse, provide),
-    rect: flow(C.rect, provide),
-    arc: flow(C.arc, provide),
-  }
-}
+export const CanvasSurface = IO.toLayer(
+  IO.serviceWith(C.Tag, canvas => CanvasSurfaceImpl(canvas)),
+  SurfaceTag
+)
 
 /**
  * The `Drawable` instance for `Shape`
  * @category instances
  */
 export const Tag = Context.Tag<Drawable.Drawable<Shape>>()
+
 export const Live = Layer.provide(
   CanvasSurface,
-  Layer.effect(Tag, pipe(IO.serviceWith(SurfaceTag, c => new ShapeDrawableImpl(c))))
+  Layer.effect(
+    Tag,
+    IO.serviceWith(SurfaceTag, c => DrawsShapesLive(c))
+  )
 )
 
 export const withDelay = (delay: Duration.Duration) =>
-  IO.updateService(Tag, (service) => ({
-    draw: (shape) => shape._tag != 'Composite' ?
-      IO.delay(delay)(service.draw(shape)) :
-      service.draw(shape)
-  }))
+  IO.updateService(
+    Tag,
+    draws => shape => shape._tag != 'Composite' ? IO.delay(delay)(draws(shape)) : draws(shape)
+  )
 
-class ShapeDrawableImpl implements Drawable.Drawable<Shape> {
-  constructor(readonly canvas: Surface) {}
-  draw(shape: Shape): IO.Effect<never, never, void> {
+export function DrawsShapesLive(surface: Surface): Drawable.Drawable<Shape> {
+  return DrawsShapesImpl(surface)
+}
+function DrawsShapesImpl(canvas: Surface): Drawable.Drawable<Shape> {
+  return draw
+  function draw(shape: Shape): IO.Effect<never, never, void> {
     switch (shape._tag) {
       case 'Arc':
-        return this.canvas.arc(shape.x, shape.y, shape.r, shape.start, shape.end, shape.anticlockwise)
+        return canvas.arc(shape.x, shape.y, shape.r, shape.start, shape.end, shape.anticlockwise)
 
       case 'Composite':
-        return pipe(IO.forEachParDiscard(shape.shapes, s => this.draw(s)))
+        return pipe(IO.forEachParDiscard(shape.shapes, s => draw(s)))
 
       case 'Ellipse':
-        return this.canvas.ellipse(
+        return canvas.ellipse(
           shape.x,
           shape.y,
           shape.rx,
@@ -72,15 +69,27 @@ class ShapeDrawableImpl implements Drawable.Drawable<Shape> {
           shape.points,
           RA.match(IO.unit, (head, tail) =>
             IO.tuple(
-              this.canvas.moveTo(head.x, head.y),
-              IO.forEach(tail, ({ x, y }) => this.canvas.lineTo(x, y))
+              canvas.moveTo(head.x, head.y),
+              IO.forEach(tail, ({ x, y }) => canvas.lineTo(x, y))
             )
           ),
-          IO.zipRight(shape.closed ? this.canvas.closePath : IO.unit())
+          IO.zipRight(shape.closed ? canvas.closePath : IO.unit())
         )
 
       case 'Rect':
-        return this.canvas.rect(shape.x, shape.y, shape.width, shape.height)
+        return canvas.rect(shape.x, shape.y, shape.width, shape.height)
     }
+  }
+}
+
+function CanvasSurfaceImpl(canvas: CanvasRenderingContext2D): Surface {
+  const provide = IO.provideService(C.Tag, canvas)
+  return {
+    moveTo: flow(C.moveTo, provide),
+    lineTo: flow(C.lineTo, provide),
+    closePath: provide(C.closePath),
+    ellipse: flow(C.ellipse, provide),
+    rect: flow(C.rect, provide),
+    arc: flow(C.arc, provide)
   }
 }

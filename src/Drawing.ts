@@ -535,7 +535,7 @@ export const shadowOffset: (offsetPoint: Point) => Shadow = (o) => ({
  */
 export const renderShape: (
   shape: Shape
-) => IO.Effect<CanvasRenderingContext2D | Drawable<Shape>, never, void> = drawShape
+) => IO.Effect<Drawable<Shape>, never, void> = drawShape
 /**
  * Renders a `Drawing`.
  *
