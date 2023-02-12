@@ -3,6 +3,7 @@ import * as Layer from '@effect/io/Layer'
 import { pipe } from '@fp-ts/core/Function'
 import { assert, it, expect, beforeEach, describe } from 'vitest'
 
+import { Live as DrawsTurtlesLive } from '../src/Drawable/Turtle2d'
 import * as T from '../src/Turtle2d'
 import * as C from '../src/Canvas'
 const CANVAS_ID = 'canvas'
@@ -18,7 +19,11 @@ beforeEach(() => {
   `
 })
 describe('Turtle2d', () => {
-  const TurtleSurface = Layer.provideMerge(C.fromId(CANVAS_ID), T.TurtleSurfaceCanvas)
+
+  const TurtleSurface = Layer.provideMerge(
+    C.fromId(CANVAS_ID),
+    DrawsTurtlesLive,
+  )
   it('exists', () => {
     assert.ok(T.Tag)
   })
@@ -48,6 +53,7 @@ describe('Turtle2d', () => {
         IO.provideSomeLayer(TurtleSurface),
         IO.runPromise
       ))
+
     describe('draw forward', () => {
       it('length 0', () =>
         pipe(

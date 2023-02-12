@@ -2,6 +2,8 @@ import * as IO from '@effect/io/Effect'
 import * as Ref from '@effect/io/Ref'
 import * as Context from '@fp-ts/data/Context'
 import { Canvas } from './Canvas/definition'
+import { Drawable } from './Drawable/definition'
+import { Tag as DrawsTurtlesTag } from './Drawable/Turtle2d'
 import { flow, pipe } from '@fp-ts/core/Function'
 
 import * as C from './Canvas'
@@ -19,17 +21,20 @@ export function Live(state: TurtleState) {
   return IO.toLayer(
     IO.gen(function* ($) {
       const ref = yield* $(Ref.make(state))
-      const surface = yield *$(IO.service(TurtleSurfaceTag))
-      return new Turtle2dImpl(ref, surface)
+      const draw = yield *$(IO.service(DrawsTurtlesTag))
+      return new Turtle2dImpl(ref, draw)
     }),
     Tag
   )
 }
 
+export type TurtleMove = [TurtleState['position'], TurtleState['position']]
 export const fromOrigin = Live({theta: 0, position: [0, 0]})
 
 export class Turtle2dImpl implements Turtle2d {
-  constructor(readonly state: Ref.Ref<TurtleState>, readonly surface: TurtleSurface) {}
+  constructor(readonly state: Ref.Ref<TurtleState>,
+    readonly draw: Drawable<TurtleMove>
+  ) {}
   drawForward(length: number): IO.Effect<never, never, TurtleState> {
     return pipe(
       Ref.get(this.state),
@@ -40,12 +45,7 @@ export class Turtle2dImpl implements Turtle2d {
           state0.position[1] + length * Math.sin(state0.theta)
         ]
       }] as const),
-      IO.tap(([{position: [x0, y0]}, {position: [x1, y1]}]) => IO.collectAllDiscard([
-        this.surface.beginPath,
-        this.surface.moveTo(x0, y0),
-        this.surface.lineTo(x1, y1),
-        this.surface.stroke,
-      ])),
+      IO.tap(([s1, s2]) => this.draw(<TurtleMove>[s1.position, s2.position])),
       IO.flatMap(([, state1]) => IO.as(Ref.set(this.state, state1), state1)),
     )
   }
