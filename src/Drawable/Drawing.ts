@@ -1,3 +1,4 @@
+/** @since 2.0.0 */
 import * as IO from '@effect/io/Effect'
 import { flow, pipe } from '@fp-ts/core/Function'
 import { Drawable } from '../Drawable'
@@ -8,19 +9,37 @@ import { toCss } from '../Color'
 import { Drawing } from '../Drawing'
 import * as Context from '@fp-ts/data/Context'
 import * as O from '@fp-ts/core/Option'
-import {showFont} from '../Font'
+import { showFont } from '../Font'
 
+/**
+ * The `Drawable` instance for a `Drawing` type
+ *
+ * @category instances
+ * @since 2.0.0
+ */
 export const Tag = Context.Tag<Drawable<Drawing>>()
+/**
+ * A Live `Drawable` layer that renders to a `CanvasRenderingContext2D`
+ *
+ * @category instances
+ * @since 2.0.0
+ */
 export const Live = pipe(
   IO.service(ShapeTag),
   IO.zip(IO.service(C.Tag)),
-  IO.map(([draws, canvas]) => DrawDrawingImpl(draws, canvas)),
+  IO.map(([draws, canvas]) => DrawsDrawingImpl(draws, canvas)),
   IO.toLayer(Tag)
 )
+/**
+ * Render a `Drawing`
+ *
+ * @category operators
+ * @since 2.0.0
+ */
+export const renderDrawing = (drawing: Drawing) =>
+  IO.serviceWithEffect(Tag, drawer => drawer(drawing))
 
-export const renderDrawing = (drawing: Drawing) => IO.serviceWithEffect(Tag, (drawer) => drawer(drawing))
-
-function DrawDrawingImpl(
+function DrawsDrawingImpl(
   drawShape: Drawable<Shape>,
   canvas: CanvasRenderingContext2D
 ): Drawable<Drawing> {
@@ -118,8 +137,7 @@ function DrawDrawingImpl(
     }
   }
 }
-const applyStyle = <A>(o: O.Option<A>, f: (a:A) => IO.Effect<CanvasRenderingContext2D, never, unknown>) => pipe(
-  IO.fromOption(o),
-  IO.flatMap(f),
-  IO.orElse(IO.unit)
-)
+const applyStyle = <A>(
+  o: O.Option<A>,
+  f: (a: A) => IO.Effect<CanvasRenderingContext2D, never, unknown>
+) => pipe(IO.fromOption(o), IO.flatMap(f), IO.orElse(IO.unit))

@@ -1,3 +1,6 @@
+/**
+ * @since 2.0.0
+ */
 import * as IO from '@effect/io/Effect'
 import * as Layer from '@effect/io/Layer'
 import { fromNullable } from '@fp-ts/core/Option'
@@ -18,6 +21,7 @@ import { CanvasError, Tag } from './definition'
  * 3 failure to obtain the context
  *
  * @since 1.0.0
+ * @category layer
  */
 export function renderTo(canvas: string | HTMLElement | CanvasRenderingContext2D) {
   const layer =
@@ -29,14 +33,26 @@ export function renderTo(canvas: string | HTMLElement | CanvasRenderingContext2D
   return IO.provideSomeLayer(layer)
 }
 
+/**
+* @category layer
+* @since 2.0.0
+*/
 export function fromId(id: string): Layer.Layer<never, CanvasError, CanvasRenderingContext2D> {
   return Layer.effect(Tag, getContextById(id))
 }
+/**
+* @category layer
+* @since 2.0.0
+*/
 export function fromCanvas(
   context2d: CanvasRenderingContext2D
 ): Layer.Layer<never, CanvasError, CanvasRenderingContext2D> {
   return Layer.succeed(Tag, context2d)
 }
+/**
+* @category layer
+* @since 2.0.0
+*/
 export function fromElement(
   element: HTMLElement
 ): Layer.Layer<never, CanvasError, CanvasRenderingContext2D> {
@@ -45,6 +61,10 @@ export function fromElement(
 function getContextById(id: string): IO.Effect<never, CanvasError, CanvasRenderingContext2D> {
   return IO.flatMap(elementById(id), getContext)
 }
+/**
+* @category layer
+* @since 2.0.0
+*/
 export function elementById(id: string): IO.Effect<never, CanvasError, HTMLCanvasElement> {
   return pipe(
     IO.sync(() => document.getElementById(id)),
@@ -54,7 +74,7 @@ export function elementById(id: string): IO.Effect<never, CanvasError, HTMLCanva
   )
 }
 const fromOption = flow(fromNullable, IO.fromOption)
-export function getContext(element: HTMLCanvasElement) {
+function getContext(element: HTMLCanvasElement) {
   return pipe(
     IO.sync(() => element.getContext('2d')),
     IO.flatMap(fromOption),

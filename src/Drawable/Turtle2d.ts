@@ -1,3 +1,4 @@
+/** @since 2.0.0 */
 import * as IO from '@effect/io/Effect'
 import * as Layer from '@effect/io/Layer'
 import * as Drawable from '../Drawable'
@@ -7,14 +8,27 @@ import * as Context from '@fp-ts/data/Context'
 import { TurtleMove } from '../Turtle2d'
 import { flow } from '@fp-ts/core/Function'
 
-export const TurtleSurfaceTag = Context.Tag<TurtleSurface>()
-export interface TurtleSurface extends Pick<Canvas, 'moveTo' | 'lineTo' | 'beginPath' | 'stroke'> {}
-export const Tag = Context.Tag<Drawable.Drawable<TurtleMove>>()
-export const TurtleSurfaceCanvas = IO.toLayer(
+const TurtleSurfaceTag = Context.Tag<TurtleSurface>()
+interface TurtleSurface extends Pick<Canvas, 'moveTo' | 'lineTo' | 'beginPath' | 'stroke'> {}
+const TurtleSurfaceCanvas = IO.toLayer(
   IO.serviceWith(C.Tag, canvas => TurtleSurfaceImpl(canvas)),
   TurtleSurfaceTag
 )
 
+/**
+*
+* Summon a Drawable<Turtle2d> instance
+* @since 2.0.0
+  * @category tag
+  */
+export const Tag = Context.Tag<Drawable.Drawable<TurtleMove>>()
+/**
+* A live instance of the `Turtle2d` service that draws to a
+* canvas.
+*
+* @since 2.0.0
+  * @category tag
+  */
 export const Live = Layer.provide(
   TurtleSurfaceCanvas,
   IO.toLayer(

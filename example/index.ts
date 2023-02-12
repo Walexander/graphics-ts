@@ -13,8 +13,6 @@ import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
 import * as S from '../src/Shape'
 import { snowFlakes } from './snowflake'
-import { main as mainTurtle } from './turtles'
-
 
 const CANVAS_ONE_ID = 'canvas1'
 const CANVAS_TWO_ID = 'canvas2'
@@ -25,11 +23,13 @@ const CANVAS_TWO_ID = 'canvas2'
 function clippedRect(clip: S.Shape) {
   return pipe(
     D.many([
+      // a blue background
       D.fill(S.rect(0, 0, 600, 600), D.fillStyle(Color.hsl(240, 1, 0.5))),
+      // and red tiles
       D.translate(25, 25)(D.many(backgroundSquares))
     ]),
+    // clip out our shape
     D.clipped(clip),
-    D.render
   )
 }
 /**
@@ -46,7 +46,7 @@ const clippingDemo = pipe(
       ([, circle]) =>
         pipe(
           C.clearRect(0, 0, 600, 600),
-          IO.zipRight(clippedRect(circle)),
+          IO.zipRight(D.render(clippedRect(circle))),
           IO.zipRight((IO.delay(Duration.millis(16))(IO.unit())))
         )
     )
@@ -82,12 +82,14 @@ const canvasDemo = pipe(
   })
 ))
 
-function main() { void IO.runPromise(canvasDemo) }
 // The only left to do is *run* the thing.
+function main() { void IO.runPromise(canvasDemo) }
 // Now it's someone else's problem 🤣
-// void IO.runPromise(mainTurtle)
 main()
 
+// a circle that gets bigger up to a radius of 300
+// then gets smaller down to a radius of 100
+// and repeats
 function nextCircle([loops, circle]: [number, S.Arc]): [number, S.Arc] {
   return [
     loops % 2 == 0 ? (circle.r >= 300 ? loops + 1 : loops) : circle.r <= 100 ? loops + 1 : loops,

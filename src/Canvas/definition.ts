@@ -1,3 +1,8 @@
+/**
+* These are the Canvas helper types
+* @since 2.0.0
+*
+*/
 import { Effect } from '@effect/io/Effect'
 import { Tag as Tag$ } from '@fp-ts/data/Context'
 
@@ -21,12 +26,32 @@ export interface Render<A, E = never, R = unknown> extends Effect<R | CanvasRend
  */
 export interface Gradient<A> extends Render<A> {}
 
+/**
+ * Represents an error attempting to obtain a valid `CanvasRenderingContext2D`, typically
+ * because of some issue with the provided HTMLElement
+ *
+ * @category model
+ * @since 2.0.0
+ */
 export class CanvasError {
+  /** @since 2.0.0 */
   readonly _tag = 'CanvasError'
   constructor(readonly message: string) {}
 }
+/**
+ * Summon a `CanvasRenderingContext2D`
+ * @category tag
+ * @since 2.0.0
+ */
 export const Tag = Tag$<CanvasRenderingContext2D>()
 
+
+/**
+ * The effectual operations one can perform against a `CanvasRenderingContext2D`
+ *
+ * @category model
+ * @since 2.0.0
+ */
 export interface Canvas {
   arc: (
     x: number,

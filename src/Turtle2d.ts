@@ -1,22 +1,53 @@
+/**
+ * @since 2.0.0
+ */
 import * as IO from '@effect/io/Effect'
 import * as Ref from '@effect/io/Ref'
 import * as Context from '@fp-ts/data/Context'
-import { Canvas } from './Canvas/definition'
 import { Drawable } from './Drawable/definition'
 import { Tag as DrawsTurtlesTag } from './Drawable/Turtle2d'
-import { flow, pipe } from '@fp-ts/core/Function'
+import { pipe } from '@fp-ts/core/Function'
 
-import * as C from './Canvas'
-export interface TurtleState {
-  theta: number
-  position: readonly [x: number, y: number]
-}
+/**
+* The classic 2D Turtle graphics api.  You can
+* 1. Turn
+* 2. DrawForward
+ *
+* @category model
+ * @since 2.0.0
+ */
 export interface Turtle2d {
   drawForward: (length: number) => IO.Effect<never, never, TurtleState>
   turn: (angle: number) => IO.Effect<never, never, TurtleState>
 }
-
+/**
+* The turtle's state
+*
+ * @category model
+ * @since 2.0.0
+ */
+export interface TurtleState {
+  theta: number
+  position: readonly [x: number, y: number]
+}
+/**
+* Summon a `Turtle2d` service
+*
+* @category tag
+* @since 2.0.0
+*
+**/
 export const Tag = Context.Tag<Turtle2d>()
+
+/**
+* Construct a live `Turtle2d` service with the provided `TurtleState`
+* Requires a `Drawable<TurtleMove>` instance
+*
+*
+* @category instance
+* @since 2.0.0
+*
+**/
 export function Live(state: TurtleState) {
   return IO.toLayer(
     IO.gen(function* ($) {
@@ -27,11 +58,22 @@ export function Live(state: TurtleState) {
     Tag
   )
 }
-
-export type TurtleMove = [TurtleState['position'], TurtleState['position']]
+/**
+* Construct a turtle starting at the origin.
+*
+* @category instance
+* @since 2.0.0
+*/
 export const fromOrigin = Live({ theta: 0, position: [0, 0] })
 
-export class Turtle2dImpl implements Turtle2d {
+/**
+* @category model
+* @since 2.0.0
+* Movement [from, to] a TurtleState['position'] type
+*/
+export type TurtleMove = [TurtleState['position'], TurtleState['position']]
+
+class Turtle2dImpl implements Turtle2d {
   constructor(readonly state: Ref.Ref<TurtleState>, readonly draw: Drawable<TurtleMove>) {}
   drawForward(length: number): IO.Effect<never, never, TurtleState> {
     return pipe(
@@ -58,22 +100,5 @@ export class Turtle2dImpl implements Turtle2d {
       theta: theta + angle,
       position
     }))
-  }
-}
-
-export interface TurtleSurface extends Pick<Canvas, 'moveTo' | 'lineTo' | 'beginPath' | 'stroke'> {}
-export const TurtleSurfaceTag = Context.Tag<TurtleSurface>()
-export const TurtleSurfaceCanvas = IO.toLayer(
-  IO.serviceWith(C.Tag, canvas => TurtleServiceLiveImpl(canvas)),
-  TurtleSurfaceTag
-)
-
-function TurtleServiceLiveImpl(canvas: CanvasRenderingContext2D) {
-  const provide = IO.provideService(C.Tag, canvas)
-  return <TurtleSurface>{
-    moveTo: flow(C.moveTo, provide),
-    lineTo: flow(C.lineTo, provide),
-    beginPath: provide(IO.as(C.beginPath, void null)),
-    stroke: provide(IO.as(C.stroke(), void null))
   }
 }

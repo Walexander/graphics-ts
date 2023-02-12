@@ -110,19 +110,19 @@ describe('Canvas', () => {
   describe('font', () => {
     it('should get the current font', () =>
       pipe(
-        C.getFont,
+        C.getFont(),
         IO.zip(Effect.service(Canvas.Tag)),
         IO.map(([font, ctx]) => assert.strictEqual(font, ctx.font))
       ))
     it('font', () =>
       pipe(
-        C.getFont,
+        C.getFont(),
         IO.map((font) => assert.equal(font, '10px sans-serif'))
       ))
     it('setFont', () =>
       pipe(
         C.setFont('12px serif'),
-        IO.zipRight(Canvas.getFont),
+        IO.zipRight(Canvas.getFont()),
         Effect.map((font) => assert.equal(font, '12px serif'))
       ))
   })

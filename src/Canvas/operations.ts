@@ -1,3 +1,4 @@
+/** @since 2.0.0 */
 import { pipe, constant } from '@fp-ts/core/Function'
 import * as RA from '@fp-ts/core/ReadonlyArray'
 import { fromNullable } from '@fp-ts/core/Option'
@@ -19,9 +20,13 @@ import {
  * Gets the canvas width in pixels.
  *
  * @category combinators
- * @since 1.0.0
+ * @since 2.0.0
  */
 export const width = withCanvas((ctx) => IO.sync(() => ctx.canvas.width))
+/**
+* @since 1.0.0
+* @category combinators
+* */
 export const getWidth = constant(width)
 
 /**
@@ -45,6 +50,11 @@ export function setWidth(width: number) {
  * @since 1.0.0
  */
 export const height = withCanvas((ctx) => IO.sync(() => ctx.canvas.height))
+/**
+* @since 1.0.0
+* @category combinators
+*/
+export const getHeight = constant(height)
 
 /**
  * Sets the height of the canvas in pixels.
@@ -117,7 +127,8 @@ export const setFillStyle: (style: string | CanvasGradient | CanvasPattern) => I
  * @since 1.0.0
  */
 export const font = withCanvas((ctx) => IO.sync(() => ctx.font))
-export const getFont = font
+/** @since 2.0.0 */
+export const getFont = constant(font)
 
 /**
  * Sets the current font.
@@ -265,9 +276,20 @@ export function setLineJoin(join: LineJoin) {
     })
   )
 }
+/**
+ * gets the current line join type for the canvas context.
+ *
+ * @category combinators
+ * @since 2.0.0
+ */
 export const lineJoin = withCanvas((ctx) =>
   pipe(IO.sync(() => ctx.lineJoin))
 )
+/**
+ * @category combinators
+ * @since 1.0.0
+ */
+export const getLineJoin = constant(lineJoin)
 
 /**
  * Sets the current line width for the canvas context in pixels.
@@ -283,6 +305,7 @@ export function setLineWidth(lineWidth: number) {
     )
   )
 }
+/** @since 2.0.0 */
 export const lineWidth = withCanvas((ctx) => pipe(IO.sync(() => ctx.lineWidth)))
 
 /**
@@ -299,9 +322,17 @@ export function setMiterLimit(miterLimit: number) {
     )
   )
 }
-export const miterLimit = withCanvas((ctx) =>
-  pipe(IO.sync(() => ctx.miterLimit))
+/**
+ * Gets the current miter limit for the canvas context.
+ *
+ * @category combinators
+ * @since 2.0.0
+ */
+export const miterLimit: IO.Effect<CanvasRenderingContext2D, never, number> = withCanvas((ctx) =>
+  IO.sync(() => ctx.miterLimit)
 )
+/** @since 1.0.0 */
+export const getMiterLimit = constant(miterLimit)
 
 /**
  * Sets the current shadow blur radius for the canvas context.
@@ -317,9 +348,17 @@ export function setShadowBlur(blur: number) {
     )
   )
 }
+/**
+ * Gets the current shadow blur radius for the canvas context.
+ *
+ * @category combinators
+ * @since 2.0.0
+ */
 export const shadowBlur = withCanvas((ctx) =>
-  pipe(IO.sync(() => ctx.shadowBlur))
+  IO.sync(() => ctx.shadowBlur)
 )
+/** @since 1.0.0 */
+export const getShadowBlur = constant(shadowBlur)
 
 /**
  * Sets the current shadow color for the canvas context.
@@ -329,15 +368,15 @@ export const shadowBlur = withCanvas((ctx) =>
  */
 export function setShadowColor(color: string) {
   return withCanvas((ctx) =>
-    pipe(
-      IO.sync(() => (ctx.shadowColor = color)),
-      IO.as(ctx)
-    )
+      IO.sync(() => (ctx.shadowColor = color))
   )
 }
+/** @since 2.0.0 */
 export const shadowColor = withCanvas((ctx) =>
   pipe(IO.sync(() => ctx.shadowColor))
 )
+/** @since 1.0.0 */
+export const getShadowColor = constant(shadowColor)
 
 /**
  * Sets the current shadow x-offset for the canvas context.
@@ -353,6 +392,7 @@ export function setShadowOffsetX(offsetX: number) {
     )
   )
 }
+/** @since 2.0.0 */
 export const shadowOffsetX = withCanvas((ctx) =>
   pipe(IO.sync(() => ctx.shadowOffsetX))
 )
@@ -371,6 +411,7 @@ export function setShadowOffsetY(offsetY: number) {
     )
   )
 }
+/** @since 2.0.0 */
 export const shadowOffsetY = withCanvas((ctY) =>
   pipe(IO.sync(() => ctY.shadowOffsetY))
 )
@@ -389,6 +430,7 @@ export function setStrokeStyle(style: string) {
     )
   )
 }
+/** @since 2.0.0 */
 export const strokeStyle = withCanvas((ctx) =>
   pipe(IO.sync(() => ctx.strokeStyle))
 )
@@ -1233,7 +1275,7 @@ export function withContext<R, E, A>(effect: Render<A, E, R>): Render<A, E, R> {
   ))
 }
 
-export function withCanvas<R, E, A>(
+function withCanvas<R, E, A>(
   f: (ctx: CanvasRenderingContext2D) => IO.Effect<R, E, A>
 ): IO.Effect<R | CanvasRenderingContext2D, E, A> {
   return IO.serviceWithEffect(Tag, f)
