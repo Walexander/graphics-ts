@@ -13,6 +13,8 @@ Taking the MDN example from the `Canvas` documentation,
 
 ```ts
 import { pipe } from '@fp-ts/core/Function'
+import * as RA from '@fp-ts/core/ReadonlyArray'
+import * as Color from 'graphics-ts/lib/Color'
 import * as E from '@effect/io/Effect'
 import * as C from 'graphics-ts/Canvas'
 import * as S from 'graphics-ts/Shape'
@@ -23,28 +25,24 @@ const triangle = IO.collectAllDiscard([
   C.moveTo(75, 50),
   C.lineTo(100, 75),
   C.lineTo(100, 25),
-   C.setFillStyle('black')
+  C.setFillStyle('black')
   C.fill(),
 ])
 ```
 
-the `triangle` drawing above becomes the following
+the imperative `triangle` above can be expressed as a
+`Drawing`
 
 ```ts
-import * as RA from '@fp-ts/core/ReadonlyArray'
-import * as C from 'graphics-ts/lib/Canvas'
-import * as Color from 'graphics-ts/lib/Color'
-import * as D from 'graphics-ts/lib/Drawing'
-import * as S from 'graphics-ts/lib/Shape'
-
-const canvasId = 'canvas'
-
-const triangle: C.Render<void> = D.render(
-  D.fill(S.path(RA.readonlyArray)([S.point(75, 50), S.point(100, 75), S.point(100, 25)]), D.fillStyle(Color.black))
+const triangle = D.render(
+  D.fill(S.path(RA.Foldable)([S.point(75, 50), S.point(100, 75), S.point(100, 25)]), D.fillStyle(Color.black))
 )
 ```
 
-either `triangle` can be rendered via
+Either of these `triangle`s can be rendered by
+
+1. providing a Canvas context via `C.renderTo()`
+2. running the resulting effect
 
 ```ts
 pipe(
@@ -64,7 +62,6 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [combinators](#combinators)
-  - [render](#render)
   - [renderShape](#rendershape)
 - [constructors](#constructors)
   - [clipped](#clipped)
@@ -82,6 +79,9 @@ Added in v1.0.0
   - [text](#text)
   - [translate](#translate)
   - [withShadow](#withshadow)
+- [destructors](#destructors)
+  - [draw](#draw)
+  - [render](#render)
 - [instances](#instances)
   - [monoidDrawing](#monoiddrawing)
   - [monoidFillStyle](#monoidfillstyle)
@@ -105,18 +105,6 @@ Added in v1.0.0
 ---
 
 # combinators
-
-## render
-
-Renders a `Drawing`.
-
-**Signature**
-
-```ts
-export declare const render: (drawing: Drawing) => IO.Effect<CanvasRenderingContext2D | Drawable<Drawing>, never, void>
-```
-
-Added in v1.0.0
 
 ## renderShape
 
@@ -308,6 +296,33 @@ Applies `Shadow` to a `Drawing`.
 
 ```ts
 export declare function withShadow(shadow: Shadow): (drawing: Drawing) => Drawing
+```
+
+Added in v1.0.0
+
+# destructors
+
+## draw
+
+Renders a `Drawing` to a CanvasRenderingContext2D using live instances of the
+Drawable<SHape> and Drawable<Drawing>.
+
+**Signature**
+
+```ts
+export declare const draw: typeof drawsDrawing
+```
+
+Added in v1.0.0
+
+## render
+
+Renders a `Drawing`.
+
+**Signature**
+
+```ts
+export declare const render: (drawing: Drawing) => IO.Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0

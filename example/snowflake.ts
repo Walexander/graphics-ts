@@ -77,7 +77,7 @@ function drawFlakes(z: number, sides = 5) {
         C.setFillStyle(`hsla(0deg 0% 100%/0.5)`),
         IO.zipRight(C.fillRect(0, 0, width, height)),
         // render the drawing
-        IO.zipRight(D.render(drawing)),
+        IO.zipRight(D.draw(drawing)),
       ),
       // get the resulting effect's duration
       IO.timed,

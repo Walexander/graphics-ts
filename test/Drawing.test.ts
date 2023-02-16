@@ -9,7 +9,7 @@ import * as D from '../src/Drawing'
 import * as C from '../src/Canvas'
 import * as F from '../src/Font'
 import * as S from '../src/Shape'
-import { testM, testDrawing } from './utils'
+import { testM, testDrawing, testCanvas } from './utils'
 
 describe('Drawing', () => {
   describe('fillStyle', () => {
@@ -31,6 +31,7 @@ describe('Drawing', () => {
         color: O.some(Color.black)
       })
     })
+
     describe('example', () => {
       it('should work', () => {
         const expected = {
@@ -284,7 +285,7 @@ describe('Drawing', () => {
     })
   })
 
-  describe('render', () => {
+  describe('destructors', () => {
     const CANVAS_ID = 'canvas'
     const TEST_CANVAS_ID = 'test-canvas'
     const CANVAS_WIDTH = 400
@@ -293,204 +294,226 @@ describe('Drawing', () => {
     let testCtx: CanvasRenderingContext2D
     beforeEach(() => {
       document.body.innerHTML = `
-        <canvas
-          id="${CANVAS_ID}"
-          width="${CANVAS_WIDTH}"
-          height="${CANVAS_HEIGHT}"
-        />
-        <canvas
-          id="${TEST_CANVAS_ID}"
-          width="${CANVAS_WIDTH}"
-          height="${CANVAS_HEIGHT}"
-        />
-      `
+<canvas
+id="${CANVAS_ID}"
+width="${CANVAS_WIDTH}"
+height="${CANVAS_HEIGHT}"
+/>
+<canvas
+id="${TEST_CANVAS_ID}"
+width="${CANVAS_WIDTH}"
+height="${CANVAS_HEIGHT}"
+/>
+`
       const testCanvas = document.getElementById(TEST_CANVAS_ID) as HTMLCanvasElement
       testCtx = testCanvas.getContext('2d') as CanvasRenderingContext2D
     })
 
-    testM('should render a clipped drawing', () => {
-      const mask = S.rect(50, 50, 50, 50)
-      const outline = S.rect(10, 20, 20, 20)
-      const color = D.outlineColor(Color.black)
-      const outlineRect = D.outline(outline, color)
-      const drawing = D.clipped(mask)(outlineRect)
-      const actual = IO.sync(() => {
-        testCtx.save()
-        testCtx.beginPath()
-        testCtx.rect(mask.x, mask.y, mask.width, mask.height)
-        testCtx.clip()
-        testCtx.save()
-        testCtx.strokeStyle = pipe(Color.black, Color.toCss)
-        testCtx.beginPath()
-        testCtx.rect(outline.x, outline.y, outline.width, outline.height)
-        testCtx.stroke()
-        testCtx.restore()
-        testCtx.restore()
-        return (testCtx as any).__getEvents()
-      })
-      return testDrawing(IO.zipRight(IO.service(C.Tag))(D.render(drawing)), actual)
-    })
-
-    testM('should render an outlined drawing', () => {
+    describe('render())', () => {
       const shape = S.rect(50, 50, 100, 100)
-      const drawing = D.outline(shape, D.outlineColor(Color.white))
-      // Test
-
-      // Actual
-      const actual = IO.sync(() => {
-        testCtx.save()
-        testCtx.strokeStyle = pipe(Color.white, Color.toCss)
-        testCtx.beginPath()
-        testCtx.rect(shape.x, shape.y, shape.width, shape.height)
-        testCtx.stroke()
-        testCtx.restore()
-        return (testCtx as any).__getEvents()
+      const drawing = D.outline(shape, D.outlineColor(Color.black))
+      it('should provide live shape and draw layers', () => {
+        const expected = IO.sync(() => {
+          testCtx.save()
+          testCtx.strokeStyle = pipe(Color.black, Color.toCss)
+          testCtx.beginPath()
+          testCtx.rect(shape.x, shape.y, shape.width, shape.height)
+          testCtx.stroke()
+          testCtx.restore()
+          return (testCtx as any).__getEvents()
+        })
+        const test =  testCanvas(
+          IO.zipRight(D.render(drawing), IO.service(C.Tag)),
+          expected,
+        )
+        return IO.runPromise(C.renderTo(CANVAS_ID)(test))
       })
-      return pipe(
-        D.render(drawing),
-        IO.map((ctx) => (ctx as any).__getEvents()),
-        IO.zip(actual),
-        IO.map(([a, b]) => assert.deepStrictEqual(a, b))
-      )
     })
 
-    testM('should render a rotated drawing', () => {
-      const shape = S.rect(50, 50, 100, 100)
-      const drawing = D.rotate(90)(D.outline(shape, D.outlineColor(Color.white)))
-
-      // Test
-
-      // Actual
-      const actual = IO.sync(() => {
-        testCtx.save()
-        testCtx.rotate(90)
-        testCtx.save()
-        testCtx.strokeStyle = pipe(Color.white, Color.toCss)
-        testCtx.beginPath()
-        testCtx.rect(shape.x, shape.y, shape.width, shape.height)
-        testCtx.stroke()
-        testCtx.restore()
-        testCtx.restore()
-        return (testCtx as any).__getEvents()
+    describe('draw()', () => {
+      testM('should draw a clipped drawing', () => {
+        const mask = S.rect(50, 50, 50, 50)
+        const outline = S.rect(10, 20, 20, 20)
+        const color = D.outlineColor(Color.black)
+        const outlineRect = D.outline(outline, color)
+        const drawing = D.clipped(mask)(outlineRect)
+        const actual = IO.sync(() => {
+          testCtx.save()
+          testCtx.beginPath()
+          testCtx.rect(mask.x, mask.y, mask.width, mask.height)
+          testCtx.clip()
+          testCtx.save()
+          testCtx.strokeStyle = pipe(Color.black, Color.toCss)
+          testCtx.beginPath()
+          testCtx.rect(outline.x, outline.y, outline.width, outline.height)
+          testCtx.stroke()
+          testCtx.restore()
+          testCtx.restore()
+          return (testCtx as any).__getEvents()
+        })
+        return testDrawing(IO.zipRight(IO.service(C.Tag))(D.draw(drawing)), actual)
       })
-      return pipe(
-        D.render(drawing),
-        IO.map((ctx) => (ctx as any).__getEvents()),
-        IO.zip(actual),
-        IO.map(([a, b]) => assert.deepStrictEqual(a, b))
-      )
-    })
+      testM('should draw an outlined drawing', () => {
+        const shape = S.rect(50, 50, 100, 100)
+        const drawing = D.outline(shape, D.outlineColor(Color.white))
+        // Test
 
-    testM('should render a scaled drawing', () => {
-      const scaleX = 5
-      const scaleY = 5
-      const shape = S.arc(10, 20, 5, S.degrees(100), S.degrees(200))
-      const drawing = pipe(D.outline(shape, D.outlineColor(Color.white)), D.scale(scaleX, scaleY))
-      // Test
-      const actual = IO.sync(() => {
         // Actual
-        testCtx.save()
-        testCtx.scale(scaleX, scaleY)
-        testCtx.save()
-        testCtx.strokeStyle = pipe(Color.white, Color.toCss)
-        testCtx.beginPath()
-        testCtx.arc(shape.x, shape.y, shape.r, shape.start, shape.end)
-        testCtx.stroke()
-        testCtx.restore()
-        testCtx.restore()
-        return (testCtx as any).__getEvents()
+        const actual = IO.sync(() => {
+          testCtx.save()
+          testCtx.strokeStyle = pipe(Color.white, Color.toCss)
+          testCtx.beginPath()
+          testCtx.rect(shape.x, shape.y, shape.width, shape.height)
+          testCtx.stroke()
+          testCtx.restore()
+          return (testCtx as any).__getEvents()
+        })
+        return pipe(
+          D.draw(drawing),
+          IO.map((ctx) => (ctx as any).__getEvents()),
+          IO.zip(actual),
+          IO.map(([a, b]) => assert.deepStrictEqual(a, b))
+        )
       })
-      return pipe(
-        D.render(drawing),
-        IO.map((ctx) => (ctx as any).__getEvents()),
-        IO.zip(actual),
-        IO.map(([a, b]) => assert.deepStrictEqual(a, b))
-      )
-    })
 
-    testM('should render text', () => {
-      const x = 10
-      const y = 100
-      const text = 'Hello world!'
-      const font = F.font('serif', 28)
-      const style = D.fillStyle(Color.black)
-      const drawing = D.text(font, x, y, style, text)
-      // Test
+      testM('should draw a rotated drawing', () => {
+        const shape = S.rect(50, 50, 100, 100)
+        const drawing = D.rotate(90)(D.outline(shape, D.outlineColor(Color.white)))
 
-      // Actual
-      // con
-      const actual = IO.sync(() => {
-        testCtx.save()
-        testCtx.font = pipe(font, F.showFont.show)
-        testCtx.fillStyle = pipe(Color.black, Color.toCss)
-        testCtx.fillText(text, x, y)
-        testCtx.restore()
-        return (testCtx as any).__getEvents()
+        // Test
+
+        // Actual
+        const actual = IO.sync(() => {
+          testCtx.save()
+          testCtx.rotate(90)
+          testCtx.save()
+          testCtx.strokeStyle = pipe(Color.white, Color.toCss)
+          testCtx.beginPath()
+          testCtx.rect(shape.x, shape.y, shape.width, shape.height)
+          testCtx.stroke()
+          testCtx.restore()
+          testCtx.restore()
+          return (testCtx as any).__getEvents()
+        })
+        return pipe(
+          D.draw(drawing),
+          IO.map((ctx) => (ctx as any).__getEvents()),
+          IO.zip(actual),
+          IO.map(([a, b]) => assert.deepStrictEqual(a, b))
+        )
       })
-      return testDrawing(pipe(D.render(drawing), IO.zipRight(IO.service(C.Tag))), actual)
-    })
 
-    testM('should render a translated drawing', () => {
-      const translateX = 5
-      const translateY = 5
-      const shape = S.rect(50, 50, 100, 100)
-      const drawing = D.translate(translateX, translateY)(D.outline(shape, D.outlineColor(Color.white)))
-
-      // Test
-
-      // Actual
-      const actual = IO.sync(() => {
-        testCtx.save()
-        testCtx.translate(translateX, translateY)
-        testCtx.save()
-        testCtx.strokeStyle = pipe(Color.white, Color.toCss)
-        testCtx.beginPath()
-        testCtx.rect(shape.x, shape.y, shape.width, shape.height)
-        testCtx.stroke()
-        testCtx.restore()
-        testCtx.restore()
-        return (testCtx as any).__getEvents()
+      testM('should draw a scaled drawing', () => {
+        const scaleX = 5
+        const scaleY = 5
+        const shape = S.arc(10, 20, 5, S.degrees(100), S.degrees(200))
+        const drawing = pipe(D.outline(shape, D.outlineColor(Color.white)), D.scale(scaleX, scaleY))
+        // Test
+        const actual = IO.sync(() => {
+          // Actual
+          testCtx.save()
+          testCtx.scale(scaleX, scaleY)
+          testCtx.save()
+          testCtx.strokeStyle = pipe(Color.white, Color.toCss)
+          testCtx.beginPath()
+          testCtx.arc(shape.x, shape.y, shape.r, shape.start, shape.end)
+          testCtx.stroke()
+          testCtx.restore()
+          testCtx.restore()
+          return (testCtx as any).__getEvents()
+        })
+        return pipe(
+          D.draw(drawing),
+          IO.map((ctx) => (ctx as any).__getEvents()),
+          IO.zip(actual),
+          IO.map(([a, b]) => assert.deepStrictEqual(a, b))
+        )
       })
-      return testDrawing(
-        IO.zipRight(IO.service(C.Tag))(D.render(drawing)),
-        actual)
-    })
 
-    testM('should render a drawing with a shadow', () => {
-      const blurRadius = 10
-      const offset = S.point(2, 2)
-      const rect = S.rect(10, 20, 100, 200)
-      const path = S.path(ROA.Foldable)([S.point(1, 2), S.point(3, 4), S.point(5, 6)])
-      const shape = S.composite([rect, path])
-      const shadow = D.monoidShadow.combineAll([
-        D.shadowColor(Color.black),
-        D.shadowBlur(blurRadius),
-        D.shadowOffset(offset)
-      ])
-      const drawing = D.withShadow(shadow)(D.outline(shape, D.outlineColor(Color.white)))
+      testM('should draw text', () => {
+        const x = 10
+        const y = 100
+        const text = 'Hello world!'
+        const font = F.font('serif', 28)
+        const style = D.fillStyle(Color.black)
+        const drawing = D.text(font, x, y, style, text)
+        // Test
 
-      // Test
-
-      // Actual
-      const actual = IO.sync(() => {
-        testCtx.save()
-        testCtx.shadowColor = pipe(Color.black, Color.toCss)
-        testCtx.shadowBlur = blurRadius
-        testCtx.shadowOffsetX = offset.x
-        testCtx.shadowOffsetY = offset.y
-        testCtx.save()
-        testCtx.strokeStyle = pipe(Color.white, Color.toCss)
-        testCtx.beginPath()
-        testCtx.rect(rect.x, rect.y, rect.width, rect.height)
-        testCtx.moveTo(1, 2)
-        testCtx.lineTo(3, 4)
-        testCtx.lineTo(5, 6)
-        testCtx.stroke()
-        testCtx.restore()
-        testCtx.restore()
-        return (testCtx as any).__getEvents()
+        // Actual
+        // con
+        const actual = IO.sync(() => {
+          testCtx.save()
+          testCtx.font = pipe(font, F.showFont.show)
+          testCtx.fillStyle = pipe(Color.black, Color.toCss)
+          testCtx.fillText(text, x, y)
+          testCtx.restore()
+          return (testCtx as any).__getEvents()
+        })
+        return testDrawing(pipe(D.draw(drawing), IO.zipRight(IO.service(C.Tag))), actual)
       })
-      return testDrawing(IO.zipRight(IO.service(C.Tag))(D.render(drawing)), actual)
+
+      testM('should draw a translated drawing', () => {
+        const translateX = 5
+        const translateY = 5
+        const shape = S.rect(50, 50, 100, 100)
+        const drawing = D.translate(translateX, translateY)(D.outline(shape, D.outlineColor(Color.white)))
+
+        // Test
+
+        // Actual
+        const actual = IO.sync(() => {
+          testCtx.save()
+          testCtx.translate(translateX, translateY)
+          testCtx.save()
+          testCtx.strokeStyle = pipe(Color.white, Color.toCss)
+          testCtx.beginPath()
+          testCtx.rect(shape.x, shape.y, shape.width, shape.height)
+          testCtx.stroke()
+          testCtx.restore()
+          testCtx.restore()
+          return (testCtx as any).__getEvents()
+        })
+        return testDrawing(
+          IO.zipRight(IO.service(C.Tag))(D.draw(drawing)),
+          actual)
+      })
+
+      testM('should draw a drawing with a shadow', () => {
+        const blurRadius = 10
+        const offset = S.point(2, 2)
+        const rect = S.rect(10, 20, 100, 200)
+        const path = S.path(ROA.Foldable)([S.point(1, 2), S.point(3, 4), S.point(5, 6)])
+        const shape = S.composite([rect, path])
+        const shadow = D.monoidShadow.combineAll([
+          D.shadowColor(Color.black),
+          D.shadowBlur(blurRadius),
+          D.shadowOffset(offset)
+        ])
+        const drawing = D.withShadow(shadow)(D.outline(shape, D.outlineColor(Color.white)))
+
+        // Test
+
+        // Actual
+        const actual = IO.sync(() => {
+          testCtx.save()
+          testCtx.shadowColor = pipe(Color.black, Color.toCss)
+          testCtx.shadowBlur = blurRadius
+          testCtx.shadowOffsetX = offset.x
+          testCtx.shadowOffsetY = offset.y
+          testCtx.save()
+          testCtx.strokeStyle = pipe(Color.white, Color.toCss)
+          testCtx.beginPath()
+          testCtx.rect(rect.x, rect.y, rect.width, rect.height)
+          testCtx.moveTo(1, 2)
+          testCtx.lineTo(3, 4)
+          testCtx.lineTo(5, 6)
+          testCtx.stroke()
+          testCtx.restore()
+          testCtx.restore()
+          return (testCtx as any).__getEvents()
+          })
+        return testDrawing(IO.zipRight(IO.service(C.Tag))(D.draw(drawing)), actual)
+      })
     })
   })
 })

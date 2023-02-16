@@ -2,7 +2,7 @@
 import * as IO from '@effect/io/Effect'
 import { flow, pipe } from '@fp-ts/core/Function'
 import { Drawable } from '../Drawable'
-import { Tag as ShapeTag } from './Shape'
+import { Tag as ShapeTag, Live as ShapeLive } from './Shape'
 import * as C from '../Canvas'
 import { Shape } from '../Shape'
 import { toCss } from '../Color'
@@ -31,13 +31,30 @@ export const Live = pipe(
   IO.toLayer(Tag)
 )
 /**
- * Render a `Drawing`
+ * Draws a `Drawing` using a `Drawable<Drawing>`
+ * from the context
  *
  * @category operators
  * @since 2.0.0
  */
-export const renderDrawing = (drawing: Drawing) =>
-  IO.serviceWithEffect(Tag, drawer => drawer(drawing))
+export function drawsDrawing(drawing: Drawing): IO.Effect<Drawable<Drawing>, never, void> {
+  return IO.serviceWithEffect(Tag, drawer => drawer(drawing))
+}
+
+/**
+ * Render a `Drawing` providing the Live `Drawable`
+ * instances for both `Drawing` and `Shape`
+ *
+ * @category operators
+ * @since 1.0.0
+ */
+export function renderDrawing(drawing: Drawing): IO.Effect<CanvasRenderingContext2D, never, void> {
+  return pipe(
+    IO.serviceWithEffect(Tag, drawer => drawer(drawing)),
+    IO.provideSomeLayer(Live),
+    IO.provideSomeLayer(ShapeLive)
+  )
+}
 
 function DrawsDrawingImpl(
   drawShape: Drawable<Shape>,

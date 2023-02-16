@@ -6,6 +6,8 @@
  *
  * ```ts
  * import { pipe } from '@fp-ts/core/Function'
+ * import * as RA from '@fp-ts/core/ReadonlyArray'
+ * import * as Color from 'graphics-ts/lib/Color'
  * import * as E from '@effect/io/Effect'
  * import * as C from 'graphics-ts/Canvas'
  * import * as S from 'graphics-ts/Shape'
@@ -16,32 +18,25 @@
  *   C.moveTo(75, 50),
  *   C.lineTo(100, 75),
  *   C.lineTo(100, 25),
- *    C.setFillStyle('black')
+ *   C.setFillStyle('black')
  *   C.fill(),
  * ])
  * ```
- *
- * the `triangle` drawing above becomes the following
+ * the imperative `triangle` above can be expressed as a
+ * `Drawing`
  *
  * ```ts
- * import * as RA from '@fp-ts/core/ReadonlyArray'
- * import * as C from 'graphics-ts/lib/Canvas'
- * import * as Color from 'graphics-ts/lib/Color'
- * import * as D from 'graphics-ts/lib/Drawing'
- * import * as S from 'graphics-ts/lib/Shape'
- *
- * const canvasId = 'canvas'
- *
- * const triangle: C.Render<void> = D.render(
+ * const triangle = D.render(
  *   D.fill(
- *     S.path(RA.readonlyArray)([S.point(75, 50), S.point(100, 75), S.point(100, 25)]),
+ *     S.path(RA.Foldable)([S.point(75, 50), S.point(100, 75), S.point(100, 25)]),
  *     D.fillStyle(Color.black)
  *   )
  * )
- *
  * ```
- *
- * either `triangle` can be rendered via
+ * Either of these `triangle`s can be rendered by
+ *   1. providing a Canvas context via `C.renderTo()`
+ *   2. running the resulting effect
+ * 
  * ```ts
  * pipe(
  *   triangle,
@@ -62,7 +57,7 @@ import * as O from '@fp-ts/core/Option'
 import * as RA from '@fp-ts/core/ReadonlyArray'
 
 import { drawShape } from './Drawable/Shape'
-import { renderDrawing } from './Drawable/Drawing'
+import { drawsDrawing, renderDrawing} from './Drawable/Drawing'
 import { Drawable } from './Drawable'
 import { Color } from './Color'
 import { Font } from './Font'
@@ -553,12 +548,21 @@ export const renderShape: (shape: Shape) => IO.Effect<Drawable<Shape>, never, vo
 /**
  * Renders a `Drawing`.
  *
- * @category combinators
+ * @category destructors
  * @since 1.0.0
  */
 export const render: (
   drawing: Drawing
-) => IO.Effect<CanvasRenderingContext2D | Drawable<Drawing>, never, void> = renderDrawing
+) => IO.Effect<CanvasRenderingContext2D, never, void> = renderDrawing
+
+/**
+ * Renders a `Drawing` to a CanvasRenderingContext2D using live instances of the
+ * Drawable<SHape> and Drawable<Drawing>.
+ *
+ * @category destructors
+ * @since 1.0.0
+ */
+export const draw = drawsDrawing
 
 // -------------------------------------------------------------------------------------
 // instances

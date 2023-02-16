@@ -16,6 +16,7 @@ Added in v2.0.0
   - [Live](#live)
   - [Tag](#tag)
 - [operators](#operators)
+  - [drawsDrawing](#drawsdrawing)
   - [renderDrawing](#renderdrawing)
 
 ---
@@ -48,14 +49,28 @@ Added in v2.0.0
 
 # operators
 
-## renderDrawing
+## drawsDrawing
 
-Render a `Drawing`
+Draws a `Drawing` using a `Drawable<Drawing>`
+from the context
 
 **Signature**
 
 ```ts
-export declare const renderDrawing: (drawing: Drawing) => IO.Effect<Drawable<Drawing>, never, void>
+export declare function drawsDrawing(drawing: Drawing): IO.Effect<Drawable<Drawing>, never, void>
 ```
 
 Added in v2.0.0
+
+## renderDrawing
+
+Render a `Drawing` providing the Live `Drawable`
+instances for both `Drawing` and `Shape`
+
+**Signature**
+
+```ts
+export declare function renderDrawing(drawing: Drawing): IO.Effect<CanvasRenderingContext2D, never, void>
+```
+
+Added in v1.0.0
