@@ -30,9 +30,8 @@ Note: `fp-ts` is a peer dependency for `graphics-ts`
 To run the example, clone the repository and run the following:
 
 ```
-npm install
-npm start
-open example/test.html
+pnpm install
+pnpm start
 ```
 
 <img alt="snowflake" src="./snowflake.png" style="display: block; width: 400px; margin-bottom: 1em;">

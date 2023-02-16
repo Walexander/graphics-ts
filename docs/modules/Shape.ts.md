@@ -1,6 +1,6 @@
 ---
 title: Shape.ts
-nav_order: 6
+nav_order: 14
 parent: Modules
 ---
 
@@ -87,10 +87,7 @@ Constructs a closed `Path` shape from a `Foldable` of `Point`s.
 **Signature**
 
 ```ts
-export declare function closed<F extends URIS3>(foldable: Foldable3<F>): <E, A>(fa: Kind3<F, E, A, Point>) => Path
-export declare function closed<F extends URIS2>(foldable: Foldable2<F>): <A>(fa: Kind2<F, A, Point>) => Path
-export declare function closed<F extends URIS>(foldable: Foldable1<F>): (fa: Kind<F, Point>) => Path
-export declare function closed<F>(F: Foldable<F>): (fa: HKT<F, Point>) => Path
+export declare function closed<F extends TypeLambda>(F: Foldable<F>): <R, O, E>(fa: Kind<F, R, O, E, Point>) => Path
 ```
 
 Added in v1.0.0
@@ -102,7 +99,7 @@ Constructs a `Composite` shape.
 **Signature**
 
 ```ts
-export declare const composite: (shapes: readonly Shape[]) => Composite
+export declare const composite: (shapes: ReadonlyArray<Shape>) => Composite
 ```
 
 Added in v1.0.0
@@ -147,10 +144,7 @@ Constructs an open `Path` shape from a `Foldable` of `Point`s.
 **Signature**
 
 ```ts
-export declare function path<F extends URIS3>(foldable: Foldable3<F>): <E, A>(fa: Kind3<F, E, A, Point>) => Path
-export declare function path<F extends URIS2>(foldable: Foldable2<F>): <A>(fa: Kind2<F, A, Point>) => Path
-export declare function path<F extends URIS>(foldable: Foldable1<F>): (fa: Kind<F, Point>) => Path
-export declare function path<F>(F: Foldable<F>): (fa: HKT<F, Point>) => Path
+export declare function path<F extends TypeLambda>(F: Foldable<F>): <R, O, E>(fa: Kind<F, R, O, E, Point>) => Path
 ```
 
 Added in v1.0.0

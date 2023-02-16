@@ -1,6 +1,6 @@
 ---
 title: Font.ts
-nav_order: 4
+nav_order: 12
 parent: Modules
 ---
 
@@ -34,7 +34,7 @@ Constructs a new `Font`.
 **Signature**
 
 ```ts
-export declare const font: (fontFamily: string, size: number, options?: FontOptions) => Font
+export declare const font: (fontFamily: FontFamily, size: number, options?: FontOptions | undefined) => Font
 ```
 
 Added in v1.0.0
@@ -51,9 +51,9 @@ export declare const fontOptions: ({
   variant,
   weight,
 }: {
-  readonly style?: string
-  readonly variant?: string
-  readonly weight?: string
+  readonly style?: string | undefined
+  readonly variant?: string | undefined
+  readonly weight?: string | undefined
 }) => FontOptions
 ```
 
@@ -68,7 +68,7 @@ The `Show` instance for `Font`.
 **Signature**
 
 ```ts
-export declare const showFont: S.Show<Font>
+export declare const showFont: { show: ({ fontFamily, size, fontOptions }: Font) => string }
 ```
 
 Added in v1.0.0
@@ -80,7 +80,7 @@ The `Show` instance for `FontOptions`.
 **Signature**
 
 ```ts
-export declare const showFontOptions: S.Show<FontOptions>
+export declare const showFontOptions: { show: (o: FontOptions) => string }
 ```
 
 Added in v1.0.0

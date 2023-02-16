@@ -11,7 +11,7 @@
 To install the stable version:
 
 ```
-npm install graphics-ts fp-ts fp-ts-contrib
+npm install graphics-ts @fp-ts/core @effect/core @effect/data
 ```
 
 Note: `fp-ts` and `fp-ts-contrib` are peer dependencies for `graphics-ts`
@@ -25,11 +25,11 @@ Note: `fp-ts` and `fp-ts-contrib` are peer dependencies for `graphics-ts`
 To run the example, clone the repository and run the following:
 
 ```
-npm install
-npm start
-open example/test.html
+pnpm install
+pnpm start
+open http://localhost:5173/
 ```
 
-<img alt="snowflake" src="./example/snowflake.png" style="display: block; width: 400px; margin-bottom: 1em;">
+<img alt="snowflake" src="./example/snowflake.png" style="display: block; width: 100%; max-width: 800px; margin-bottom: 1em;">
 
 Adapted from https://github.com/purescript-contrib/purescript-drawing/blob/master/test/Main.purs

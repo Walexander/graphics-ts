@@ -40,5 +40,11 @@
     "removeComments": false,
     "plugins": [{ "name": "@effect/language-service" }]
   },
-  "include": ["./src/", "./test"]
+  "include": ["./src/", "./test"],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs",
+      "target": "ES2017"
+    }
+  }
 }

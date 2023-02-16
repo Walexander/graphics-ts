@@ -1,6 +1,6 @@
 ---
 title: Drawing.ts
-nav_order: 3
+nav_order: 11
 parent: Modules
 ---
 
@@ -12,32 +12,26 @@ when using the `Canvas` module directly and instead allows us to be more declara
 Taking the MDN example from the `Canvas` documentation,
 
 ```ts
-import { error } from 'fp-ts/lib/Console'
-import { pipe } from 'fp-ts/lib/pipeable'
-import * as R from 'fp-ts-contrib/lib/ReaderIO'
-import * as C from 'graphics-ts/lib/Canvas'
-import * as Color from 'graphics-ts/lib/Color'
-import * as S from 'graphics-ts/lib/Shape'
+import { pipe } from '@fp-ts/core/Function'
+import * as E from '@effect/io/Effect'
+import * as C from 'graphics-ts/Canvas'
+import * as S from 'graphics-ts/Shape'
 
 const canvasId = 'canvas'
-
-const triangle: C.Render<void> = C.fillPath(
-  pipe(
-    C.setFillStyle(pipe(Color.black, Color.toCss)),
-    R.chain(() => C.moveTo(S.point(75, 50))),
-    R.chain(() => C.lineTo(S.point(100, 75))),
-    R.chain(() => C.lineTo(S.point(100, 25)))
-  )
-)
-
-C.renderTo(canvasId, () => error(`[ERROR]: Unable to find canvas with id ${canvasId}`))(triangle)()
+const triangle = IO.collectAllDiscard([
+  C.beginPath,
+  C.moveTo(75, 50),
+  C.lineTo(100, 75),
+  C.lineTo(100, 25),
+   C.setFillStyle('black')
+  C.fill(),
+])
 ```
 
-the `triangle` renderer above becomes the following
+the `triangle` drawing above becomes the following
 
 ```ts
-import { error } from 'fp-ts/lib/Console'
-import * as RA from 'fp-ts/lib/ReadonlyArray'
+import * as RA from '@fp-ts/core/ReadonlyArray'
 import * as C from 'graphics-ts/lib/Canvas'
 import * as Color from 'graphics-ts/lib/Color'
 import * as D from 'graphics-ts/lib/Drawing'
@@ -48,8 +42,17 @@ const canvasId = 'canvas'
 const triangle: C.Render<void> = D.render(
   D.fill(S.path(RA.readonlyArray)([S.point(75, 50), S.point(100, 75), S.point(100, 25)]), D.fillStyle(Color.black))
 )
+```
 
-C.renderTo(canvasId, () => error(`[ERROR]: Unable to find canvas with id ${canvasId}`))(triangle)()
+either `triangle` can be rendered via
+
+```ts
+pipe(
+  triangle,
+  C.renderTo(canvasId),
+  IO.catchAll((e) => Effect.logError(`error opening #${canvasId}: ${e.message}`)),
+  IO.runPromise
+)
 ```
 
 Adapted from https://github.com/purescript-contrib/purescript-drawing
@@ -110,7 +113,7 @@ Renders a `Drawing`.
 **Signature**
 
 ```ts
-export declare const render: (drawing: Drawing) => C.Render<CanvasRenderingContext2D>
+export declare const render: (drawing: Drawing) => IO.Effect<CanvasRenderingContext2D | Drawable<Drawing>, never, void>
 ```
 
 Added in v1.0.0
@@ -122,7 +125,7 @@ Renders a `Shape`.
 **Signature**
 
 ```ts
-export declare const renderShape: (shape: Shape) => C.Render<CanvasRenderingContext2D>
+export declare const renderShape: (shape: Shape) => IO.Effect<Drawable<Shape>, never, void>
 ```
 
 Added in v1.1.0
@@ -136,7 +139,7 @@ Clips a `Drawing` using the specified `Shape`.
 **Signature**
 
 ```ts
-export declare const clipped: (shape: Shape, drawing: Drawing) => Drawing
+export declare const clipped: (shape: Shape) => (drawing: Drawing) => Drawing
 ```
 
 Added in v1.0.0
@@ -184,7 +187,7 @@ Construct a single `Drawing` from a collection of `Many` `Drawing`s.
 **Signature**
 
 ```ts
-export declare const many: (drawings: readonly Drawing[]) => Drawing
+export declare const many: (drawings: ReadonlyArray<Drawing>) => Drawing
 ```
 
 Added in v1.0.0
@@ -220,7 +223,7 @@ Applies rotation to the transform of a `Drawing`.
 **Signature**
 
 ```ts
-export declare const rotate: (angle: number, drawing: Drawing) => Drawing
+export declare function rotate(angle: number): (drawing: Drawing) => Drawing
 ```
 
 Added in v1.0.0
@@ -232,7 +235,7 @@ Applies scale to the transform of a `Drawing`.
 **Signature**
 
 ```ts
-export declare const scale: (scaleX: number, scaleY: number, drawing: Drawing) => Drawing
+export declare function scale(scaleX: number, scaleY: number): (drawing: Drawing) => Drawing
 ```
 
 Added in v1.0.0
@@ -292,7 +295,7 @@ Applies translation to the transform of a `Drawing`.
 **Signature**
 
 ```ts
-export declare const translate: (translateX: number, translateY: number, drawing: Drawing) => Drawing
+export declare function translate(translateX: number, translateY: number): (drawing: Drawing) => Drawing
 ```
 
 Added in v1.0.0
@@ -304,7 +307,7 @@ Applies `Shadow` to a `Drawing`.
 **Signature**
 
 ```ts
-export declare const withShadow: (shadow: Shadow, drawing: Drawing) => Drawing
+export declare function withShadow(shadow: Shadow): (drawing: Drawing) => Drawing
 ```
 
 Added in v1.0.0
@@ -330,7 +333,7 @@ Gets a `Monoid` instance for `FillStyle`.
 **Signature**
 
 ```ts
-export declare const monoidFillStyle: M.Monoid<FillStyle>
+export declare const monoidFillStyle: M.Monoid<{ readonly color: O.Option<Color> }>
 ```
 
 Added in v1.0.0
@@ -348,18 +351,8 @@ export declare const monoidOutlineStyle: M.Monoid<OutlineStyle>
 **Example**
 
 ```ts
-import * as O from 'fp-ts/lib/Option'
-import * as M from 'fp-ts/lib/Monoid'
-import * as Color from 'graphics-ts/lib/Color'
-import * as D from 'graphics-ts/lib/Drawing'
-
-assert.deepStrictEqual(
-  M.fold(D.monoidOutlineStyle)([D.outlineColor(Color.black), D.outlineColor(Color.white), D.lineWidth(5)]),
-  {
-    color: O.some(Color.black),
-    lineWidth: O.some(5),
-  }
-)
+import * as D from 'graphics-ts/Drawing'
+D.monoidOutlineStyle.combineAll([])
 ```
 
 Added in v1.0.0
