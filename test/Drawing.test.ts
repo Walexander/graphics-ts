@@ -31,6 +31,20 @@ describe('Drawing', () => {
         color: O.some(Color.black)
       })
     })
+    describe('example', () => {
+      it('should work', () => {
+        const expected = {
+          color: O.some(Color.black),
+          lineWidth: O.some(5)
+        }
+        const actual = D.monoidOutlineStyle.combineAll([
+          D.outlineColor(Color.black),
+          D.outlineColor(Color.white),
+          D.lineWidth(5)
+        ])
+        assert.deepStrictEqual(actual, expected)
+      })
+    })
   })
 
   describe('outlineColor', () => {

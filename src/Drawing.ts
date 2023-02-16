@@ -338,7 +338,16 @@ export interface Shadow {
  * @category model
  * @since 1.0.0
  */
-export type Drawing = Clipped | Fill | Outline | Many | Rotate | Scale | Text | Translate | WithShadow
+export type Drawing =
+  | Clipped
+  | Fill
+  | Outline
+  | Many
+  | Rotate
+  | Scale
+  | Text
+  | Translate
+  | WithShadow
 
 // -------------------------------------------------------------------------------------
 // constructors
@@ -364,7 +373,11 @@ export const clipped =
  * @category constructors
  * @since 1.0.0
  */
-export const fill: (shape: Shape, style: FillStyle) => Drawing = (shape, style) => ({ _tag: 'Fill', shape, style })
+export const fill: (shape: Shape, style: FillStyle) => Drawing = (shape, style) => ({
+  _tag: 'Fill',
+  shape,
+  style
+})
 
 /**
  * Constructs a `FillStyle`.
@@ -372,7 +385,7 @@ export const fill: (shape: Shape, style: FillStyle) => Drawing = (shape, style) 
  * @category constructors
  * @since 1.0.0
  */
-export const fillStyle: (color: Color) => FillStyle = (c) => ({ color: O.some(c) })
+export const fillStyle: (color: Color) => FillStyle = c => ({ color: O.some(c) })
 
 /**
  * Constructs a `Drawing` from an `Outline` `Shape`.
@@ -392,7 +405,7 @@ export const outline: (shape: Shape, style: OutlineStyle) => Drawing = (shape, s
  * @category constructors
  * @since 1.0.0
  */
-export const outlineColor: (color: Color) => OutlineStyle = (c) => ({
+export const outlineColor: (color: Color) => OutlineStyle = c => ({
   color: O.some(c),
   lineWidth: O.none()
 })
@@ -403,7 +416,7 @@ export const outlineColor: (color: Color) => OutlineStyle = (c) => ({
  * @category constructors
  * @since 1.0.0
  */
-export const lineWidth: (lineWidth: number) => OutlineStyle = (w) => ({
+export const lineWidth: (lineWidth: number) => OutlineStyle = w => ({
   color: O.none(),
   lineWidth: O.some(w)
 })
@@ -414,7 +427,10 @@ export const lineWidth: (lineWidth: number) => OutlineStyle = (w) => ({
  * @category constructors
  * @since 1.0.0
  */
-export const many: (drawings: ReadonlyArray<Drawing>) => Drawing = (drawings) => ({ _tag: 'Many', drawings })
+export const many: (drawings: ReadonlyArray<Drawing>) => Drawing = drawings => ({
+  _tag: 'Many',
+  drawings
+})
 
 /**
  * Applies rotation to the transform of a `Drawing`.
@@ -423,7 +439,7 @@ export const many: (drawings: ReadonlyArray<Drawing>) => Drawing = (drawings) =>
  * @since 1.0.0
  */
 export function rotate(angle: number): (drawing: Drawing) => Drawing {
-  return (drawing) => ({
+  return drawing => ({
     _tag: 'Rotate',
     angle,
     drawing
@@ -436,7 +452,7 @@ export function rotate(angle: number): (drawing: Drawing) => Drawing {
  * @since 1.0.0
  */
 export function scale(scaleX: number, scaleY: number): (drawing: Drawing) => Drawing {
-  return (drawing) => ({
+  return drawing => ({
     _tag: 'Scale',
     scaleX,
     scaleY,
@@ -471,7 +487,7 @@ export const text: (font: Font, x: number, y: number, style: FillStyle, text: st
  * @since 1.0.0
  */
 export function translate(translateX: number, translateY: number): (drawing: Drawing) => Drawing {
-  return (drawing) => ({ _tag: 'Translate', translateX, translateY, drawing })
+  return drawing => ({ _tag: 'Translate', translateX, translateY, drawing })
 }
 
 /**
@@ -481,7 +497,7 @@ export function translate(translateX: number, translateY: number): (drawing: Dra
  * @since 1.0.0
  */
 export function withShadow(shadow: Shadow): (drawing: Drawing) => Drawing {
-  return (drawing) => ({
+  return drawing => ({
     _tag: 'WithShadow',
     shadow,
     drawing
@@ -493,7 +509,7 @@ export function withShadow(shadow: Shadow): (drawing: Drawing) => Drawing {
  * @category constructors
  * @since 1.0.0
  */
-export const shadowBlur: (blurRadius: number) => Shadow = (b) => ({
+export const shadowBlur: (blurRadius: number) => Shadow = b => ({
   color: O.none(),
   blur: O.some(b),
   offset: O.none()
@@ -505,7 +521,7 @@ export const shadowBlur: (blurRadius: number) => Shadow = (b) => ({
  * @category constructors
  * @since 1.0.0
  */
-export const shadowColor: (color: Color) => Shadow = (c) => ({
+export const shadowColor: (color: Color) => Shadow = c => ({
   color: O.some(c),
   blur: O.none(),
   offset: O.none()
@@ -517,7 +533,7 @@ export const shadowColor: (color: Color) => Shadow = (c) => ({
  * @category constructors
  * @since 1.0.0
  */
-export const shadowOffset: (offsetPoint: Point) => Shadow = (o) => ({
+export const shadowOffset: (offsetPoint: Point) => Shadow = o => ({
   color: O.none(),
   blur: O.none(),
   offset: O.some(o)
@@ -533,9 +549,7 @@ export const shadowOffset: (offsetPoint: Point) => Shadow = (o) => ({
  * @category combinators
  * @since 1.1.0
  */
-export const renderShape: (
-  shape: Shape
-) => IO.Effect<Drawable<Shape>, never, void> = drawShape
+export const renderShape: (shape: Shape) => IO.Effect<Drawable<Shape>, never, void> = drawShape
 /**
  * Renders a `Drawing`.
  *
@@ -564,27 +578,13 @@ export const monoidFillStyle = M.struct<FillStyle>({
  * Gets a `Monoid` instance for `OutlineStyle`.
  *
  * @example
- * import * as O from 'fp-ts/lib/Option'
- * import * as M from 'fp-ts/lib/Monoid'
- * import * as Color from 'graphics-ts/lib/Color'
- * import * as D from 'graphics-ts/lib/Drawing'
- *
- * assert.deepStrictEqual(
- *   M.fold(D.monoidOutlineStyle)([
- *     D.outlineColor(Color.black),
- *     D.outlineColor(Color.white),
- *     D.lineWidth(5)
- *   ]),
- *   {
- *     color: O.some(Color.black),
- *     lineWidth: O.some(5)
- *   }
- * )
+ * import * as D from 'graphics-ts/Drawing'
+ * D.monoidOutlineStyle.combineAll([])
  *
  * @category instances
  * @since 1.0.0
  */
-export const monoidOutlineStyle = M.struct<OutlineStyle>({
+export const monoidOutlineStyle: M.Monoid<OutlineStyle> = M.struct<OutlineStyle>({
   color: getFirstMonoidColor,
   lineWidth: getFirstMonoidNumber
 })
@@ -595,7 +595,7 @@ export const monoidOutlineStyle = M.struct<OutlineStyle>({
  * @category instances
  * @since 1.0.0
  */
-export const monoidShadow = M.struct<Shadow>({
+export const monoidShadow: M.Monoid<Shadow> = M.struct<Shadow>({
   color: getFirstMonoidColor,
   blur: getFirstMonoidNumber,
   offset: getFirstMonoidPoint

@@ -441,7 +441,11 @@ height="${CANVAS_HEIGHT}"
           testCtx.arcTo(x1, y1, x2, y2, r)
           return (testCtx as any).__getEvents()
         })
-        return testCanvas(C.arcTo(x1, y1, x2, y2, r), expected)
+        const sut = pipe(
+          C.arcTo(x1, y1, x2, y2, r),
+          IO.zipRight(IO.service(C.Tag))
+        )
+        return testCanvas(sut, expected)
       })
     })
 
@@ -486,6 +490,7 @@ height="${CANVAS_HEIGHT}"
         const rect = S.rect(10, 20, 150, 100)
         return pipe(
           C.clearRect(rect.x, rect.y, rect.width, rect.height),
+          IO.zipRight(IO.service(Canvas.Tag)),
           IO.map((ctx) => expect(ctx.clearRect as Mock).toHaveBeenCalledWith(rect.x, rect.y, rect.width, rect.height))
         )
       })
@@ -496,6 +501,7 @@ height="${CANVAS_HEIGHT}"
         const sut = pipe(
           C.beginPath,
           IO.zipRight(C.clip()),
+          IO.zipRight(IO.service(Canvas.Tag)),
         )
 
         // Actual
@@ -513,6 +519,7 @@ height="${CANVAS_HEIGHT}"
         const sut = pipe(
           C.beginPath,
           IO.zipRight(C.clip(fillRule)),
+          IO.zipRight(IO.service(Canvas.Tag)),
         )
 
         // Actual
@@ -529,7 +536,9 @@ height="${CANVAS_HEIGHT}"
         const fillRule = 'nonzero'
         const path = new Path2D()
         path.rect(10, 10, 100, 100)
-        const sut = pipe(C.beginPath, IO.zipRight(C.clip(fillRule, path)))
+        const sut = pipe(C.beginPath, IO.zipRight(C.clip(fillRule, path)),
+          IO.zipRight(IO.service(Canvas.Tag)),
+        )
         const expected = IO.sync(() => {
           testCtx.beginPath()
           testCtx.clip(path, fillRule)
@@ -545,7 +554,8 @@ height="${CANVAS_HEIGHT}"
         const sut = pipe(
           C.beginPath,
           IO.zipRight(C.stroke()),
-          IO.zipRight(C.closePath)
+          IO.zipRight(C.closePath),
+          IO.zipRight(IO.service(Canvas.Tag)),
         )
         const expected = IO.sync(() => {
           testCtx.beginPath()

@@ -3,6 +3,7 @@ import { pipe, constant } from '@fp-ts/core/Function'
 import * as RA from '@fp-ts/core/ReadonlyArray'
 import { fromNullable } from '@fp-ts/core/Option'
 import * as IO from '@effect/io/Effect'
+import { Effect } from '@effect/io/Effect'
 import {
   LineCap,
   LineJoin,
@@ -76,7 +77,7 @@ export function setHeight(height: number) {
  * @category combinators
  * @since 1.0.0
  */
-export const dimensions: IO.Effect<CanvasRenderingContext2D, never, CanvasDimensions> = IO.struct({
+export const dimensions: Effect<CanvasRenderingContext2D, never, CanvasDimensions> = IO.struct({
   width,
   height
 })
@@ -112,7 +113,7 @@ export const toDataURL = withCanvas((ctx) =>
  * @since 1.0.0
  */
   
-export const setFillStyle: (style: string | CanvasGradient | CanvasPattern) => IO.Effect<CanvasRenderingContext2D, never, CanvasRenderingContext2D> = (style: string | CanvasGradient | CanvasPattern) =>
+export const setFillStyle: (style: string | CanvasGradient | CanvasPattern) => Effect<CanvasRenderingContext2D, never, CanvasRenderingContext2D> = (style: string | CanvasGradient | CanvasPattern) =>
   withCanvas((ctx) =>
     pipe(
       IO.sync(() => (ctx.fillStyle = style)),
@@ -272,7 +273,6 @@ export function setLineJoin(join: LineJoin) {
   return withCanvas((ctx) =>
     IO.sync(() => {
       ctx.lineJoin = join
-      return ctx
     })
   )
 }
@@ -328,7 +328,7 @@ export function setMiterLimit(miterLimit: number) {
  * @category combinators
  * @since 2.0.0
  */
-export const miterLimit: IO.Effect<CanvasRenderingContext2D, never, number> = withCanvas((ctx) =>
+export const miterLimit: Effect<CanvasRenderingContext2D, never, number> = withCanvas((ctx) =>
   IO.sync(() => ctx.miterLimit)
 )
 /** @since 1.0.0 */
@@ -520,7 +520,6 @@ export function arcTo (
   return withCanvas((ctx) =>
     IO.sync(() => {
       ctx.arcTo(x1, y1, x2, y2, radius)
-      return ctx
     })
   )
 }
@@ -554,7 +553,6 @@ export function bezierCurveTo(
   return withCanvas((ctx) =>
     IO.sync(() => {
       ctx.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, x, y)
-      return ctx
     })
   )
 }
@@ -573,7 +571,6 @@ export function clearRect(
   return withCanvas((ctx) =>
     IO.sync(() => {
       ctx.clearRect(x, y, width, height)
-      return ctx
     })
   )
 }
@@ -594,7 +591,6 @@ export function clip(fillRule?: FillRule, path?: Path2D)  {
       } else {
         ctx.clip()
       }
-      return ctx
     })
   )
 }
@@ -607,7 +603,6 @@ export function clip(fillRule?: FillRule, path?: Path2D)  {
 export const closePath =  withCanvas((ctx) =>
   IO.sync(() => {
     ctx.closePath()
-    return ctx
   })
 )
 
@@ -686,7 +681,6 @@ export const drawFocusIfNeeded= (
       } else {
         ctx.drawFocusIfNeeded(element)
       }
-      return ctx
     })
   )
 
@@ -704,7 +698,6 @@ export const drawImage= (
   withCanvas((ctx) =>
     IO.sync(() => {
       ctx.drawImage(imageSource, offsetX, offsetY)
-      return ctx
     })
   )
 
@@ -724,7 +717,6 @@ export const drawImageScale = (
   withCanvas((ctx) =>
     IO.sync(() => {
       ctx.drawImage(imageSource, offsetX, offsetY, width, height)
-      return ctx
     })
   )
 
@@ -758,7 +750,6 @@ export const drawImageFull = (
         canvasImageWidth,
         canvasImageHeight
       )
-      return ctx
     })
   )
 
@@ -781,7 +772,6 @@ export function ellipse(
   return withCanvas((ctx) =>
     IO.sync(() => {
       ctx.ellipse(x, y, rx, ry, rotation, start, end, anticlockwise)
-      return ctx
     })
   )
 }
@@ -804,7 +794,6 @@ export const fill = (
       } else {
         ctx.fill()
       }
-      return ctx
     })
   )
 
@@ -823,7 +812,6 @@ export function fillRect(
   return withCanvas((ctx) =>
     IO.sync(() => {
       ctx.fillRect(x, y, width, height)
-      return ctx
     })
   )
 }
@@ -846,7 +834,6 @@ export const fillText= (
       } else {
         ctx.fillText(t, x, y)
       }
-      return ctx
     })
   )
 
@@ -933,7 +920,6 @@ export const lineTo = (x: number, y: number) =>
   withCanvas((ctx) =>
     IO.sync(() => {
       ctx.lineTo(x, y)
-      return ctx
     })
   )
 
@@ -956,7 +942,6 @@ export function moveTo(x: number, y: number) {
   return withCanvas((ctx) =>
     IO.sync(() => {
       ctx.moveTo(x, y)
-      return ctx
     })
   )
 }
@@ -975,7 +960,6 @@ export const putImageData= (
   withCanvas((ctx) =>
     IO.sync(() => {
       ctx.putImageData(imageData, dx, dy)
-      return ctx
     })
   )
 
@@ -997,7 +981,6 @@ export const putImageDataFull= (
   withCanvas((ctx) =>
     IO.sync(() => {
       ctx.putImageData(data, dx, dy, dirtyX, dirtyY, dirtyW, dirtyH)
-      return ctx
     })
   )
 
@@ -1016,7 +999,6 @@ export const quadraticCurveTo= (
   withCanvas((ctx) =>
     IO.sync(() => {
       ctx.quadraticCurveTo(cpx, cpy, x, y)
-      return ctx
     })
   )
 
@@ -1035,7 +1017,6 @@ export function rect(
   return withCanvas((ctx) =>
     IO.sync(() => {
       ctx.rect(x, y, width, height)
-      return ctx
     })
   )
 }
@@ -1048,7 +1029,6 @@ export function rect(
 export const restore = withCanvas((ctx) =>
   IO.sync(() => {
     ctx.restore()
-    return ctx
   })
 )
 
@@ -1062,7 +1042,6 @@ export const rotate = (angle: number) =>
   withCanvas((ctx) =>
     IO.sync(() => {
       ctx.rotate(angle)
-      return ctx
     })
   )
 
@@ -1075,7 +1054,6 @@ export const rotate = (angle: number) =>
 export const save = withCanvas((ctx) =>
   IO.sync(() => {
     ctx.save()
-    return ctx
   })
 )
 
@@ -1089,7 +1067,6 @@ export const scale = (scaleX: number, scaleY: number) =>
   withCanvas((ctx) =>
     IO.sync(() => {
       ctx.scale(scaleX, scaleY)
-      return ctx
     })
   )
 
@@ -1102,7 +1079,6 @@ export const scale = (scaleX: number, scaleY: number) =>
 export function setLineDash(segments: ReadonlyArray<number>) {
   return withCanvas((ctx) => IO.sync(() => {
     ctx.setLineDash(RA.copy(segments))
-    return ctx
   })
   )
 }
@@ -1125,7 +1101,6 @@ export function setTransform(
   return withCanvas((ctx) =>
     IO.sync(() => {
       ctx.setTransform(a, b, c, d, e, f)
-      return ctx
     })
   )
 }
@@ -1139,7 +1114,6 @@ export function setTransform(
 export function setTransformMatrix(matrix: DOMMatrix) {
   return withCanvas((ctx) => IO.sync(() => {
     ctx.setTransform(matrix)
-    return ctx
   })
   )
 }
@@ -1158,7 +1132,6 @@ export function stroke(path?: Path2D) {
       } else {
         ctx.stroke()
       }
-      return ctx
     })
   )
 }
@@ -1173,7 +1146,6 @@ export function strokeRect(x: number, y: number, width: number, height: number) 
   return withCanvas((ctx) =>
     IO.sync(() => {
       ctx.strokeRect(x, y, width, height)
-      return ctx
     })
   )
 }
@@ -1196,7 +1168,6 @@ export function strokeText(
       } else {
         ctx.strokeText(text, x, y)
       }
-      return ctx
     })
   )
 }
@@ -1210,7 +1181,6 @@ export const transform = (m11: number, m12: number, m21: number, m22: number, m3
   withCanvas((ctx) =>
     IO.sync(() => {
       ctx.transform(m11, m12, m21, m22, m31, m32)
-      return ctx
     })
   )
 
@@ -1224,7 +1194,6 @@ export const translate = (x: number, y: number) =>
   withCanvas((ctx) =>
     IO.sync(() => {
       ctx.translate(x, y)
-      return ctx
     })
   )
 
@@ -1276,11 +1245,11 @@ export function withContext<R, E, A>(effect: Render<A, E, R>): Render<A, E, R> {
 }
 
 function withCanvas<R, E, A>(
-  f: (ctx: CanvasRenderingContext2D) => IO.Effect<R, E, A>
-): IO.Effect<R | CanvasRenderingContext2D, E, A> {
+  f: (ctx: CanvasRenderingContext2D) => Effect<R, E, A>
+): Effect<R | CanvasRenderingContext2D, E, A> {
   return IO.serviceWithEffect(Tag, f)
 }
 
 declare function withGradient<R, E, A>(
-  f: (gradient: CanvasGradient) => IO.Effect<R, E, A>
+  f: (gradient: CanvasGradient) => Effect<R, E, A>
 ): Render<A, E, R>
