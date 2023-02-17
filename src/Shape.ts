@@ -7,7 +7,7 @@ import { Kind, TypeLambda } from '@fp-ts/core/HKT'
 import { Foldable } from '@fp-ts/core/typeclass/Foldable'
 import * as RA from '@fp-ts/core/ReadonlyArray'
 import * as M from '@fp-ts/core/typeclass/Monoid'
-import {constant} from '@fp-ts/core/Function'
+import {constant, pipe} from '@fp-ts/core/Function'
 
 // -------------------------------------------------------------------------------------
 // model
@@ -397,6 +397,17 @@ export const rect = (x: number, y: number, width: number, height: number): Rect 
   width,
   height
 })
+/**
+ * Create an equilateral polygon of `n` sides
+ *
+ * @category constructors
+ * @since 2.0.0
+ */
+export const polygon = (sides: number): Shape => pipe(
+  RA.range(0, sides - 1),
+  RA.map((n) => pipe((Math.PI / (sides / 2)) * n, (theta) => point(Math.sin(theta), Math.cos(theta)))),
+  closed(RA.Foldable)
+)
 
 // -------------------------------------------------------------------------------------
 // instances

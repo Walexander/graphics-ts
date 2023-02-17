@@ -1,5 +1,4 @@
 import * as IO from '@effect/io/Effect'
-import * as Layer from '@effect/io/Layer'
 import * as RA from '@fp-ts/core/ReadonlyArray'
 import * as Duration from '@fp-ts/data/Duration'
 import { pipe } from '@fp-ts/core/Function'
@@ -9,7 +8,67 @@ import * as Color from '../src/Color'
 import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
 import * as S from '../src/Shape'
-const SCALE = 375 / 1000 //0.35
+
+// this is exported for rendering within a service worker
+export function snowFlakes(canvas: CanvasRenderingContext2D|string, iters: number) {
+  return pipe(
+    // this is our main program.
+    // It has dependencies on the CanvasRenderingContext2D
+    // and a `Drawable<Drawing>`
+    loopFlakes(iters), // IO.Effect<CanvasRenderingContext2D | Drawable<D.Drawing>, C.CanvasError, void>
+    // First, provide the Drawable instance for our Drawings
+    // This depends on a `Drawable<Shape>` service
+    IO.provideSomeLayer(DrawsDrawingsLive),
+    // This allows us to animate drawing 
+    // with a slight delay between shapes
+    withDelay(Duration.millis(16)),
+    // Provide a live instance for `Drawable<Shape>`
+    IO.provideSomeLayer(DrawsShapesLive),
+    // This provides our final dependency: `CanvasRenderingContext2D`
+    C.renderTo(canvas),
+  )
+}
+
+// this is our main rendering loop.
+// it iteratively draws a new `snowflake(1..total)` every `1/iteration` seconds
+function loopFlakes(total: number) {
+  return IO.loopDiscard(
+    1,
+    (z) => z <= total,
+    (z) => z + 1,
+    (z) => pipe(
+      C.dimensions,
+      // Make our snowflake
+      IO.map(({width, height}) => flakeDrawing(z, 5, width, height)),
+      // Now, time how long it takes to draw
+      IO.flatMap(drawing => IO.timed(D.draw(drawing))),
+      // Log the duration, but keep the previous result
+      IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration.millis}ms`)),
+      // Pause to allow the user to behold the wonder
+      IO.zipLeft(pipe(IO.unit(), IO.delay(Duration.seconds(1))))
+    )
+  )
+}
+
+//
+function flakeDrawing(z: number, sides: number, width: number, height: number) {
+  const flake = pipe(
+    // generate a snowflake drawing for this iteration
+    snowflake(z, sides),
+    // scale the whole thing by 25%
+    D.scale(width / 4, height / 4),
+    // translate it to the middle of the canvas
+    D.translate(width / 2, height / 2),
+    // add a shadow
+    D.withShadow(D.monoidShadow.combine(D.shadowColor(Color.black), D.shadowBlur(10)))
+  )
+  return D.many([
+    // put half opacity to fade the layer below us
+    clear(width, height),
+    flake
+  ])
+}
+const scale = 375 / 1000
 const colors: ReadonlyArray<Color.Color> = [
   Color.hsla(60, 0.6, 0.5, 1),
   Color.hsla(55, 0.65, 0.55, 1),
@@ -19,143 +78,46 @@ const colors: ReadonlyArray<Color.Color> = [
   Color.hsla(268, 1, 0.18, 1),
   Color.hsla(240, 1, 0.01, 1)
 ]
-const polygon = (sides: number): S.Path => pipe(
-  RA.range(0, sides - 1),
-  RA.map((n) => pipe((Math.PI / (sides / 2)) * n, (theta) => S.point(Math.sin(theta), Math.cos(theta)))),
-  S.closed(RA.Foldable)
-)
-// this is exported to our main thread and will return
-// an Effect that either uses a Worker or runs on the main thread
-export function snowFlakes(canvasId: string, iters: number) {
-  return snowflakeMain(canvasId, iters)
-  // return navigator.userAgent.indexOf('Chrome') >= 0 // 🙁 requires module workers and OffscreenCanvas
-  //   ? snowflakeWorker(canvasId, iters)
-  //   : snowflakeMain(canvasId, iters)
-}
 
-// this is exported for rendering within a service worker
-export function runFlakes(canvas: CanvasRenderingContext2D, iters: number) {
-  return pipe(
-    makeFlakes(iters),
-    IO.provideSomeLayer(Layer.succeed(C.Tag, canvas)),
-    IO.provideSomeLayer(DrawsDrawingsLive),
-    withDelay(Duration.millis(1)),
-    IO.provideSomeLayer(DrawsShapesLive),
-    C.renderToCanvas(canvas),
-    IO.runPromise
-  )
-}
-
-// this is our main rendering loop.
-// it iteratively draws a new `snowflake(1..total)` every `1/iteration` seconds
-function makeFlakes(total: number) {
-  return pipe(
-    IO.loopDiscard(
-      1,
-      (z) => z <= total,
-      (z) => z + 1,
-      (z) => drawFlakes(z, 5)
-    ),
-  )
-
-}
-// draw the flakes at `z` iteration
-function drawFlakes(z: number, sides = 5) {
-  return pipe(
-    C.dimensions,
-    IO.flatMap(({width, height}) => pipe(
-      // generate a snowflake drawing for this iteration
-      snowflake(z, sides),
-      // scale the whole drawing by 1/4 our width and place
-      // it in the middle of the canvas
-      D.scale(width / 4, height / 4),
-      D.translate(width / 2, height / 2),
-      // nice looking shadow
-      D.withShadow(D.monoidShadow.combine(D.shadowColor(Color.black), D.shadowBlur(10))),
-      (drawing) => pipe(
-        // fade the current canvas
-        C.setFillStyle(`hsla(0deg 0% 100%/0.5)`),
-        IO.zipRight(C.fillRect(0, 0, width, height)),
-        // render the drawing
-        IO.zipRight(D.draw(drawing)),
-      ),
-      // get the resulting effect's duration
-      IO.timed,
-      IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration.millis}ms`)),
-      // a little delay
-      IO.zipLeft(
-        // pause *after* this unit effect, ie after we draw,
-        pipe(IO.unit(), IO.delay(Duration.seconds(1 / z)))
-      )
-    ))
-  )
-}
 
 // this function recursively creates a new drawing,
 // makes 5 more copies, each scaled down 0.375 and
 // placed on the edge of a unit pentagon,
 // which is then prepended to the Drawing
-//
 function snowflake(n: number, sides: number): D.Drawing {
+  const polygon = S.polygon(sides)
+  const color = colors[n % colors.length]
+
   return n <= 0 ? D.monoidDrawing.empty : pipe(
+    // get our immediate "child" drawing
     snowflake(n - 1, sides),
-    D.scale(SCALE, SCALE),
-    _ => makeMore(_, sides),
-    RA.prepend(D.fill(polygon(sides), D.fillStyle(colors[n % colors.length]))),
-    D.monoidDrawing.combineAll
-  )
-}
-
-// this will make 5 copies of a drawing and place each
-// equally around a circle
-function makeMore(child: D.Drawing, size = 5): D.Drawing[] {
-  return pipe(
-    RA.range(0, size - 1),
-    RA.map((j) =>
-      pipe(
-        child,
-        D.translate(0, Math.cos(Math.PI / size) * (1 + SCALE)),
-        D.rotate((Math.PI / (size / 2)) * (j + 0.5))
-      )
-    )
-  )
-}
-
-// On the main thread we delay all calls to `draw` our shapes,
-// yielding CPU and providing an animated effect
-function snowflakeMain(id: string, iters: number) {
-  return pipe(
-    makeFlakes(iters),
-    IO.provideSomeLayer(DrawsDrawingsLive),
-    withDelay(Duration.millis(1)),
-    IO.provideSomeLayer(DrawsShapesLive),
-    C.renderTo(id),
-  )
-}
-
-function makeWorker() {
-  return pipe(
-    IO.attempt(
-      () =>
-        new Worker(new URL('./snowflake.worker.ts?worker&inline', import.meta.url), {
-          type: 'module'
-        })
+    // scale it down so it fits around the pentagon
+    D.scale(scale, scale),
+    child => pipe(
+      RA.range(0, sides - 1),
+      RA.map((j) =>
+        pipe(
+          // copy the child
+          child,
+          // translate it up by
+          D.translate(0, Math.cos(Math.PI / sides) * (1 + scale)),
+          // and rotate it so its placed on the polygon
+          D.rotate((Math.PI / (sides / 2)) * (j + 0.5))
+        )
+      ),
+      D.many
     ),
-    IO.tapError((_) => IO.logError(`ERROR opening worker`)),
-    IO.orDie
+    // prepend a unit polygon to the drawing
+    (children) => D.combine(
+      D.fill(polygon, D.fillStyle(color)),
+      children
+    ),
   )
 }
-function snowflakeWorker(canvasId: string, iters: number) {
-  return pipe(
-    C.elementById(canvasId),
-    IO.flatMap((a) =>
-      IO.tryCatch(
-        () => a.transferControlToOffscreen(),
-        (error) => new Error(error + '')
-      )
-    ),
-    IO.zip(makeWorker()),
-    IO.tap(([canvas, worker]) => IO.sync(() => worker.postMessage({ iters, canvas }, [canvas]))),
-    IO.catchAll((e) => IO.logError(`Error getting canvas: ${e.message}`))
+
+function clear(width:number, height: number) {
+  return D.fill(
+    S.rect(0, 0, width, height),
+    D.fillStyle(Color.hsla(0, 0,100, 0.5))
   )
 }

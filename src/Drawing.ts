@@ -623,3 +623,16 @@ export const monoidDrawing: M.Monoid<Drawing> = M.fromSemigroup(
   ),
   many(readonlyArrayMonoidDrawing.empty)
 )
+
+/**
+ * Collect an Iterable of Drawings into one bigger shape
+ * @category constructors
+ * @since 1.0.0
+ */
+export const combineAll = monoidDrawing.combineAll
+/**
+ * Combine two drawings together
+ * @category constructors
+ * @since 1.0.0
+ */
+export const combine = monoidDrawing.combine

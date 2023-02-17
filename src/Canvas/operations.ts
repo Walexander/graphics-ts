@@ -1230,6 +1230,16 @@ export const strokePath = <R, E, A>(f: Render<A, E, R>) =>
   pipe(beginPath, IO.zipRight(f), IO.zipLeft(stroke()))
 
 /**
+ * Get access to a raw canvas 2d context and go crazy
+ *
+ * @category combinators
+ * @since 2.0.0
+ */
+export function use<A = void>(f: (canvas: CanvasRenderingContext2D) => A) {
+  return withCanvas(ctx => IO.sync(() => f(ctx)))
+}
+
+/**
  * A convenience function which allows for running an action while preserving the existing
  * canvas context.
  *

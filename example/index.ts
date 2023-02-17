@@ -74,14 +74,28 @@ const canvasDemo = pipe(
         // finally, provide our an actual canvas
         C.renderTo(CANVAS_TWO_ID),
       ),
-      snowFlakes(CANVAS_ONE_ID, 6)
-    ])),
+      snowFlakes(CANVAS_ONE_ID, 4)
+    ])
+  ),
   IO.zipLeft(IO.sync(() => {
     (document.getElementById('restart') as HTMLButtonElement).disabled = false;
     (document.getElementById('restart') as HTMLButtonElement).addEventListener('click', main)
   })
 ))
-
+const canvasDemo2 = C.use((canvas) => {
+  canvas.fillStyle= 'magenta'
+  canvas.fillRect(40, 40, 20, 20)
+})
+const circle = C.use((canvas) => {
+  canvas.fillStyle= 'purple'
+  canvas.arc(50, 50, 5, 0, Math.PI * 2)
+  canvas.fill()
+})
+void IO.runPromise(
+  C.renderTo('canvas3')(
+    IO.collectAllDiscard([canvasDemo2, circle])
+  )
+)
 // The only left to do is *run* the thing.
 function main() { void IO.runPromise(canvasDemo) }
 // Now it's someone else's problem 🤣
