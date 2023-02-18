@@ -16,22 +16,6 @@ import { snowFlakes } from './snowflake'
 
 const CANVAS_ONE_ID = 'canvas1'
 const CANVAS_TWO_ID = 'canvas2'
-
-/**
- * Example of a clipped canvas from [MDN Web Docs](https://mzl.la/3e0mKKx).
- */
-function clippedRect(clip: S.Shape) {
-  return pipe(
-    D.many([
-      // a blue background
-      D.fill(S.rect(0, 0, 600, 600), D.fillStyle(Color.hsl(240, 1, 0.5))),
-      // and red tiles
-      D.translate(25, 25)(D.many(backgroundSquares))
-    ]),
-    // clip out our shape
-    D.clipped(clip),
-  )
-}
 /**
  * A simple animation loop that grows a circle 1px / 16ms
  * and then renders a clipped rect drawing
@@ -58,8 +42,8 @@ const clippingDemo = pipe(
 const canvasDemo = pipe(
   // some button management
   IO.sync(() => {
-    (document.getElementById('restart') as HTMLButtonElement).disabled = true;
-    (document.getElementById('restart') as HTMLButtonElement).removeEventListener('click', main);
+    ;(document.getElementById('restart') as HTMLButtonElement).disabled = true
+    ;(document.getElementById('restart') as HTMLButtonElement).removeEventListener('click', main)
   }),
   IO.zipRight(
     // our clipping demo runs forever but `raceAll`
@@ -68,32 +52,20 @@ const canvasDemo = pipe(
       pipe(
         clippingDemo,
         // give our program a way to draw `Drawing`
-        IO.provideSomeLayer( DrawsDrawingsLive),
+        IO.provideSomeLayer(DrawsDrawingsLive),
         // give that a way to draw `Shape`
         IO.provideSomeLayer(DrawsShapesLive),
         // finally, provide our an actual canvas
-        C.renderTo(CANVAS_TWO_ID),
+        C.renderTo(CANVAS_TWO_ID)
       ),
       snowFlakes(CANVAS_ONE_ID, 4)
     ])
   ),
-  IO.zipLeft(IO.sync(() => {
-    (document.getElementById('restart') as HTMLButtonElement).disabled = false;
-    (document.getElementById('restart') as HTMLButtonElement).addEventListener('click', main)
-  })
-))
-const canvasDemo2 = C.use((canvas) => {
-  canvas.fillStyle= 'magenta'
-  canvas.fillRect(40, 40, 20, 20)
-})
-const circle = C.use((canvas) => {
-  canvas.fillStyle= 'purple'
-  canvas.arc(50, 50, 5, 0, Math.PI * 2)
-  canvas.fill()
-})
-void IO.runPromise(
-  C.renderTo('canvas3')(
-    IO.collectAllDiscard([canvasDemo2, circle])
+  IO.zipLeft(
+    IO.sync(() => {
+      ;(document.getElementById('restart') as HTMLButtonElement).disabled = false
+      ;(document.getElementById('restart') as HTMLButtonElement).addEventListener('click', main)
+    })
   )
 )
 // The only left to do is *run* the thing.
@@ -113,11 +85,29 @@ function nextCircle([loops, circle]: [number, S.Arc]): [number, S.Arc] {
   ]
 }
 const backgroundSquares = pipe(
-    RA.range(0, 2),
-    RA.flatMap((row) =>
-      pipe(
-        RA.range(0, 2),
-        RA.map((col) => D.fill(S.rect(col * 200, row * 200, 150, 150), D.fillStyle(Color.hsl(0, 1, 0.5))))
+  RA.range(0, 2),
+  RA.flatMap(row =>
+    pipe(
+      RA.range(0, 2),
+      RA.map(col =>
+        D.fill(S.rect(col * 200, row * 200, 150, 150), D.fillStyle(Color.hsl(0, 1, 0.5)))
       )
     )
   )
+)
+
+/**
+ * Example of a clipped canvas from [MDN Web Docs](https://mzl.la/3e0mKKx).
+ */
+function clippedRect(clip: S.Shape) {
+  return pipe(
+    D.many([
+      // a blue background
+      D.fill(S.rect(0, 0, 600, 600), D.fillStyle(Color.hsl(240, 1, 0.5))),
+      // and red tiles
+      D.translate(25, 25)(D.many(backgroundSquares))
+    ]),
+    // clip out our shape
+    D.clipped(clip),
+  )
+}
