@@ -1,6 +1,6 @@
 import * as IO from '@effect/io/Effect'
 import * as RA from '@fp-ts/core/ReadonlyArray'
-import * as Duration from '@fp-ts/data/Duration'
+import * as Duration from '@effect/data/Duration'
 import { pipe } from '@fp-ts/core/Function'
 import { Live as DrawsShapesLive, withDelay } from '../src/Drawable/Shape'
 import { Live as DrawsDrawingsLive } from '../src/Drawable/Drawing'
@@ -10,7 +10,7 @@ import * as D from '../src/Drawing'
 import * as S from '../src/Shape'
 
 // this is exported for rendering within a service worker
-export function snowFlakes(canvas: CanvasRenderingContext2D|string, iters: number) {
+export function snowFlakes(canvas: CanvasRenderingContext2D | string, iters: number) {
   return pipe(
     // this is our main program.
     // It has dependencies on the CanvasRenderingContext2D
@@ -19,13 +19,13 @@ export function snowFlakes(canvas: CanvasRenderingContext2D|string, iters: numbe
     // First, provide the Drawable instance for our Drawings
     // This depends on a `Drawable<Shape>` service
     IO.provideSomeLayer(DrawsDrawingsLive),
-    // This allows us to animate drawing 
+    // This allows us to animate drawing
     // with a slight delay between shapes
     withDelay(Duration.millis(16)),
     // Provide a live instance for `Drawable<Shape>`
     IO.provideSomeLayer(DrawsShapesLive),
     // This provides our final dependency: `CanvasRenderingContext2D`
-    C.renderTo(canvas),
+    C.renderTo(canvas)
   )
 }
 

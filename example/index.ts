@@ -3,7 +3,7 @@
  */
 import * as IO from '@effect/io/Effect'
 import * as RA from '@fp-ts/core/ReadonlyArray'
-import * as Duration from '@fp-ts/data/Duration'
+import * as Duration from '@effect/data/Duration'
 import { pipe } from '@fp-ts/core/Function'
 
 import { Live as DrawsShapesLive } from '../src/Drawable/Shape'
@@ -21,7 +21,7 @@ const CANVAS_TWO_ID = 'canvas2'
  * and then renders a clipped rect drawing
  */
 const clippingDemo = pipe(
-  IO.log(`Starting clipping demonstration`),
+  IO.unit(),
   IO.zipRight(
     IO.loopDiscard(
       <[number, S.Arc]>[0, S.circle(300, 300, 100)],
@@ -29,7 +29,8 @@ const clippingDemo = pipe(
       nextCircle,
       ([, circle]) =>
         pipe(
-          C.clearRect(0, 0, 600, 600),
+          IO.unit(),
+          IO.zipRight(C.clearRect(0, 0, 600, 600)),
           IO.zipRight(D.render(clippedRect(circle))),
           IO.zipRight((IO.delay(Duration.millis(16))(IO.unit())))
         )
@@ -38,12 +39,13 @@ const clippingDemo = pipe(
   IO.zipLeft(IO.log(`Finished clipping animation loop`)),
   IO.forever
 )
+const button = document.getElementById('restart') as HTMLButtonElement
 // The `clippingDemo` in parallel with our `snowflake` animation Effect
 const canvasDemo = pipe(
   // some button management
   IO.sync(() => {
-    ;(document.getElementById('restart') as HTMLButtonElement).disabled = true
-    ;(document.getElementById('restart') as HTMLButtonElement).removeEventListener('click', main)
+    ;button.disabled = true
+    ;button.removeEventListener('click', main)
   }),
   IO.zipRight(
     // our clipping demo runs forever but `raceAll`
@@ -58,13 +60,13 @@ const canvasDemo = pipe(
         // finally, provide our an actual canvas
         C.renderTo(CANVAS_TWO_ID)
       ),
-      snowFlakes(CANVAS_ONE_ID, 4)
+      snowFlakes(CANVAS_ONE_ID, 6)
     ])
   ),
   IO.zipLeft(
     IO.sync(() => {
-      ;(document.getElementById('restart') as HTMLButtonElement).disabled = false
-      ;(document.getElementById('restart') as HTMLButtonElement).addEventListener('click', main)
+      ;button.disabled = false
+      ;button.addEventListener('click', main)
     })
   )
 )
