@@ -612,7 +612,7 @@ export const monoidShadow: M.Monoid<Shadow> = M.struct<Shadow>({
  * @since 1.0.0
  */
 export const monoidDrawing: M.Monoid<Drawing> = M.fromSemigroup(
-  SG.fromCombine((x, y) =>
+  SG.make((x, y) =>
     x._tag === 'Many' && y._tag === 'Many'
       ? many(readonlyArrayMonoidDrawing.combineAll([x.drawings, y.drawings]))
       : x._tag === 'Many'

@@ -1,6 +1,6 @@
 /** @since 2.0.0 */
 import * as Effect from '@effect/io/Effect'
-import * as Context from '@fp-ts/data/Context'
+import * as Context from '@effect/data/Context'
 
 /**
  * Represents the ability to `draw` a value of type `A`

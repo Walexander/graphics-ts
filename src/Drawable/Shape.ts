@@ -7,8 +7,8 @@ import * as Drawable from '../Drawable'
 import * as C from '../Canvas'
 import { Canvas } from '../Canvas/definition'
 import { Shape } from '../Shape'
-import * as Context from '@fp-ts/data/Context'
-import * as Duration from '@fp-ts/data/Duration'
+import * as Context from '@effect/data/Context'
+import * as Duration from '@effect/data/Duration'
 /**
  * The Canvas operations required to draw a `Shape`
 *
@@ -90,7 +90,7 @@ function DrawsShapeImpl(canvas: Surface): Drawable.Drawable<Shape> {
       case 'Path':
         return pipe(
           shape.points,
-          RA.match(IO.unit, (head, tail) =>
+          RA.match(IO.unit, ([head, ...tail]) =>
             IO.tuple(
               canvas.moveTo(head.x, head.y),
               IO.forEach(tail, ({ x, y }) => canvas.lineTo(x, y))

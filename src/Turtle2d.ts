@@ -3,7 +3,7 @@
  */
 import * as IO from '@effect/io/Effect'
 import * as Ref from '@effect/io/Ref'
-import * as Context from '@fp-ts/data/Context'
+import * as Context from '@effect/data/Context'
 import { Drawable } from './Drawable/definition'
 import { Tag as DrawsTurtlesTag } from './Drawable/Turtle2d'
 import { pipe } from '@fp-ts/core/Function'

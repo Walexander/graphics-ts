@@ -4,7 +4,7 @@
 *
 */
 import { Effect } from '@effect/io/Effect'
-import { Tag as Tag$ } from '@fp-ts/data/Context'
+import { Tag as Tag$ } from '@effect/data/Context'
 
 /**
  * Represents the management of a `CanvasRenderingContext2D` as *reading* from the
@@ -63,7 +63,7 @@ export interface Canvas {
   ) => Effect<never, never, void>
   beginPath: Effect<never, never, void>
   closePath: Effect<never, never, void>
-  ellipse: (
+ ellipse: (
     x: number,
     y: number,
     rx: number,

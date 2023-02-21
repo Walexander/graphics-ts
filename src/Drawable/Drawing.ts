@@ -7,7 +7,7 @@ import * as C from '../Canvas'
 import { Shape } from '../Shape'
 import { toCss } from '../Color'
 import { Drawing } from '../Drawing'
-import * as Context from '@fp-ts/data/Context'
+import * as Context from '@effect/data/Context'
 import * as O from '@fp-ts/core/Option'
 import { showFont } from '../Font'
 
@@ -32,7 +32,7 @@ export const Live = pipe(
 )
 /**
  * Draws a `Drawing` using a `Drawable<Drawing>`
- * from the context
+* from the context
  *
  * @category operators
  * @since 2.0.0
