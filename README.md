@@ -163,6 +163,6 @@ pnpm start
 open http://localhost:5173/
 ```
 
-<img alt="snowflake" src="./example/snowflake.png" style="display: block; width: 100%; max-width: 800px; margin-bottom: 1em;">
+<img alt="snowflake" src="./docs/snowflake.png" style="display: block; width: 100%; max-width: 800px; margin-bottom: 1em;">
 
 Adapted from https://github.com/purescript-contrib/purescript-drawing/blob/master/test/Main.purs

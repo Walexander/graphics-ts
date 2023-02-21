@@ -24,6 +24,7 @@ Added in v1.0.0
   - [ellipse](#ellipse)
   - [path](#path)
   - [point](#point)
+  - [polygon](#polygon)
   - [radians](#radians)
   - [rect](#rect)
 - [instances](#instances)
@@ -160,6 +161,18 @@ export declare const point: (x: number, y: number) => Point
 ```
 
 Added in v1.0.0
+
+## polygon
+
+Create an equilateral polygon of `n` sides
+
+**Signature**
+
+```ts
+export declare const polygon: (sides: number) => Shape
+```
+
+Added in v2.0.0
 
 ## radians
 

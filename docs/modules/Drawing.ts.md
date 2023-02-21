@@ -65,6 +65,8 @@ Added in v1.0.0
   - [renderShape](#rendershape)
 - [constructors](#constructors)
   - [clipped](#clipped)
+  - [combine](#combine)
+  - [combineAll](#combineall)
   - [fill](#fill)
   - [fillStyle](#fillstyle)
   - [lineWidth](#linewidth)
@@ -128,6 +130,30 @@ Clips a `Drawing` using the specified `Shape`.
 
 ```ts
 export declare const clipped: (shape: Shape) => (drawing: Drawing) => Drawing
+```
+
+Added in v1.0.0
+
+## combine
+
+Combine two drawings together
+
+**Signature**
+
+```ts
+export declare const combine: (self: Drawing, that: Drawing) => Drawing
+```
+
+Added in v1.0.0
+
+## combineAll
+
+Collect an Iterable of Drawings into one bigger shape
+
+**Signature**
+
+```ts
+export declare const combineAll: (collection: Iterable<Drawing>) => Drawing
 ```
 
 Added in v1.0.0

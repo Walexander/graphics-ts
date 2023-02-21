@@ -97,6 +97,7 @@ Added in v2.0.0
   - [toDataURL](#todataurl)
   - [transform](#transform)
   - [translate](#translate)
+  - [use](#use)
   - [width](#width)
   - [withContext](#withcontext)
 - [utils](#utils)
@@ -1213,6 +1214,18 @@ export declare const translate: (x: number, y: number) => IO.Effect<CanvasRender
 ```
 
 Added in v1.0.0
+
+## use
+
+Get access to a raw canvas 2d context and go crazy
+
+**Signature**
+
+```ts
+export declare function use<A = void>(f: (canvas: CanvasRenderingContext2D) => A)
+```
+
+Added in v2.0.0
 
 ## width
 
