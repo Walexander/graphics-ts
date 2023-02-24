@@ -16,6 +16,8 @@ canvas {
 }
 #root {
   display: flex;
+  justify-content: center;
+  align-items: center;
   row-gap: 1rem;
   margin: auto;
   column-gap: 1rem;
@@ -26,8 +28,11 @@ canvas {
   </head>
   <body>
     <div id="root">
-      <h2>Prime Spiral 1 - 100,000</h2>
-        <canvas id="canvas4" width="600" height="600" style="border: 1px solid black;"></canvas>
+      <h2>Prime Spiral</h2>
+
+      <span>1 - <span id=latest>0</span></span>
+      <span id=prime></span>
+        <canvas id="canvas4" width="600" height="600" style="outline: 2px solid blue;" ></canvas>
     </div>
   </body>
 </html>

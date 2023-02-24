@@ -60,7 +60,7 @@ const canvasDemo = pipe(
         // finally, provide our an actual canvas
         C.renderTo(CANVAS_TWO_ID)
       ),
-      snowFlakes(CANVAS_ONE_ID, 6)
+      snowFlakes(CANVAS_ONE_ID, 4)
     ])
   ),
   IO.zipLeft(
