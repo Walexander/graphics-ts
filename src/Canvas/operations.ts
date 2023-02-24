@@ -20,24 +20,24 @@ import {
 /**
  * Gets the canvas width in pixels.
  *
- * @category combinators
+ * @category box
  * @since 2.0.0
  */
-export const width = withCanvas((ctx) => IO.sync(() => ctx.canvas.width))
+export const width = withCanvas(ctx => IO.sync(() => ctx.canvas.width))
 /**
-* @since 1.0.0
-* @category combinators
-* */
+ * @since 1.0.0
+ * @category box
+ * */
 export const getWidth = constant(width)
 
 /**
  * Sets the width of the canvas in pixels.
  *
- * @category combinators
+ * @category box
  * @since 1.0.0
  */
 export function setWidth(width: number) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.canvas.width = width
     })
@@ -47,24 +47,24 @@ export function setWidth(width: number) {
 /**
  * Gets the canvas height in pixels.
  *
- *  @category combinators
+ *  @category box
  * @since 1.0.0
  */
-export const height = withCanvas((ctx) => IO.sync(() => ctx.canvas.height))
+export const height = withCanvas(ctx => IO.sync(() => ctx.canvas.height))
 /**
-* @since 1.0.0
-* @category combinators
-*/
+ * @since 1.0.0
+ * @category box
+ */
 export const getHeight = constant(height)
 
 /**
  * Sets the height of the canvas in pixels.
  *
- * @category combinators
+ * @category box
  * @since 1.0.0
  */
 export function setHeight(height: number) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.canvas.height = height
     })
@@ -74,7 +74,7 @@ export function setHeight(height: number) {
 /**
  * Gets the dimensions of the canvas in pixels.
  *
- * @category combinators
+ * @category box
  * @since 1.0.0
  */
 export const dimensions: Effect<CanvasRenderingContext2D, never, CanvasDimensions> = IO.struct({
@@ -85,7 +85,7 @@ export const dimensions: Effect<CanvasRenderingContext2D, never, CanvasDimension
 /**
  * Sets the dimensions of the canvas in pixels.
  *
- * @category combinators
+ * @category box
  * @since 1.0.0
  */
 export function setDimensions(dims: CanvasDimensions) {
@@ -99,46 +99,54 @@ export function setDimensions(dims: CanvasDimensions) {
 /**
  * Create a data URL for the canvas.
  *
- * @category combinators
+ * @category conversion
  * @since 1.0.0
  */
-export const toDataURL = withCanvas((ctx) =>
-  IO.sync(() => ctx.canvas.toDataURL())
-)
+export const toDataURL = withCanvas(ctx => IO.sync(() => ctx.canvas.toDataURL()))
 
 /**
  * Sets the current fill style for the canvas context.
  *
- * @category combinators
+ * @category fill styles
  * @since 1.0.0
  */
-  
-export const setFillStyle: (style: string | CanvasGradient | CanvasPattern) => Effect<CanvasRenderingContext2D, never, CanvasRenderingContext2D> = (style: string | CanvasGradient | CanvasPattern) =>
-  withCanvas((ctx) =>
-    pipe(
-      IO.sync(() => (ctx.fillStyle = style)),
-      IO.as(ctx)
-    )
-  )
 
+export const setFillStyle: (
+  style: string | CanvasGradient | CanvasPattern
+) => Effect<CanvasRenderingContext2D, never, void> = (style) => use(ctx => {
+    ctx.fillStyle = style
+  })
+/**
+ * Gets the current fill style for the canvas context.
+ *
+ * @category fill styles
+ * @since 1.0.0
+ */
+
+export const fillStyle = use(ctx => ctx.fillStyle)
 /**
  * Gets the current font.
  *
- * @category combinators
+ * @category text
  * @since 1.0.0
  */
-export const font = withCanvas((ctx) => IO.sync(() => ctx.font))
-/** @since 2.0.0 */
+export const font = withCanvas(ctx => IO.sync(() => ctx.font))
+/**
+ * Gets the current font.
+ *
+ * @category text
+ * @since 2.0.0
+ */
 export const getFont = constant(font)
 
 /**
  * Sets the current font.
  *
- * @category combinators
+ * @category text
  * @since 1.0.0
  */
 export function setFont(font: string) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => (ctx.font = font)),
       IO.as(ctx)
@@ -149,40 +157,38 @@ export function setFont(font: string) {
 /**
  * Gets the current global alpha.
  *
- * @category combinators
+ * @category compositing
  * @since 1.1.0
  */
-export const globalAlpha = withCanvas((ctx) => IO.sync(() => ctx.globalAlpha))
+export const globalAlpha = withCanvas(ctx => IO.sync(() => ctx.globalAlpha))
 /**
  * Sets the current global alpha for the canvas context.
  *
- * @category combinators
+ * @category compositing
  * @since 1.0.0
  */
 export function setGlobalAlpha(globalAlpha: number) {
-  return withCanvas((ctx) => IO.sync(() => (ctx.globalAlpha = globalAlpha)))
+  return withCanvas(ctx => IO.sync(() => (ctx.globalAlpha = globalAlpha)))
 }
 
 /**
  * Gets the current global composite operation type for the canvas context.
  *
- * @category combinators
+ * @category compositing
  * @since 1.0.0
  */
-export const globalCompositeOperation = withCanvas((ctx) =>
+export const globalCompositeOperation = withCanvas(ctx =>
   IO.sync(() => ctx.globalCompositeOperation)
 )
 
 /**
  * Sets the current global composite operation type for the canvas context.
  *
- * @category combinators
+ * @category compositing
  * @since 1.0.0
  */
-export function setGlobalCompositeOperation(
-  globalCompositeOperation: GlobalCompositeOperation
-) {
-  return withCanvas((ctx) =>
+export function setGlobalCompositeOperation(globalCompositeOperation: GlobalCompositeOperation) {
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => (ctx.globalCompositeOperation = globalCompositeOperation)),
       IO.as(ctx)
@@ -193,23 +199,21 @@ export function setGlobalCompositeOperation(
  * Gets the current image smoothing property for the canvas context. Determines whether scaled images are smoothed
  * (`true`, default) or not (`false`).
  *
- * @category combinators
+ * @category compositing
  * @since 1.1.0
  */
 
-export const imageSmoothingEnabled = withCanvas((ctx) =>
-  IO.sync(() => ctx.imageSmoothingEnabled)
-)
+export const imageSmoothingEnabled = withCanvas(ctx => IO.sync(() => ctx.imageSmoothingEnabled))
 
 /**
  * Sets the current image smoothing property for the canvas context. Determines whether scaled images are smoothed
  * (`true`, default) or not (`false`).
  *
- * @category combinators
+ * @category smoothing
  * @since 1.0.0
  */
 export function setImageSmoothingEnabled(enable: boolean) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => (ctx.imageSmoothingEnabled = enable)),
       IO.as(ctx)
@@ -220,11 +224,11 @@ export function setImageSmoothingEnabled(enable: boolean) {
 /**
  * Sets the current line cap type for the canvas context.
  *
- * @category combinators
+ * @category line styles
  * @since 1.0.0
  */
 export function setLineCap(cap: LineCap) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => (ctx.lineCap = cap)),
       IO.as(ctx)
@@ -234,19 +238,19 @@ export function setLineCap(cap: LineCap) {
 /**
  * Gets the current line cap type for the canvas context.
  *
- * @category combinators
+ * @category line styles
  * @since 1.0.0
  */
-export const lineCap = withCanvas((ctx) => pipe(IO.sync(() => ctx.lineCap)))
+export const lineCap = withCanvas(ctx => pipe(IO.sync(() => ctx.lineCap)))
 
 /**
  * Sets the current line dash offset, or "phase", for the canvas context.
  *
- * @category combinators
+ * @category line styles
  * @since 1.0.0
  */
 export function setLineDashOffset(offset: number) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => (ctx.lineDashOffset = offset)),
       IO.as(ctx)
@@ -256,21 +260,19 @@ export function setLineDashOffset(offset: number) {
 /**
  * Gets the current line dash offset, or "phase", for the canvas context.
  *
- * @category combinators
+ * @category line styles
  * @since 1.0.0
  */
-export const lineDashOffset = withCanvas((ctx) =>
-  pipe(IO.sync(() => ctx.lineDashOffset))
-)
+export const lineDashOffset = withCanvas(ctx => pipe(IO.sync(() => ctx.lineDashOffset)))
 
 /**
  * Sets the current line join type for the canvas context.
  *
- * @category combinators
+ * @category line styles
  * @since 1.0.0
  */
 export function setLineJoin(join: LineJoin) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.lineJoin = join
     })
@@ -279,14 +281,12 @@ export function setLineJoin(join: LineJoin) {
 /**
  * gets the current line join type for the canvas context.
  *
- * @category combinators
+ * @category line styles
  * @since 2.0.0
  */
-export const lineJoin = withCanvas((ctx) =>
-  pipe(IO.sync(() => ctx.lineJoin))
-)
+export const lineJoin = withCanvas(ctx => pipe(IO.sync(() => ctx.lineJoin)))
 /**
- * @category combinators
+ * @category line styles
  * @since 1.0.0
  */
 export const getLineJoin = constant(lineJoin)
@@ -294,28 +294,28 @@ export const getLineJoin = constant(lineJoin)
 /**
  * Sets the current line width for the canvas context in pixels.
  *
- * @category combinators
+ * @category line styles
  * @since 1.0.0
  */
 export function setLineWidth(lineWidth: number) {
-  return withCanvas((ctx) =>
-    pipe(
-      IO.sync(() => (ctx.lineWidth = lineWidth)),
-      IO.as(ctx)
-    )
-  )
+  return use(ctx => {
+    ctx.lineWidth = lineWidth
+  })
 }
-/** @since 2.0.0 */
-export const lineWidth = withCanvas((ctx) => pipe(IO.sync(() => ctx.lineWidth)))
+/**
+ * @category line styles
+ * @since 2.0.0
+ * */
+export const lineWidth = withCanvas(ctx => pipe(IO.sync(() => ctx.lineWidth)))
 
 /**
  * Sets the current miter limit for the canvas context.
  *
- * @category combinators
+ * @category line styles
  * @since 1.0.0
  */
 export function setMiterLimit(miterLimit: number) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => (ctx.miterLimit = miterLimit)),
       IO.as(ctx)
@@ -325,23 +325,47 @@ export function setMiterLimit(miterLimit: number) {
 /**
  * Gets the current miter limit for the canvas context.
  *
- * @category combinators
+ * @category line styles
  * @since 2.0.0
  */
-export const miterLimit: Effect<CanvasRenderingContext2D, never, number> = withCanvas((ctx) =>
+export const miterLimit: Effect<CanvasRenderingContext2D, never, number> = withCanvas(ctx =>
   IO.sync(() => ctx.miterLimit)
 )
-/** @since 1.0.0 */
+/**
+ * Lazily get the current miter limit for the canvas context.
+ *
+ * @category line styles
+ * @since 1.0.0
+ */
 export const getMiterLimit = constant(miterLimit)
 
+
+/**
+ * Sets the current stroke style for the canvas context.
+ *
+ * @category stroke styles
+ * @since 1.0.0
+ */
+export function setStrokeStyle(style: string) {
+  return use(ctx => {
+    ctx.strokeStyle = style
+  })
+}
+/**
+ * Gets the current stroke style for the canvas context.
+ *
+ * @category stroke styles
+ * @since 1.0.0
+ */
+export const strokeStyle = use(c => c.strokeStyle)
 /**
  * Sets the current shadow blur radius for the canvas context.
  *
- * @category combinators
+ * @category shadow
  * @since 1.0.0
  */
 export function setShadowBlur(blur: number) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => (ctx.shadowBlur = blur)),
       IO.as(ctx)
@@ -351,106 +375,102 @@ export function setShadowBlur(blur: number) {
 /**
  * Gets the current shadow blur radius for the canvas context.
  *
- * @category combinators
+ * @category shadow
  * @since 2.0.0
  */
-export const shadowBlur = withCanvas((ctx) =>
-  IO.sync(() => ctx.shadowBlur)
-)
-/** @since 1.0.0 */
+export const shadowBlur = withCanvas(ctx => IO.sync(() => ctx.shadowBlur))
+/**
+ * Gets the current shadow blur radius for the canvas context.
+ *
+ * @category shadow
+ * @since 1.0.0
+ */
 export const getShadowBlur = constant(shadowBlur)
 
 /**
  * Sets the current shadow color for the canvas context.
  *
- * @category combinators
+ * @category shadow
  * @since 1.0.0
  */
 export function setShadowColor(color: string) {
-  return withCanvas((ctx) =>
-      IO.sync(() => (ctx.shadowColor = color))
-  )
+  return withCanvas(ctx => IO.sync(() => (ctx.shadowColor = color)))
 }
-/** @since 2.0.0 */
-export const shadowColor = withCanvas((ctx) =>
-  pipe(IO.sync(() => ctx.shadowColor))
-)
-/** @since 1.0.0 */
+/**
+ * Gets the current shadow color for the canvas context.
+ *
+ * @category shadow
+ * @since 2.0.0
+ */
+export const shadowColor = withCanvas(ctx => pipe(IO.sync(() => ctx.shadowColor)))
+/**
+ * Gets the current shadow color for the canvas context.
+ *
+ * @category shadow
+ * @since 1.0.0
+ */
 export const getShadowColor = constant(shadowColor)
 
 /**
  * Sets the current shadow x-offset for the canvas context.
  *
- * @category combinators
+ * @category shadow
  * @since 1.0.0
  */
 export function setShadowOffsetX(offsetX: number) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => (ctx.shadowOffsetX = offsetX)),
       IO.as(ctx)
     )
   )
 }
-/** @since 2.0.0 */
-export const shadowOffsetX = withCanvas((ctx) =>
-  pipe(IO.sync(() => ctx.shadowOffsetX))
-)
+/**
+ * Sets the current shadow x-offset for the canvas context.
+ *
+ * @category shadow
+ * @since 2.0.0
+ */
+export const shadowOffsetX = withCanvas(ctx => pipe(IO.sync(() => ctx.shadowOffsetX)))
 
 /**
  * Sets the current shadow y-offset for the canvas context.
  *
- * @category combinators
+ * @category shadow
  * @since 1.0.0
  */
 export function setShadowOffsetY(offsetY: number) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => (ctx.shadowOffsetY = offsetY)),
       IO.as(ctx)
     )
   )
 }
-/** @since 2.0.0 */
-export const shadowOffsetY = withCanvas((ctY) =>
-  pipe(IO.sync(() => ctY.shadowOffsetY))
-)
-
 /**
- * Sets the current stroke style for the canvas context.
+ * Gets the current shadow y-offset for the canvas context.
  *
- * @category combinators
- * @since 1.0.0
+ * @category shadow
+ * @since 2.0.0
  */
-export function setStrokeStyle(style: string) {
-  return withCanvas((ctx) =>
-    pipe(
-      IO.sync(() => (ctx.strokeStyle = style)),
-      IO.as(ctx)
-    )
-  )
-}
-/** @since 2.0.0 */
-export const strokeStyle = withCanvas((ctx) =>
-  pipe(IO.sync(() => ctx.strokeStyle))
-)
+export const shadowOffsetY = withCanvas(ctY => pipe(IO.sync(() => ctY.shadowOffsetY)))
 
 /**
  * Gets the current text alignment.
  *
- * @category combinators
+ * @category text
  * @since 1.0.0
  */
-export const textAlign = withCanvas((ctx) => IO.sync(() => ctx.textAlign))
+export const textAlign = use(ctx => ctx.textAlign)
 
 /**
  * Sets the current text alignment.
  *
- * @category combinators
+ * @category text
  * @since 1.0.0
  */
 export function setTextAlign(textAlign: TextAlign) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => (ctx.textAlign = textAlign)),
       IO.as(ctx)
@@ -461,32 +481,27 @@ export function setTextAlign(textAlign: TextAlign) {
 /**
  * Gets the current text baseline.
  *
- * @category combinators
+ * @category text
  * @since 1.0.0
  */
-export const textBaseline = withCanvas((ctx) =>
-  IO.sync(() => ctx.textBaseline)
-)
+export const textBaseline = withCanvas(ctx => IO.sync(() => ctx.textBaseline))
 
 /**
  * Sets the current text baseline.
  *
- * @category combinators
+ * @category text
  * @since 1.0.0
  */
 export function setTextBaseline(textBaseline: TextBaseline) {
-  return withCanvas((ctx) =>
-    pipe(
-      IO.sync(() => (ctx.textBaseline = textBaseline)),
-      IO.as(ctx)
-    )
-  )
+  return use(ctx => {
+    ctx.textBaseline = textBaseline
+  })
 }
 
 /**
  * Render an arc.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
 export function arc(
@@ -497,7 +512,7 @@ export function arc(
   end: number,
   counterclockwise = false
 ) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     pipe(
       IO.sync(() => ctx.arc(x, y, radius, start, end, counterclockwise)),
       IO.as(ctx)
@@ -507,17 +522,11 @@ export function arc(
 /**
  * Render an arc that is automatically connected to the path's latest point.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
-export function arcTo (
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  radius: number
-) {
-  return withCanvas((ctx) =>
+export function arcTo(x1: number, y1: number, x2: number, y2: number, radius: number) {
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.arcTo(x1, y1, x2, y2, radius)
     })
@@ -526,20 +535,17 @@ export function arcTo (
 /**
  * Begin a path on the canvas.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
-export const beginPath = withCanvas((ctx) =>
-  pipe(
-    IO.sync(() => ctx.beginPath()),
-    IO.as(ctx)
-  )
-)
+export const beginPath = use(ctx => {
+  ctx.beginPath()
+})
 
 /**
  * Draw a cubic Bézier curve.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
 export function bezierCurveTo(
@@ -549,8 +555,8 @@ export function bezierCurveTo(
   cpy2: number,
   x: number,
   y: number
-){
-  return withCanvas((ctx) =>
+) {
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, x, y)
     })
@@ -559,16 +565,11 @@ export function bezierCurveTo(
 /**
  * Set the pixels in the specified rectangle back to transparent black.
  *
- * @category combinators
+ * @category rectangles
  * @since 1.0.0
  */
-export function clearRect(
-  x: number,
-  y: number,
-  width: number,
-  height: number
-) {
-  return withCanvas((ctx) =>
+export function clearRect(x: number, y: number, width: number, height: number) {
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.clearRect(x, y, width, height)
     })
@@ -578,11 +579,11 @@ export function clearRect(
 /**
  * Clip the current path on the canvas.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
-export function clip(fillRule?: FillRule, path?: Path2D)  {
-  return withCanvas((ctx) =>
+export function clip(fillRule?: FillRule, path?: Path2D) {
+  return withCanvas(ctx =>
     IO.sync(() => {
       if (typeof path !== 'undefined') {
         ctx.clip(path, fillRule)
@@ -597,10 +598,10 @@ export function clip(fillRule?: FillRule, path?: Path2D)  {
 /**
  * Closes the current canvas path.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
-export const closePath =  withCanvas((ctx) =>
+export const closePath = withCanvas(ctx =>
   IO.sync(() => {
     ctx.closePath()
   })
@@ -609,72 +610,62 @@ export const closePath =  withCanvas((ctx) =>
 /**
  * Gets `ImageData` for the specified rectangle.
  *
- * @category combinators
+ * @category pixels
  * @since 1.0.0
  */
 export const createImageData = (sw: number, sh: number) =>
-  withCanvas((ctx) => IO.sync(() => ctx.createImageData(sw, sh)))
+  withCanvas(ctx => IO.sync(() => ctx.createImageData(sw, sh)))
 
 /**
  * Creates a copy of an existing `ImageData` object.
  *
- * @category combinators
+ * @category pixels
  * @since 1.0.0
  */
 export const createImageDataCopy = (imageData: ImageData) =>
-  withCanvas((ctx) => IO.sync(() => ctx.createImageData(imageData)))
+  withCanvas(ctx => IO.sync(() => ctx.createImageData(imageData)))
 
 /**
  * Creates a linear `CanvasGradient` object.
  *
- * @category combinators
+ * @category gradients
  * @since 1.0.0
  */
-export const createLinearGradient = (
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number
-) =>
-  withCanvas((ctx) => IO.sync(() => ctx.createLinearGradient(x0, y0, x1, y1)))
+export const createLinearGradient = (x0: number, y0: number, x1: number, y1: number) =>
+  withCanvas(ctx => IO.sync(() => ctx.createLinearGradient(x0, y0, x1, y1)))
 
 /**
  * Creates a new canvas pattern (repeatable image).
  *
- * @category combinators
+ * @category gradients
  * @since 1.0.0
  */
-export const createPattern = (
-  source: ImageSource,
-  repetition: PatternRepetition
-) => withCanvas((ctx) => IO.sync(() => fromNullable(ctx.createPattern(source, repetition))))
+export const createPattern = (source: ImageSource, repetition: PatternRepetition) =>
+  withCanvas(ctx => IO.sync(() => fromNullable(ctx.createPattern(source, repetition))))
 
 /**
  * Creates a radial `CanvasGradient` object.
  *
- * @category combinators
+ * @category gradients
  * @since 1.0.0
  */
-export const createRadialGradient= (
+export const createRadialGradient = (
   x0: number,
   y0: number,
   r0: number,
   x1: number,
   y1: number,
   r1: number
-) => withCanvas((ctx) => IO.sync(() => ctx.createRadialGradient(x0, y0, r0, x1, y1, r1)))
+) => withCanvas(ctx => IO.sync(() => ctx.createRadialGradient(x0, y0, r0, x1, y1, r1)))
 
 /**
  * Draws a focus ring around the current or given path, if the specified element is focused.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
-export const drawFocusIfNeeded= (
-  element: HTMLElement,
-  path2d?: Path2D
-) =>
-  withCanvas((ctx) =>
+export const drawFocusIfNeeded = (element: HTMLElement, path2d?: Path2D) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       if (typeof path2d !== 'undefined') {
         ctx.drawFocusIfNeeded(path2d, element)
@@ -687,15 +678,11 @@ export const drawFocusIfNeeded= (
 /**
  * Render an image.
  *
- * @category combinators
+ * @category images
  * @since 1.0.0
  */
-export const drawImage= (
-  imageSource: ImageSource,
-  offsetX: number,
-  offsetY: number
-) =>
-  withCanvas((ctx) =>
+export const drawImage = (imageSource: ImageSource, offsetX: number, offsetY: number) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       ctx.drawImage(imageSource, offsetX, offsetY)
     })
@@ -704,7 +691,7 @@ export const drawImage= (
 /**
  * Draws an image to the canvas.
  *
- * @category combinators
+ * @category images
  * @since 1.0.0
  */
 export const drawImageScale = (
@@ -714,16 +701,14 @@ export const drawImageScale = (
   width: number,
   height: number
 ) =>
-  withCanvas((ctx) =>
-    IO.sync(() => {
-      ctx.drawImage(imageSource, offsetX, offsetY, width, height)
-    })
-  )
+  use(ctx => {
+    ctx.drawImage(imageSource, offsetX, offsetY, width, height)
+  })
 
 /**
  * Draws an image to the canvas.
  *
- * @category combinators
+ * @category images
  * @since 1.0.0
  */
 export const drawImageFull = (
@@ -737,26 +722,24 @@ export const drawImageFull = (
   canvasImageWidth: number,
   canvasImageHeight: number
 ) =>
-  withCanvas((ctx) =>
-    IO.sync(() => {
-      ctx.drawImage(
-        imageSource,
-        offsetX,
-        offsetY,
-        width,
-        height,
-        canvasOffsetX,
-        canvasOffsetY,
-        canvasImageWidth,
-        canvasImageHeight
-      )
-    })
-  )
+  use(ctx => {
+    ctx.drawImage(
+      imageSource,
+      offsetX,
+      offsetY,
+      width,
+      height,
+      canvasOffsetX,
+      canvasOffsetY,
+      canvasImageWidth,
+      canvasImageHeight
+    )
+  })
 
 /**
  * Render an ellipse.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
 export function ellipse(
@@ -769,7 +752,7 @@ export function ellipse(
   end: number,
   anticlockwise = false
 ) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.ellipse(x, y, rx, ry, rotation, start, end, anticlockwise)
     })
@@ -778,14 +761,11 @@ export function ellipse(
 /**
  * Fill the current path on the canvas.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
-export const fill = (
-  f?: FillRule,
-  p?: Path2D
-) =>
-  withCanvas((ctx) =>
+export const fill = (f?: FillRule, p?: Path2D) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       if (typeof p !== 'undefined') {
         ctx.fill(p, f)
@@ -800,16 +780,11 @@ export const fill = (
 /**
  * Render a filled rectangle.
  *
- * @category combinators
+ * @category rectangles
  * @since 1.0.0
  */
-export function fillRect(
-  x: number,
-  y: number,
-  width: number,
-  height: number
-) {
-  return withCanvas((ctx) =>
+export function fillRect(x: number, y: number, width: number, height: number) {
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.fillRect(x, y, width, height)
     })
@@ -818,16 +793,11 @@ export function fillRect(
 /**
  * Render filled text.
  *
- * @category combinators
+ * @category text
  * @since 1.0.0
  */
-export const fillText= (
-  t: string,
-  x: number,
-  y: number,
-  mw?: number
-) =>
-  withCanvas((ctx) =>
+export const fillText = (t: string, x: number, y: number, mw?: number) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       if (typeof mw !== 'undefined') {
         ctx.fillText(t, x, y, mw)
@@ -840,51 +810,37 @@ export const fillText= (
 /**
  * Gets the image data for the specified portion of the canvas.
  *
- * @category combinators
+ * @category images
  * @since 1.0.0
  */
-export function getImageData(
-  x: number,
-  y: number,
-  width: number,
-  height: number
-) {
-  return withCanvas((ctx) => IO.sync(() => ctx.getImageData(x, y, width, height)))
+export function getImageData(x: number, y: number, width: number, height: number) {
+  return withCanvas(ctx => IO.sync(() => ctx.getImageData(x, y, width, height)))
 }
 
 /**
  * Gets the current line dash pattern for the canvas context.
  *
- * @category combinators
+ * @category line styles
  * @since 1.0.0
  */
-export const lineDash = withCanvas((ctx) =>
-  IO.sync(() => ctx.getLineDash())
-)
+export const lineDash = withCanvas(ctx => IO.sync(() => ctx.getLineDash()))
 
 /**
  * Gets the current transformation matrix being applied to the canvas context.
  *
- * @category combinators
+ * @category transformations
  * @since 1.0.0
  */
-export const getTransform = withCanvas((ctx) =>
-  IO.sync(() => ctx.getTransform())
-)
+export const getTransform = withCanvas(ctx => IO.sync(() => ctx.getTransform()))
 
 /**
  * Determines if the specified point is contained in the current path.)
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
-export function isPointInPath(
-  x: number,
-  y: number,
-  fillRule?: FillRule,
-  path?: Path2D
-) {
-  return withCanvas((ctx) =>
+export function isPointInPath(x: number, y: number, fillRule?: FillRule, path?: Path2D) {
+  return withCanvas(ctx =>
     IO.sync(() => {
       return typeof path !== 'undefined'
         ? ctx.isPointInPath(path, x, y, fillRule)
@@ -897,15 +853,11 @@ export function isPointInPath(
 /**
  * Determines if the specified point is inside the area contained by the stroking of a path.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
-export const isPointInStroke = (
-  x: number,
-  y: number,
-  path?: Path2D
-) =>
-  withCanvas((ctx) =>
+export const isPointInStroke = (x: number, y: number, path?: Path2D) =>
+  withCanvas(ctx =>
     IO.sync(() =>
       typeof path !== 'undefined' ? ctx.isPointInStroke(path, x, y) : ctx.isPointInStroke(x, y)
     )
@@ -913,33 +865,30 @@ export const isPointInStroke = (
 /**
  * Move the canvas path to the specified point while drawing a line segment.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
 export const lineTo = (x: number, y: number) =>
-  withCanvas((ctx) =>
-    IO.sync(() => {
-      ctx.lineTo(x, y)
-    })
-  )
+  use(ctx => {
+    ctx.lineTo(x, y)
+  })
 
 /**
  * Get the text measurements for the specified text.
  *
- * @category combinators
+ * @category text
  * @since 1.0.0
  */
-export const measureText = (text: string) =>
-  withCanvas((ctx) => IO.sync(() => ctx.measureText(text)))
+export const measureText = (text: string) => withCanvas(ctx => IO.sync(() => ctx.measureText(text)))
 
 /**
  * Move the canvas path to the specified point without drawing a line segment.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
 export function moveTo(x: number, y: number) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.moveTo(x, y)
     })
@@ -949,15 +898,11 @@ export function moveTo(x: number, y: number) {
 /**
  * Sets the image data for the specified portion of the canvas.
  *
- * @category combinators
+ * @category images
  * @since 1.0.0
  */
-export const putImageData= (
-  imageData: ImageData,
-  dx: number,
-  dy: number
-) =>
-  withCanvas((ctx) =>
+export const putImageData = (imageData: ImageData, dx: number, dy: number) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       ctx.putImageData(imageData, dx, dy)
     })
@@ -966,10 +911,10 @@ export const putImageData= (
 /**
  * Sets the image data for the specified portion of the canvas.
  *
- * @category combinators
+ * @category images
  * @since 1.0.0
  */
-export const putImageDataFull= (
+export const putImageDataFull = (
   data: ImageData,
   dx: number,
   dy: number,
@@ -978,7 +923,7 @@ export const putImageDataFull= (
   dirtyW: number,
   dirtyH: number
 ) =>
-  withCanvas((ctx) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       ctx.putImageData(data, dx, dy, dirtyX, dirtyY, dirtyW, dirtyH)
     })
@@ -987,16 +932,11 @@ export const putImageDataFull= (
 /**
  * Draws a quadratic Bézier curve.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
-export const quadraticCurveTo= (
-  cpx: number,
-  cpy: number,
-  x: number,
-  y: number
-) =>
-  withCanvas((ctx) =>
+export const quadraticCurveTo = (cpx: number, cpy: number, x: number, y: number) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       ctx.quadraticCurveTo(cpx, cpy, x, y)
     })
@@ -1005,16 +945,11 @@ export const quadraticCurveTo= (
 /**
  * Render a rectangle.
  *
- * @category combinators
+ * @category rectangles
  * @since 1.0.0
  */
-export function rect(
-  x: number,
-  y: number,
-  width: number,
-  height: number
-) {
-  return withCanvas((ctx) =>
+export function rect(x: number, y: number, width: number, height: number) {
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.rect(x, y, width, height)
     })
@@ -1023,10 +958,10 @@ export function rect(
 /**
  * Restore the previous canvas context.
  *
- * @category combinators
+ * @category state
  * @since 1.0.0
  */
-export const restore = withCanvas((ctx) =>
+export const restore = withCanvas(ctx =>
   IO.sync(() => {
     ctx.restore()
   })
@@ -1035,11 +970,11 @@ export const restore = withCanvas((ctx) =>
 /**
  * Apply rotation to the current canvas context transform.
  *
- * @category combinators
+ * @category transformations
  * @since 1.0.0
  */
 export const rotate = (angle: number) =>
-  withCanvas((ctx) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       ctx.rotate(angle)
     })
@@ -1048,10 +983,10 @@ export const rotate = (angle: number) =>
 /**
  * Save the current canvas context.
  *
- * @category combinators
+ * @category state
  * @since 1.0.0
  */
-export const save = withCanvas((ctx) =>
+export const save = withCanvas(ctx =>
   IO.sync(() => {
     ctx.save()
   })
@@ -1060,11 +995,11 @@ export const save = withCanvas((ctx) =>
 /**
  * Apply scale to the current canvas context transform.
  *
- * @category combinators
+ * @category transformations
  * @since 1.0.0
  */
 export const scale = (scaleX: number, scaleY: number) =>
-  withCanvas((ctx) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       ctx.scale(scaleX, scaleY)
     })
@@ -1073,13 +1008,14 @@ export const scale = (scaleX: number, scaleY: number) =>
 /**
  * Sets the current line dash pattern used when stroking lines.
  *
- * @category combinators
+ * @category line styles
  * @since 1.0.0
  */
 export function setLineDash(segments: ReadonlyArray<number>) {
-  return withCanvas((ctx) => IO.sync(() => {
-    ctx.setLineDash(RA.copy(segments))
-  })
+  return withCanvas(ctx =>
+    IO.sync(() => {
+      ctx.setLineDash(RA.copy(segments))
+    })
   )
 }
 
@@ -1087,18 +1023,11 @@ export function setLineDash(segments: ReadonlyArray<number>) {
  * Resets the current transformation to the identity matrix, and then applies the transform specified
  * to the current canvas context.
  *
- * @category combinators
+ * @category transformations
  * @since 1.0.0
  */
-export function setTransform(
-  a: number,
-  b: number,
-  c: number,
-  d: number,
-  e: number,
-  f: number
-) {
-  return withCanvas((ctx) =>
+export function setTransform(a: number, b: number, c: number, d: number, e: number, f: number) {
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.setTransform(a, b, c, d, e, f)
     })
@@ -1108,24 +1037,25 @@ export function setTransform(
  * Resets the current transformation to the identity matrix, and then applies the transform specified
  * to the current canvas context.
  *
- * @category combinators
+ * @category transformations
  * @since 1.0.0
  */
 export function setTransformMatrix(matrix: DOMMatrix) {
-  return withCanvas((ctx) => IO.sync(() => {
-    ctx.setTransform(matrix)
-  })
+  return withCanvas(ctx =>
+    IO.sync(() => {
+      ctx.setTransform(matrix)
+    })
   )
 }
 
 /**
  * Stroke the current path on the canvas.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
 export function stroke(path?: Path2D) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     IO.sync(() => {
       if (typeof path !== 'undefined') {
         ctx.stroke(path)
@@ -1139,11 +1069,11 @@ export function stroke(path?: Path2D) {
 /**
  * Render a stroked rectangle.
  *
- * @category combinators
+ * @category rectangles
  * @since 1.0.0
  */
 export function strokeRect(x: number, y: number, width: number, height: number) {
-  return withCanvas((ctx) =>
+  return withCanvas(ctx =>
     IO.sync(() => {
       ctx.strokeRect(x, y, width, height)
     })
@@ -1152,16 +1082,11 @@ export function strokeRect(x: number, y: number, width: number, height: number) 
 /**
  * Render stroked text.
  *
- * @category combinators
+ * @category text
  * @since 1.0.0
  */
-export function strokeText(
-  text: string,
-  x: number,
-  y: number,
-  maxWidth?: number
-) {
-  return withCanvas((ctx) =>
+export function strokeText(text: string, x: number, y: number, maxWidth?: number) {
+  return withCanvas(ctx =>
     IO.sync(() => {
       if (typeof maxWidth !== 'undefined') {
         ctx.strokeText(text, x, y, maxWidth)
@@ -1174,11 +1099,18 @@ export function strokeText(
 /**
  * Apply the specified transformation matrix to the canvas context.
  *
- * @category combinators
+ * @category transformations
  * @since 1.0.0
  */
-export const transform = (m11: number, m12: number, m21: number, m22: number, m31: number, m32: number) =>
-  withCanvas((ctx) =>
+export const transform = (
+  m11: number,
+  m12: number,
+  m21: number,
+  m22: number,
+  m31: number,
+  m32: number
+) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       ctx.transform(m11, m12, m21, m22, m31, m32)
     })
@@ -1187,11 +1119,11 @@ export const transform = (m11: number, m12: number, m21: number, m22: number, m3
 /**
  * Translate the current canvas context transform.
  *
- * @category combinators
+ * @category transformations
  * @since 1.0.0
  */
 export const translate = (x: number, y: number) =>
-  withCanvas((ctx) =>
+  withCanvas(ctx =>
     IO.sync(() => {
       ctx.translate(x, y)
     })
@@ -1200,11 +1132,11 @@ export const translate = (x: number, y: number) =>
 /**
  * Add a single color stop to a `CanvasGradient` object.
  *
- * @category combinators
+ * @category gradients
  * @since 1.0.0
  */
 export const addColorStop: (offset: number, color: string) => Gradient<CanvasGradient> = (o, c) =>
-  withGradient((g) =>
+  withGradient(g =>
     IO.sync(() => {
       g.addColorStop(o, c)
       return g
@@ -1214,7 +1146,7 @@ export const addColorStop: (offset: number, color: string) => Gradient<CanvasGra
 /**
  * Convenience function for drawing a filled path.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
 export const fillPath = <R, E, A>(f: Render<A, E, R>): Render<A, E, R> =>
@@ -1223,7 +1155,7 @@ export const fillPath = <R, E, A>(f: Render<A, E, R>): Render<A, E, R> =>
 /**
  * Convenience function for drawing a stroked path.
  *
- * @category combinators
+ * @category paths
  * @since 1.0.0
  */
 export const strokePath = <R, E, A>(f: Render<A, E, R>) =>
@@ -1232,7 +1164,7 @@ export const strokePath = <R, E, A>(f: Render<A, E, R>) =>
 /**
  * Get access to a raw canvas 2d context and go crazy
  *
- * @category combinators
+ * @category utils
  * @since 2.0.0
  */
 export function use<A = void>(f: (canvas: CanvasRenderingContext2D) => A) {
@@ -1243,15 +1175,17 @@ export function use<A = void>(f: (canvas: CanvasRenderingContext2D) => A) {
  * A convenience function which allows for running an action while preserving the existing
  * canvas context.
  *
- * @category combinators
+ * @category state
  * @since 1.0.0
  */
 export function withContext<R, E, A>(effect: Render<A, E, R>): Render<A, E, R> {
-  return IO.scoped(IO.acquireUseRelease(
-    save,
-    (_) => effect,
-    (_) => restore
-  ))
+  return IO.scoped(
+    IO.acquireUseRelease(
+      save,
+      _ => effect,
+      _ => restore
+    )
+  )
 }
 
 function withCanvas<R, E, A>(
@@ -1260,6 +1194,4 @@ function withCanvas<R, E, A>(
   return IO.serviceWithEffect(Tag, f)
 }
 
-declare function withGradient<R, E, A>(
-  f: (gradient: CanvasGradient) => Effect<R, E, A>
-): Render<A, E, R>
+declare function withGradient<R, E, A>(f: (gradient: CanvasGradient) => Effect<R, E, A>): Render<A, E, R>

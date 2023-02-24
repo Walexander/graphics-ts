@@ -14,6 +14,7 @@ Added in v2.0.0
 
 - [instance](#instance)
   - [Live](#live)
+  - [centeredLive](#centeredlive)
   - [fromOrigin](#fromorigin)
 - [model](#model)
   - [Turtle2d (interface)](#turtle2d-interface)
@@ -34,12 +35,26 @@ Requires a `Drawable<TurtleMove>` instance
 **Signature**
 
 ```ts
-export declare function Live(state: TurtleState)
+export declare function Live(state: TurtleState): Layer.Layer<Drawable<TurtleMove>, never, Turtle2d>
 ```
 
 Added in v2.0.0
 
 -
+
+## centeredLive
+
+Construct a turtle starting at the center of a canvas.
+
+**Signature**
+
+```ts
+export declare function centeredLive(
+  theta = 0
+): Layer.Layer<Drawable<TurtleMove> | CanvasRenderingContext2D, never, Turtle2d>
+```
+
+Added in v2.0.0
 
 ## fromOrigin
 
@@ -48,7 +63,7 @@ Construct a turtle starting at the origin.
 **Signature**
 
 ```ts
-export declare const fromOrigin: Layer<unknown, unknown, Turtle2d>
+export declare const fromOrigin: Layer.Layer<Drawable<TurtleMove>, never, Turtle2d>
 ```
 
 Added in v2.0.0

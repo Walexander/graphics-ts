@@ -52,7 +52,14 @@ export const Tag = Tag$<CanvasRenderingContext2D>()
  * @category model
  * @since 2.0.0
  */
-export interface Canvas {
+export interface Canvas2d {
+
+  /**
+   * Render an arc.
+   *
+   * @category paths
+   * @since 1.0.0
+   */
   arc: (
     x: number,
     y: number,
@@ -162,7 +169,7 @@ export type GlobalCompositeOperation =
  * @category model
  * @since 1.0.0
  */
-export type ImageSource = HTMLCanvasElement | HTMLImageElement | HTMLVideoElement
+export type ImageSource = HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | ImageBitmap
 
 /**
  * The shape used to draw the end points of lines.

@@ -15,7 +15,7 @@ Added in v2.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [model](#model)
-  - [Canvas (interface)](#canvas-interface)
+  - [Canvas2d (interface)](#canvas2d-interface)
   - [CanvasDimensions (interface)](#canvasdimensions-interface)
   - [CanvasError (class)](#canvaserror-class)
     - [\_tag (property)](#_tag-property)
@@ -37,14 +37,20 @@ Added in v2.0.0
 
 # model
 
-## Canvas (interface)
+## Canvas2d (interface)
 
 The effectual operations one can perform against a `CanvasRenderingContext2D`
 
 **Signature**
 
 ```ts
-export interface Canvas {
+export interface Canvas2d {
+  /**
+   * Render an arc.
+   *
+   * @category paths
+   * @since 1.0.0
+   */
   arc: (
     x: number,
     y: number,
@@ -198,7 +204,7 @@ An element to draw into the HTML canvas context.
 **Signature**
 
 ```ts
-export type ImageSource = HTMLCanvasElement | HTMLImageElement | HTMLVideoElement
+export type ImageSource = HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | ImageBitmap
 ```
 
 Added in v1.0.0

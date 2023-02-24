@@ -101,8 +101,7 @@ describe('Canvas', () => {
     const fillStyle = '#0000ff'
     it('should set the current fill style', () =>
       pipe(
-        C.setFillStyle(fillStyle),
-        IO.tap((_) => Effect.log(`The fill style  is ${_.fillStyle}`)),
+        IO.zipLeft(IO.service(C.Tag), C.setFillStyle(fillStyle)),
         IO.map((ctx) => assert.equal(ctx.fillStyle, fillStyle))
       ))
   })
@@ -208,7 +207,7 @@ describe('Canvas', () => {
     describe('withContext', () => {
       it('calls save, runs program then restore', () =>
         pipe(
-          Canvas.withContext(pipe(Canvas.beginPath)),
+          IO.zipLeft(IO.service(C.Tag), C.withContext(C.beginPath)),
           Effect.map((ctx) => {
             expect(ctx.save as Mock).to.have.toHaveBeenCalled()
             expect(ctx.beginPath as Mock).to.have.toHaveBeenCalled()
@@ -223,6 +222,7 @@ describe('Canvas', () => {
             Effect.logError(`failed running withContext effect`),
             Effect.zipRight(Effect.service(Canvas.Tag))
           )),
+          Effect.zipRight(IO.service(C.Tag)),
           Effect.map((ctx) => {
             expect(ctx.restore as Mock).to.have.toHaveBeenCalledOnce()
           })
@@ -451,11 +451,12 @@ height="${CANVAS_HEIGHT}"
 
     describe('beginPath', () => {
       testM('should begin drawing a path', () => {
+        const actual = IO.zipLeft(IO.service(C.Tag), C.beginPath)
         const expected = Effect.sync(() => {
           testCtx.beginPath()
           return testCtx
         })
-        return testCanvas(C.beginPath, expected)
+        return testCanvas(actual, expected)
       })
     })
 

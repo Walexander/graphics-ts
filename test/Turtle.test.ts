@@ -53,7 +53,6 @@ describe('Turtle2d', () => {
         IO.provideSomeLayer(TurtleSurface),
         IO.runPromise
       ))
-
     describe('draw forward', () => {
       it('length 0', () =>
         pipe(
