@@ -5,7 +5,7 @@ import * as RA from '@fp-ts/core/ReadonlyArray'
 import { flow, pipe } from '@fp-ts/core/Function'
 import * as Drawable from '../Drawable'
 import * as C from '../Canvas'
-import { Canvas } from '../Canvas/definition'
+import { Canvas2d } from '../Canvas/definition'
 import { Shape } from '../Shape'
 import * as Context from '@effect/data/Context'
 import * as Duration from '@effect/data/Duration'
@@ -16,7 +16,7 @@ import * as Duration from '@effect/data/Duration'
 * @since 2.0.0
 */
 interface Surface
-  extends Pick<Canvas, 'arc' | 'rect' | 'ellipse' | 'moveTo' | 'lineTo' | 'closePath'> {}
+  extends Pick<Canvas2d, 'drawImage' | 'arc' | 'rect' | 'ellipse' | 'moveTo' | 'lineTo' | 'closePath'> {}
 /**
  * The Canvas operations required to draw a shape`
 *
@@ -101,6 +101,9 @@ function DrawsShapeImpl(canvas: Surface): Drawable.Drawable<Shape> {
 
       case 'Rect':
         return canvas.rect(shape.x, shape.y, shape.width, shape.height)
+
+      case 'Image':
+        return canvas.drawImage(shape.image, shape.source.x, shape.source.y)
     }
   }
 }
@@ -113,7 +116,8 @@ function CanvasSurfaceImpl(canvas: CanvasRenderingContext2D): Surface {
     closePath: provide(C.closePath),
     ellipse: flow(C.ellipse, provide),
     rect: flow(C.rect, provide),
-    arc: flow(C.arc, provide)
+    arc: flow(C.arc, provide),
+    drawImage: flow(C.drawImage, provide),
   }
 }
 /**

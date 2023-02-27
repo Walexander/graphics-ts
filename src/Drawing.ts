@@ -62,6 +62,8 @@ import { Drawable } from './Drawable'
 import { Color } from './Color'
 import { Font } from './Font'
 import { Point, Shape } from './Shape'
+import * as C from './Canvas'
+import {pipe} from '@fp-ts/core/Function'
 
 const readonlyArrayMonoidDrawing = RA.getMonoid<Drawing>()
 const firstSome = <A>() => M.fromSemigroup(O.getFirstSomeSemigroup<A>(), O.none<A>())
@@ -623,6 +625,25 @@ export const monoidDrawing: M.Monoid<Drawing> = M.fromSemigroup(
   ),
   many(readonlyArrayMonoidDrawing.empty)
 )
+
+/**
+* @category utils
+* @since 2.0.0
+*/
+export function cached(drawing: Drawing) {
+  return IO.gen(function* ($) {
+    const canvas = yield* $(IO.sync(() => document.createElement('canvas')))
+    const { width, height } = yield *$(C.dimensions)
+    return yield *$(pipe(
+      C.setDimensions({width, height}),
+      IO.zipRight(render(drawing)),
+      IO.zipRight(C.getImageData(0, 0, width, height)),
+      IO.flatMap(_ => IO.tryPromise(() => createImageBitmap(_))),
+      C.renderTo(canvas),
+      IO.orDie,
+    ))
+  })
+}
 
 /**
  * Collect an Iterable of Drawings into one bigger shape

@@ -88,6 +88,7 @@ export interface Canvas2d {
   lineTo: (x: number, y: number) => Effect<never, never, void>
   moveTo: (x: number, y: number) => Effect<never, never, void>
   rect: (x: number, y: number, width: number, height: number) => Effect<never, never, void>
+  drawImage: (imageData: ImageSource, sx: number, sy: number) => Effect<never, never, void>
   setFillStyle: (
     style: string | CanvasGradient | CanvasPattern
   ) => Effect<never, never, void>

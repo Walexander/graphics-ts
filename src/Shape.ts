@@ -8,6 +8,7 @@ import { Foldable } from '@fp-ts/core/typeclass/Foldable'
 import * as RA from '@fp-ts/core/ReadonlyArray'
 import * as M from '@fp-ts/core/typeclass/Monoid'
 import {constant, pipe} from '@fp-ts/core/Function'
+import { ImageSource } from './Canvas/definition'
 
 // -------------------------------------------------------------------------------------
 // model
@@ -228,12 +229,37 @@ export interface Rect {
 }
 
 /**
+ * Represents an `ImageSource` with a top-left corner at `x` and `y`,
+ * a width and a height
+*
+* @category model
+* @since 2.0.0
+ */
+export interface Image {
+  readonly _tag: 'Image'
+
+  /**
+   * The position of the top-left corner on the x-axis.
+   */
+  readonly source: Point
+  /**
+   * The position of the top-left corner on the x-axis
+   * of the source image
+   */
+  readonly dest?: Point
+  /**
+   * The source of the image data
+   */
+  readonly image: ImageSource
+}
+
+/**
  * Represents a shape that can be drawn.
  *
  * @category model
  * @since 1.0.0
  */
-export type Shape = Arc | Composite | Ellipse | Path | Rect
+export type Shape = Arc | Composite | Ellipse | Path | Rect | Image
 
 // -------------------------------------------------------------------------------------
 // constructors
@@ -278,6 +304,19 @@ export const angle = (angle: Angle): number => {
  * @since 1.0.0
  */
 export const point = (x: number, y: number): Point => ({ x, y })
+
+/**
+ * Constructs an image `Shape`
+ *
+ * @category constructors
+ * @since 2.0.0
+ */
+export const image = (image: ImageSource, source: Point, dest?: Point): Shape => ({
+  _tag: 'Image',
+  image,
+  source,
+  dest
+})
 
 /**
  * Constructs an `Arc` shape.
@@ -405,7 +444,7 @@ export const rect = (x: number, y: number, width: number, height: number): Rect 
  */
 export const polygon = (sides: number): Shape => pipe(
   RA.range(0, sides - 1),
-  RA.map((n) => pipe((Math.PI / (sides / 2)) * n, (theta) => point(Math.sin(theta), Math.cos(theta)))),
+  RA.map((n) => pipe(n * Math.PI / (sides / 2), (theta) => point(Math.sin(theta), Math.cos(theta)))),
   closed(RA.Foldable)
 )
 

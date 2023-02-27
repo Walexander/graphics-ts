@@ -81,6 +81,7 @@ describe('Drawable/Shape', () => {
       })
     })
   })
+
   describe('Path', () => {
     const path = [
       { x: 0, y: 1 },
@@ -119,4 +120,14 @@ describe('Drawable/Shape', () => {
       })
     })
   })
+
+  describe('Image', async () => {
+    const img = await createImageBitmap(new ImageData(CANVAS_WIDTH, CANVAS_HEIGHT))
+
+    it('should draw an image', () => {
+      const image = Shape.image(img, Shape.point(0,0))
+      return testM(image, canvas => expect(canvas.drawImage).toHaveBeenCalledWith(img, 0, 0))
+    })
+  })
+
 })
