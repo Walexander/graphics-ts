@@ -1,7 +1,7 @@
 import * as IO from '@effect/io/Effect'
-import * as O from '@fp-ts/core/Option'
-import * as ROA from '@fp-ts/core/ReadonlyArray'
-import { pipe } from '@fp-ts/core/Function'
+import * as O from '@effect/data/Option'
+import * as ROA from '@effect/data/ReadonlyArray'
+import { pipe } from '@effect/data/Function'
 import { beforeEach, describe, it, assert } from 'vitest'
 
 import * as Color from '../src/Color'

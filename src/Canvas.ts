@@ -28,7 +28,7 @@
  * to provide it with the canvas and, finally, run the effect to a Promise
  *
  * ```ts
- * import { pipe } from '@fp-ts/core/Function'
+ * import { pipe } from '@effect/data/Function'
  * import * as E from '@effect/io/Effect'
  * import * as C from 'graphics-ts/Canvas'
  *

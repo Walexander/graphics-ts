@@ -1,7 +1,7 @@
-import { liftPredicate } from '@fp-ts/core/Option'
+import { liftPredicate } from '@effect/data/Option'
 import * as IO from '@effect/io/Effect'
 import * as Context from '@effect/data/Context'
-import { pipe } from '@fp-ts/core/Function'
+import { pipe } from '@effect/data/Function'
 
 export const RestartButton = Context.Tag<HTMLButtonElement>()
 export const isButton = liftPredicate(

@@ -1,8 +1,8 @@
 /** @since 2.0.0 */
 import * as IO from '@effect/io/Effect'
 import * as Layer from '@effect/io/Layer'
-import * as RA from '@fp-ts/core/ReadonlyArray'
-import { flow, pipe } from '@fp-ts/core/Function'
+import * as RA from '@effect/data/ReadonlyArray'
+import { flow, pipe } from '@effect/data/Function'
 import * as Drawable from '../Drawable'
 import * as C from '../Canvas'
 import { Canvas2d } from '../Canvas/definition'
@@ -101,9 +101,6 @@ function DrawsShapeImpl(canvas: Surface): Drawable.Drawable<Shape> {
 
       case 'Rect':
         return canvas.rect(shape.x, shape.y, shape.width, shape.height)
-
-      case 'Image':
-        return canvas.drawImage(shape.image, shape.source.x, shape.source.y)
     }
   }
 }

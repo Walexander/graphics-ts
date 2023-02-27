@@ -2,8 +2,8 @@
  * Adapted from https://github.com/purescript-contrib/purescript-drawing/blob/master/test/Main.purs
  */
 import * as IO from '@effect/io/Effect'
-import * as RA from '@fp-ts/core/ReadonlyArray'
-import { pipe } from '@fp-ts/core/Function'
+import * as RA from '@effect/data/ReadonlyArray'
+import { pipe } from '@effect/data/Function'
 import { Live as DrawsShapesLive, withDelay } from '../src/Drawable/Shape'
 import { Live as DrawsDrawingsLive } from '../src/Drawable/Drawing'
 import { millis } from '@effect/data/Duration'

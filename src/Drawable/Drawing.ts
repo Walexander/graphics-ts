@@ -1,6 +1,6 @@
 /** @since 2.0.0 */
 import * as IO from '@effect/io/Effect'
-import { flow, pipe } from '@fp-ts/core/Function'
+import { flow, pipe } from '@effect/data/Function'
 import { Drawable } from '../Drawable'
 import { Tag as ShapeTag, Live as ShapeLive } from './Shape'
 import * as C from '../Canvas'
@@ -8,7 +8,7 @@ import { Shape } from '../Shape'
 import { toCss } from '../Color'
 import { Drawing } from '../Drawing'
 import * as Context from '@effect/data/Context'
-import * as O from '@fp-ts/core/Option'
+import * as O from '@effect/data/Option'
 import { showFont } from '../Font'
 
 /**

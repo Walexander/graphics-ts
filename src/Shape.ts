@@ -3,11 +3,11 @@
  *
  * @since 1.0.0
  */
-import { Kind, TypeLambda } from '@fp-ts/core/HKT'
-import { Foldable } from '@fp-ts/core/typeclass/Foldable'
-import * as RA from '@fp-ts/core/ReadonlyArray'
-import * as M from '@fp-ts/core/typeclass/Monoid'
-import {constant, pipe} from '@fp-ts/core/Function'
+import { Kind, TypeLambda } from '@effect/data/HKT'
+import { Foldable } from '@effect/data/typeclass/Foldable'
+import * as RA from '@effect/data/ReadonlyArray'
+import * as M from '@effect/data/typeclass/Monoid'
+import {pipe} from '@effect/data/Function'
 import { ImageSource } from './Canvas/definition'
 
 // -------------------------------------------------------------------------------------
@@ -259,7 +259,7 @@ export interface Image {
  * @category model
  * @since 1.0.0
  */
-export type Shape = Arc | Composite | Ellipse | Path | Rect | Image
+export type Shape = Arc | Composite | Ellipse | Path | Rect
 
 // -------------------------------------------------------------------------------------
 // constructors
@@ -311,7 +311,7 @@ export const point = (x: number, y: number): Point => ({ x, y })
  * @category constructors
  * @since 2.0.0
  */
-export const image = (image: ImageSource, source: Point, dest?: Point): Shape => ({
+export const image = (image: ImageSource, source: Point, dest?: Point) => ({
   _tag: 'Image',
   image,
   source,
@@ -459,11 +459,12 @@ export const polygon = (sides: number): Shape => pipe(
  * @since 1.0.0
  */
 export const monoidPath: M.Monoid<Path> = M.struct({
-  _tag: {
-    combineAll: constant('Path'),
-    combineMany: constant('Path'),
-    combine: constant('Path'), empty: 'Path'
+  _tag: <M.Monoid<Path['_tag']>>{
+    combineAll: () => 'Path' as const,
+    combineMany: () => ('Path') as const,
+    combine: () => ('Path') as const,
+    empty: 'Path'
   },
-  closed: M.booleanAny,
+  closed: M.booleanSome,
   points: RA.getMonoid<Point>()
 })

@@ -3,9 +3,9 @@
  */
 import * as IO from '@effect/io/Effect'
 import * as Layer from '@effect/io/Layer'
-import { fromNullable } from '@fp-ts/core/Option'
-import { liftPredicate } from '@fp-ts/core/Either'
-import { flow, pipe } from '@fp-ts/core/Function'
+import { fromNullable } from '@effect/data/Option'
+import { liftPredicate } from '@effect/data/Either'
+import { flow, pipe } from '@effect/data/Function'
 
 import { CanvasError, Tag } from './definition'
 

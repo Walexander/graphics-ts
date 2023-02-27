@@ -1,7 +1,7 @@
 /** @since 2.0.0 */
-import { pipe, constant } from '@fp-ts/core/Function'
-import * as RA from '@fp-ts/core/ReadonlyArray'
-import { fromNullable } from '@fp-ts/core/Option'
+import { pipe, constant } from '@effect/data/Function'
+import * as RA from '@effect/data/ReadonlyArray'
+import { fromNullable } from '@effect/data/Option'
 import * as IO from '@effect/io/Effect'
 import { Effect } from '@effect/io/Effect'
 import {

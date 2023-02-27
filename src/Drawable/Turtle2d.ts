@@ -6,7 +6,7 @@ import * as C from '../Canvas'
 import { Canvas2d } from '../Canvas/definition'
 import * as Context from '@effect/data/Context'
 import { TurtleMove } from '../Turtle2d'
-import { flow } from '@fp-ts/core/Function'
+import { flow } from '@effect/data/Function'
 
 /**
  *

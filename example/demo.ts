@@ -3,7 +3,7 @@
   */
 import * as IO from '@effect/io/Effect'
 import * as Duration from '@effect/data/Duration'
-import { pipe } from '@fp-ts/core/Function'
+import { pipe } from '@effect/data/Function'
 
 import * as Color from '../src/Color'
 import * as C from '../src/Canvas'

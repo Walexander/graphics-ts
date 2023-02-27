@@ -1,5 +1,5 @@
 import * as IO from '@effect/io/Effect'
-import { pipe } from '@fp-ts/core/Function'
+import { pipe } from '@effect/data/Function'
 
 import { renderTo } from '../src/Canvas'
 import { snowFlakes } from './snowflake'

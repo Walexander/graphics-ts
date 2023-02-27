@@ -5,8 +5,8 @@
  * Taking the MDN example from the `Canvas` documentation,
  *
  * ```ts
- * import { pipe } from '@fp-ts/core/Function'
- * import * as RA from '@fp-ts/core/ReadonlyArray'
+ * import { pipe } from '@effect/data/Function'
+ * import * as RA from '@effect/data/ReadonlyArray'
  * import * as Color from 'graphics-ts/lib/Color'
  * import * as E from '@effect/io/Effect'
  * import * as C from 'graphics-ts/Canvas'
@@ -51,10 +51,10 @@
  * @since 1.0.0
  */
 import * as IO from '@effect/io/Effect'
-import * as SG from '@fp-ts/core/typeclass/Semigroup'
-import * as M from '@fp-ts/core/typeclass/Monoid'
-import * as O from '@fp-ts/core/Option'
-import * as RA from '@fp-ts/core/ReadonlyArray'
+import * as SG from '@effect/data/typeclass/Semigroup'
+import * as M from '@effect/data/typeclass/Monoid'
+import * as O from '@effect/data/Option'
+import * as RA from '@effect/data/ReadonlyArray'
 
 import { drawShape } from './Drawable/Shape'
 import { drawsDrawing, renderDrawing} from './Drawable/Drawing'
@@ -63,7 +63,7 @@ import { Color } from './Color'
 import { Font } from './Font'
 import { Point, Shape } from './Shape'
 import * as C from './Canvas'
-import {pipe} from '@fp-ts/core/Function'
+import {pipe} from '@effect/data/Function'
 
 const readonlyArrayMonoidDrawing = RA.getMonoid<Drawing>()
 const firstSome = <A>() => M.fromSemigroup(O.getFirstSomeSemigroup<A>(), O.none<A>())
@@ -576,9 +576,9 @@ export const draw = drawsDrawing
  * @category instances
  * @since 1.0.0
  */
-export const monoidFillStyle = M.struct<FillStyle>({
+export const monoidFillStyle: M.Monoid<FillStyle> = M.struct({
   color: getFirstMonoidColor
-})
+} as const)
 
 /**
  * Gets a `Monoid` instance for `OutlineStyle`.
@@ -590,7 +590,7 @@ export const monoidFillStyle = M.struct<FillStyle>({
  * @category instances
  * @since 1.0.0
  */
-export const monoidOutlineStyle: M.Monoid<OutlineStyle> = M.struct<OutlineStyle>({
+export const monoidOutlineStyle: M.Monoid<OutlineStyle> = M.struct({
   color: getFirstMonoidColor,
   lineWidth: getFirstMonoidNumber
 })
@@ -601,7 +601,7 @@ export const monoidOutlineStyle: M.Monoid<OutlineStyle> = M.struct<OutlineStyle>
  * @category instances
  * @since 1.0.0
  */
-export const monoidShadow: M.Monoid<Shadow> = M.struct<Shadow>({
+export const monoidShadow: M.Monoid<Shadow> = M.struct({
   color: getFirstMonoidColor,
   blur: getFirstMonoidNumber,
   offset: getFirstMonoidPoint

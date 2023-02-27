@@ -1,5 +1,5 @@
 import * as IO from '@effect/io/Effect'
-import { pipe } from '@fp-ts/core/Function'
+import { pipe } from '@effect/data/Function'
 import { it as vit, assert } from 'vitest'
 import * as DS from '../src/Drawable/Shape'
 import * as DD from '../src/Drawable/Drawing'

@@ -1,10 +1,10 @@
 /**
  * @since 1.0.0
  */
-import * as O from '@fp-ts/core/Option'
-import { isEmpty } from '@fp-ts/core/String'
-import { not } from '@fp-ts/core/Boolean'
-import { flow, constant } from '@fp-ts/core/Function'
+import * as O from '@effect/data/Option'
+import { isEmpty } from '@effect/data/String'
+import { not } from '@effect/data/Boolean'
+import { flow, constant } from '@effect/data/Function'
 
 // -------------------------------------------------------------------------------------
 // model

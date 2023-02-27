@@ -1,6 +1,6 @@
 import * as IO from '@effect/io/Effect'
 import * as Layer from '@effect/io/Layer'
-import { pipe } from '@fp-ts/core/Function'
+import { pipe } from '@effect/data/Function'
 import { assert, it, expect, beforeEach, describe } from 'vitest'
 
 import { Live as DrawsTurtlesLive } from '../src/Drawable/Turtle2d'

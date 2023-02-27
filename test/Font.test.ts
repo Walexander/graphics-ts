@@ -1,5 +1,5 @@
-import * as O from '@fp-ts/core/Option'
-import { pipe } from '@fp-ts/core/Function'
+import * as O from '@effect/data/Option'
+import { pipe } from '@effect/data/Function'
 import { it, assert, describe } from 'vitest'
 
 import * as F from '../src/Font'

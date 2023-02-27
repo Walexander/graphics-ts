@@ -1,5 +1,5 @@
 import * as IO from '@effect/io/Effect'
-import { pipe } from '@fp-ts/core/Function'
+import { pipe } from '@effect/data/Function'
 import { testM, testCanvas } from './utils'
 import type { Mock } from 'vitest'
 import { assert, beforeEach, describe, expect } from 'vitest'

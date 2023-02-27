@@ -1,5 +1,5 @@
-import * as ROA from '@fp-ts/core/ReadonlyArray'
-import { pipe } from '@fp-ts/core/Function'
+import * as ROA from '@effect/data/ReadonlyArray'
+import { pipe } from '@effect/data/Function'
 import { assert, describe, it } from 'vitest'
 
 import * as S from '../src/Shape'

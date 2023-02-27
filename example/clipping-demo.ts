@@ -4,8 +4,8 @@
  */
 import * as IO from '@effect/io/Effect'
 import * as Duration from '@effect/data/Duration'
-import * as RA from '@fp-ts/core/ReadonlyArray'
-import { pipe } from '@fp-ts/core/Function'
+import * as RA from '@effect/data/ReadonlyArray'
+import { pipe } from '@effect/data/Function'
 
 import { Live as DrawsShapesLive } from '../src/Drawable/Shape'
 import { Live as DrawsDrawingsLive } from '../src/Drawable/Drawing'

@@ -1,8 +1,8 @@
 import * as IO from '@effect/io/Effect'
 import * as Context from '@effect/data/Context'
 import { millis } from '@effect/data/Duration'
-import { pipe } from '@fp-ts/core/Function'
-import * as O from '@fp-ts/core/Option'
+import { pipe } from '@effect/data/Function'
+import * as O from '@effect/data/Option'
 
 import * as Turtle2d from '../src/Turtle2d'
 import * as DrawsTurtles from '../src/Drawable/Turtle2d'
@@ -72,11 +72,11 @@ function spiralMaker(total: number) {
         num
       }
     ]),
-    Stream.tap(({ num }) =>
-      num < 1e2 && num % 1e1 == 0 ||
-      num % 1e2 == 0
-        ? IO.delay(IO.unit(), millis(16)) : IO.unit()
-    ),
+    // Stream.tap(({ num }) =>
+    //   num < 1e2 && num % 1e1 == 0 ||
+    //   num % 1e2 == 0
+    //     ? IO.delay(IO.unit(), millis(16)) : IO.unit()
+    // ),
     Stream.tap(updateText(total)),
     Stream.map(turtleDraw),
     Stream.mapEffect(fn => IO.serviceWithEffect(Turtle2d.Tag, fn)),
@@ -90,7 +90,7 @@ function turtleDraw({ num, isPrime, nextSquare }: CellParams) {
     pipe(
       IO.collectAllDiscard<R, never, void>([
         C.setLineWidth(isPrime ? 3 : 1),
-        C.setStrokeStyle(isPrime ? 'transparent' : Color.toCss(Color.hsla(0, 0, 0, 0.25)))
+        C.setStrokeStyle(isPrime ? 'transparent' : Color.toCss(Color.hsla(0, 0, 0, 0.25))),
       ]),
       IO.zipRight(turtle.drawForward(2)),
       IO.tap(({ position: [x, y] }) => isPrime ?
@@ -164,7 +164,7 @@ function sieveChunk(primes: Chunk.Chunk<number>, candidate: number) {
 
 const primeSpiral =  pipe(
   Stream.fromEffect(initialize),
-  Stream.merge(spiralMaker(3_363)),
+  Stream.merge(spiralMaker(2978)),
   Stream.runLast,
   IO.flatMap(state =>
     pipe(
@@ -176,7 +176,7 @@ const primeSpiral =  pipe(
   ),
   C.withContext,
   IO.timed,
-  IO.tap(([ duration, { position: [x, y] } ]) => IO.log(`duration: ${duration.millis}ms : [${x}, ${y}]`)),
+  IO.tap(([ duration, ]) => IO.log(`duration: ${duration.millis}ms `)),
   IO.zipRight(IO.delay(spinIt, millis(3e3))),
   IO.zipRight(IO.serviceWithEffect(RestartButton, toggleButton(main))),
   IO.provideSomeLayer(Turtle2d.fromOrigin),
