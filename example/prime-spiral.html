@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf8" />
     <title>graphics-ts</title>
-    <script type="module" src="./prime-spiral.ts"></script>
 <style>
 canvas {
   width: 300px;
@@ -28,12 +27,17 @@ canvas {
   </head>
   <body>
     <div id="root">
+      <button id="restart">Restart</button>
       <h2>Prime Spiral</h2>
 
       <span>1 - <span id=latest>0</span></span>
       <span id=prime></span>
         <canvas id="canvas4" width="600" height="600" style="outline: 2px solid blue;" ></canvas>
     </div>
+    <script type="module">
+      import { main } from './prime-spiral.ts'
+      void main()
+    </script>
   </body>
 </html>
 

@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf8" />
     <title>graphics-ts</title>
-    <script type=module src="./index.ts"></script>
 <style>
 #root {
 display: flex;
@@ -35,5 +34,9 @@ canvas {
       <h2>Clipped Rectangle Animation Loop</h2>
         <canvas id="canvas2" width="600" height="600" style="border: 1px solid black;"></canvas> </div>
     </div>
+    <script type=module>
+      import { main } from './index.ts'
+      void main()
+    </script>
   </body>
 </html>

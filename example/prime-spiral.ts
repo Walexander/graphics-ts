@@ -1,6 +1,3 @@
-/**
- * Adapted from https://github.com/purescript-contrib/purescript-drawing/blob/master/test/Main.purs
- */
 import * as IO from '@effect/io/Effect'
 import * as Context from '@effect/data/Context'
 import { millis } from '@effect/data/Duration'
@@ -10,53 +7,54 @@ import * as O from '@fp-ts/core/Option'
 import * as Turtle2d from '../src/Turtle2d'
 import * as DrawsTurtles from '../src/Drawable/Turtle2d'
 import * as C from '../src/Canvas'
+import * as Shape from '../src/Shape'
+import * as D from '../src/Drawing'
 import * as Color from '../src/Color'
 import * as Chunk from '@effect/data/Chunk'
 import * as Stream from '@effect/stream/Stream'
 
-const intsPlusPrimality = pipe(
-  Stream.range(2, Number.MAX_SAFE_INTEGER),
-  Stream.mapAccum(Chunk.empty<number>(), sieveChunk),
-  Stream.flatten
-)
-function sieveChunk(primes: Chunk.Chunk<number>, candidate: number) {
-  const isPrime = candidate > 1 && Chunk.every(primes, prime => candidate % prime !== 0)
-  const value = [candidate, isPrime] as const
-  return [isPrime ? primes.append(candidate) : primes, Stream.succeed(value)] as const
-}
+import { toggleButton, RestartButton, liveRestartButton, loopCircle } from './utils'
 
-function main() {
-  return pipe(
-    Stream.fromEffect(initialize),
-    Stream.merge(spiralMaker(21_950)),
-    Stream.runLast,
-    IO.timed,
-    IO.tap(([duration, state]) => pipe(
-      state,
-      O.flatMap(O.fromNullable),
-      IO.fromOption,
-      IO.zipLeft(C.setFillStyle('black')),
-      IO.tap(({ position: [x, y] }) => C.fillPath(C.arc(x, y, 10, 0, Math.PI * 2))),
-      IO.tap(_ =>
-        IO.log(`duration: ${duration.millis}ms : ${_.position}}`),
-      )
-    )),
-    C.withContext,
-    IO.provideSomeLayer(Turtle2d.fromOrigin),
-    IO.provideSomeLayer(DrawsTurtles.Live),
-    IO.provideSomeLayer(liveLastPrime),
-    IO.provideSomeLayer(liveLatest),
-    IO.provideSomeLayer(liveFormatter),
-    C.renderTo('canvas4'),
-    IO.runPromise
-  )
+export function main() {
+  return IO.runPromise(primeSpiral)
 }
+export const spinIt =  pipe(
+  IO.unit(),
+  IO.zipRight(C.dimensions),
+  IO.flatMap(({ width, height }) =>
+    pipe(
+      IO.unit(),
+      IO.zipRight(C.getImageData(0, 0, width, height)),
+      IO.flatMap(imageData => IO.tryPromise(() => createImageBitmap(imageData))),
+      IO.zipLeft(C.setDimensions({ width, height })),
+      IO.tap(imageBitmap =>
+        loopCircle(angle =>
+          C.withContext(
+            pipe(
+              C.clearRect(0, 0, width, height),
+              IO.zipRight(C.translate(width / 2, height / 2)),
+              IO.zipRight(C.rotate(angle)),
+              IO.zipRight(C.drawImage(imageBitmap, width / -2, height / -2)),
+              IO.zipRight(IO.delay(IO.unit(), millis(16)))
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
 const initialize = pipe(
   IO.unit(),
-  IO.zipRight(IO.log(`starting prime spiral`)),
   IO.zipRight(C.dimensions),
-  IO.tap(({ width, height }) => C.translate(width / 2, height / 2)),
-  IO.as(void null)
+  IO.tap(({ width, height }) => pipe(
+    IO.unit(),
+    IO.zipRight(C.clearRect(0, 0, width, height)),
+    IO.zipRight(C.translate(width / 2, height / 2)),
+  )),
+  IO.zipRight(C.scale(2.5, 2.5)),
+  IO.zipRight(IO.serviceWithEffect(RestartButton, toggleButton(main))),
+  IO.as(null)
 )
 type CellParams = {
   num: number
@@ -75,7 +73,8 @@ function spiralMaker(total: number) {
       }
     ]),
     Stream.tap(({ num }) =>
-      num > 1e3 && num % 1e2 == 0 || num < 1e3 && num % 2e1 == 0
+      num < 1e2 && num % 1e1 == 0 ||
+      num % 1e2 == 0
         ? IO.delay(IO.unit(), millis(16)) : IO.unit()
     ),
     Stream.tap(updateText(total)),
@@ -106,8 +105,6 @@ function turtleDraw({ num, isPrime, nextSquare }: CellParams) {
       ),
       IO.zipRight(turtle.drawForward(2))
     )
-
-
   function turnAmount(candidate: number, oddRoot: number) {
     const lastOdd = oddRoot - 2
     const nextSq = oddRoot ** 2
@@ -152,4 +149,45 @@ function setText(text: string) {
     el.innerText = text
   })
 }
-void main()
+
+const intsPlusPrimality = pipe(
+  Stream.range(2, Number.MAX_SAFE_INTEGER),
+  Stream.mapAccum(Chunk.empty<number>(), sieveChunk),
+  Stream.flatten
+)
+function sieveChunk(primes: Chunk.Chunk<number>, candidate: number) {
+  const isPrime = candidate > 1 && Chunk.every(primes, prime => candidate % prime !== 0)
+  const value = [candidate, isPrime] as const
+  return [isPrime ? primes.append(candidate) : primes, Stream.succeed(value)] as const
+}
+
+
+const primeSpiral =  pipe(
+  Stream.fromEffect(initialize),
+  Stream.merge(spiralMaker(3_363)),
+  Stream.runLast,
+  IO.flatMap(state =>
+    pipe(
+      state,
+      O.flatMap(_ => O.fromNullable(_)),
+      IO.fromOption,
+      IO.tap(_ => D.render(fillEnd(_))),
+    )
+  ),
+  C.withContext,
+  IO.timed,
+  IO.tap(([ duration, { position: [x, y] } ]) => IO.log(`duration: ${duration.millis}ms : [${x}, ${y}]`)),
+  IO.zipRight(IO.delay(spinIt, millis(3e3))),
+  IO.zipRight(IO.serviceWithEffect(RestartButton, toggleButton(main))),
+  IO.provideSomeLayer(Turtle2d.fromOrigin),
+  IO.provideSomeLayer(DrawsTurtles.Live),
+  IO.provideSomeLayer(liveLastPrime),
+  IO.provideSomeLayer(liveLatest),
+  IO.provideSomeLayer(liveFormatter),
+  IO.provideSomeLayer(liveRestartButton),
+  C.renderTo('canvas4'),
+)
+function fillEnd({position: [x, y]}: Turtle2d.TurtleState) {
+  return D.fill(Shape.circle(x, y, 4), D.fillStyle(Color.hsla(0, 0.5, 0, 0.5)))
+}
+

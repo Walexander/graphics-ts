@@ -1,115 +1,31 @@
-/**
- * Adapted from https://github.com/purescript-contrib/purescript-drawing/blob/master/test/Main.purs
- */
 import * as IO from '@effect/io/Effect'
-import * as RA from '@fp-ts/core/ReadonlyArray'
-import * as Duration from '@effect/data/Duration'
 import { pipe } from '@fp-ts/core/Function'
 
-import { Live as DrawsShapesLive } from '../src/Drawable/Shape'
-import { Live as DrawsDrawingsLive } from '../src/Drawable/Drawing'
-import * as Color from '../src/Color'
-import * as C from '../src/Canvas'
-import * as D from '../src/Drawing'
-import * as S from '../src/Shape'
+import { renderTo } from '../src/Canvas'
 import { snowFlakes } from './snowflake'
+import { clippingDemo } from './clipping-demo'
 
+import { toggleButton, RestartButton, liveRestartButton } from './utils'
 const CANVAS_ONE_ID = 'canvas1'
 const CANVAS_TWO_ID = 'canvas2'
-/**
- * A simple animation loop that grows a circle 1px / 16ms
- * and then renders a clipped rect drawing
- */
-const clippingDemo = pipe(
-  IO.unit(),
-  IO.zipRight(
-    IO.loopDiscard(
-      <[number, S.Arc]>[0, S.circle(300, 300, 100)],
-      ([loops]) => loops < 2,
-      nextCircle,
-      ([, circle]) =>
-        pipe(
-          IO.unit(),
-          IO.zipRight(C.clearRect(0, 0, 600, 600)),
-          IO.zipRight(D.render(clippedRect(circle))),
-          IO.zipRight((IO.delay(Duration.millis(16))(IO.unit())))
-        )
-    )
-  ),
-  IO.zipLeft(IO.log(`Finished clipping animation loop`)),
-  IO.forever
-)
-const button = document.getElementById('restart') as HTMLButtonElement
+
 // The `clippingDemo` in parallel with our `snowflake` animation Effect
 const canvasDemo = pipe(
   // some button management
-  IO.sync(() => {
-    ;button.disabled = true
-    ;button.removeEventListener('click', main)
-  }),
+  IO.serviceWithEffect(RestartButton, toggleButton(main)),
   IO.zipRight(
-    // our clipping demo runs forever but `raceAll`
-    // will interrupt it once our `snowFlakes` are done
+    // `raceAll` will run these effects in parallel
+    // our clipping demo runs forever, but `raceAll`
+    // will interrupt when the first effect finishes
     IO.raceAll([
-      pipe(
-        clippingDemo,
-        // give our program a way to draw `Drawing`
-        IO.provideSomeLayer(DrawsDrawingsLive),
-        // give that a way to draw `Shape`
-        IO.provideSomeLayer(DrawsShapesLive),
-        // finally, provide our an actual canvas
-        C.renderTo(CANVAS_TWO_ID)
-      ),
-      snowFlakes(CANVAS_ONE_ID, 4)
+      // Since we want these to render to separate canvases
+      // we provide them individually
+      renderTo(CANVAS_TWO_ID)(clippingDemo),
+      renderTo(CANVAS_ONE_ID)(snowFlakes(6)),
     ])
   ),
-  IO.zipLeft(
-    IO.sync(() => {
-      ;button.disabled = false
-      ;button.addEventListener('click', main)
-    })
-  )
-)
-// The only left to do is *run* the thing.
-function main() { void IO.runPromise(canvasDemo) }
-// Now it's someone else's problem 🤣
-main()
-
-// a circle that gets bigger up to a radius of 300
-// then gets smaller down to a radius of 100
-// and repeats
-function nextCircle([loops, circle]: [number, S.Arc]): [number, S.Arc] {
-  return [
-    loops % 2 == 0 ? (circle.r >= 300 ? loops + 1 : loops) : circle.r <= 100 ? loops + 1 : loops,
-    loops % 2 == 0
-      ? S.circle(circle.x, circle.y, circle.r + 1)
-      : S.circle(circle.x, circle.y, Math.max(circle.r - 1, 0))
-  ]
-}
-const backgroundSquares = pipe(
-  RA.range(0, 2),
-  RA.flatMap(row =>
-    pipe(
-      RA.range(0, 2),
-      RA.map(col =>
-        D.fill(S.rect(col * 200, row * 200, 150, 150), D.fillStyle(Color.hsl(0, 1, 0.5)))
-      )
-    )
-  )
+  IO.zipLeft(IO.serviceWithEffect(RestartButton, toggleButton(main))),
+  IO.provideSomeLayer(liveRestartButton)
 )
 
-/**
- * Example of a clipped canvas from [MDN Web Docs](https://mzl.la/3e0mKKx).
- */
-function clippedRect(clip: S.Shape) {
-  return pipe(
-    D.many([
-      // a blue background
-      D.fill(S.rect(0, 0, 600, 600), D.fillStyle(Color.hsl(240, 1, 0.5))),
-      // and red tiles
-      D.translate(25, 25)(D.many(backgroundSquares))
-    ]),
-    // clip out our shape
-    D.clipped(clip),
-  )
-}
+export function main() { IO.runPromise(canvasDemo) }

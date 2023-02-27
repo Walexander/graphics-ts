@@ -1,9 +1,9 @@
 import * as IO from '@effect/io/Effect'
 import * as RA from '@fp-ts/core/ReadonlyArray'
-import * as Duration from '@effect/data/Duration'
 import { pipe } from '@fp-ts/core/Function'
 import { Live as DrawsShapesLive, withDelay } from '../src/Drawable/Shape'
 import { Live as DrawsDrawingsLive } from '../src/Drawable/Drawing'
+import { millis } from '@effect/data/Duration'
 import * as Color from '../src/Color'
 import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
@@ -21,7 +21,7 @@ export function snowFlakes(canvas: CanvasRenderingContext2D | string, iters: num
     IO.provideSomeLayer(DrawsDrawingsLive),
     // This allows us to animate drawing
     // with a slight delay between shapes
-    withDelay(Duration.millis(16)),
+    withDelay(millis(16)),
     // Provide a live instance for `Drawable<Shape>`
     IO.provideSomeLayer(DrawsShapesLive),
     // This provides our final dependency: `CanvasRenderingContext2D`
@@ -33,19 +33,20 @@ export function snowFlakes(canvas: CanvasRenderingContext2D | string, iters: num
 // it iteratively draws a new `snowflake(1..total)` every `1/iteration` seconds
 function loopFlakes(total: number) {
   return IO.loopDiscard(
-    1,
+    total,
     (z) => z <= total,
     (z) => z + 1,
     (z) => pipe(
       C.dimensions,
       // Make our snowflake
+      IO.tap(({width, height}) =>  C.clearRect(0, 0, width, height)),
       IO.map(({width, height}) => flakeDrawing(z, 5, width, height)),
       // Now, time how long it takes to draw
       IO.flatMap(drawing => IO.timed(D.draw(drawing))),
       // Log the duration, but keep the previous result
       IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration.millis}ms`)),
       // Pause to allow the user to behold the wonder
-      IO.zipLeft(pipe(IO.unit(), IO.delay(Duration.seconds(1))))
+      // IO.zipLeft(pipe(IO.unit(), IO.delay(Duration.seconds(1))))
     )
   )
 }
@@ -56,7 +57,7 @@ function flakeDrawing(z: number, sides: number, width: number, height: number) {
     // generate a snowflake drawing for this iteration
     snowflake(z, sides),
     // scale the whole thing by 25%
-    D.scale(width / 4, height / 4),
+    D.scale(width / (sides - 1.5), height / (sides - 1.5)),
     // translate it to the middle of the canvas
     D.translate(width / 2, height / 2),
     // add a shadow
@@ -68,6 +69,7 @@ function flakeDrawing(z: number, sides: number, width: number, height: number) {
     flake
   ])
 }
+
 const scale = 375 / 1000
 const colors: ReadonlyArray<Color.Color> = [
   Color.hsla(60, 0.6, 0.5, 1),
@@ -78,7 +80,6 @@ const colors: ReadonlyArray<Color.Color> = [
   Color.hsla(268, 1, 0.18, 1),
   Color.hsla(240, 1, 0.01, 1)
 ]
-
 
 // this function recursively creates a new drawing,
 // makes 5 more copies, each scaled down 0.375 and
@@ -93,14 +94,14 @@ function snowflake(n: number, sides: number): D.Drawing {
     snowflake(n - 1, sides),
     // scale it down so it fits around the pentagon
     D.scale(scale, scale),
+    // translate it up
+    D.translate(0, Math.cos(Math.PI / sides) * (1 + scale)),
     child => pipe(
       RA.range(0, sides - 1),
       RA.map((j) =>
         pipe(
           // copy the child
           child,
-          // translate it up by
-          D.translate(0, Math.cos(Math.PI / sides) * (1 + scale)),
           // and rotate it so its placed on the polygon
           D.rotate((Math.PI / (sides / 2)) * (j + 0.5))
         )
@@ -118,6 +119,6 @@ function snowflake(n: number, sides: number): D.Drawing {
 function clear(width:number, height: number) {
   return D.fill(
     S.rect(0, 0, width, height),
-    D.fillStyle(Color.hsla(0, 0,100, 0.5))
+    D.fillStyle(Color.hsla(0, 0,100, 0.0))
   )
 }

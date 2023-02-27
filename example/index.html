@@ -30,7 +30,10 @@ canvas {
     </ul>
     <h2>From the Readme</h2>
     <button id="restart">Restart</button>
-    <script type="module" src="./demo.ts"></script>
+    <script type=module>
+      import { main } from './demo.ts'
+      main()
+    </script>
     <div id="root">
       <canvas id="canvas2" width="100" height="100" style="border: 1px solid black;"></canvas>
       <canvas id="canvas3" width="100" height="100" style="border: 1px solid black;"></canvas>

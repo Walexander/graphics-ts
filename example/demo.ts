@@ -1,26 +1,24 @@
 import * as IO from '@effect/io/Effect'
 import * as Duration from '@effect/data/Duration'
+import * as Context from '@effect/data/Context'
 import { pipe } from '@fp-ts/core/Function'
 
 import * as Color from '../src/Color'
 import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
 import * as S from '../src/Shape'
+import { loopCircle, toggleButton, RestartButton, liveRestartButton } from './utils'
 
 const drawNestedRect = IO.collectAll([
   C.setFillStyle('magenta'),
   C.fillRect(-20, -20, 40, 40),
   C.setStrokeStyle(Color.toCss(Color.hsla(180, 0.5, 0.25, 1))),
-  C.strokePath(C.rect(-5, -5, 10, 10)),
+  C.strokePath(C.rect(-5, -5, 10, 10))
 ])
 
 function rotatesAndDrawsRect(rads: number) {
   return C.withContext(
-    IO.collectAllDiscard([
-      C.clearRect(-50, -50, 100, 100),
-      C.rotate(rads),
-      drawNestedRect
-    ])
+    IO.collectAllDiscard([C.clearRect(-50, -50, 100, 100), C.rotate(rads), drawNestedRect])
   )
 }
 const drawDirect = C.withContext(
@@ -36,47 +34,21 @@ const nestedRectDrawing = D.combineAll([
   D.outline(S.rect(-5, -5, 10, 10), D.outlineColor(Color.hsla(-180, 0.5, 0.25, 1)))
 ])
 
-const rotateRectDrawing = (z: number) => pipe(
-  nestedRectDrawing,
-  D.rotate(z),
-  D.translate(50, 50)
-)
+const rotateRectDrawing = (z: number) => pipe(nestedRectDrawing, D.rotate(z), D.translate(50, 50))
 
 const withDrawing = C.withContext(
-  loopCircle(z => IO.delay(
-    D.render(rotateRectDrawing(-z)),
-    Duration.millis(16)
-  ))
+  loopCircle(z => IO.delay(D.render(rotateRectDrawing(-z)), Duration.millis(16)))
 )
-
-function loopCircle<R, E, A>(f: (z: number) => IO.Effect<R, E, A>) {
-  return IO.loopDiscard(
-    0,
-    _ => _ <= 360,
-    z => z + 1,
-    z => f(-z * Math.PI / 180),
+// IO.fromOption(fromNullable(document.getElementById('restart')))
+export function main() {
+  return pipe(
+    IO.serviceWithEffect(RestartButton, toggleButton(main)),
+    IO.zipRight(C.renderTo('canvas2')(drawDirect)),
+    IO.zipParRight(C.renderTo('canvas3')(withDrawing)),
+    IO.zipRight(
+      IO.serviceWithEffect(RestartButton, toggleButton(main))
+    ),
+    IO.provideSomeLayer(liveRestartButton),
+    IO.runPromise
   )
 }
-
-function main() {
-  return IO.runPromise(
-    pipe(
-      IO.sync(() => {
-        ;(document.getElementById('restart') as HTMLButtonElement).disabled = true
-        ;(document.getElementById('restart') as HTMLButtonElement).removeEventListener(
-          'click',
-          main
-        )
-      }),
-      IO.zipRight(C.renderTo('canvas2')(drawDirect)),
-      IO.zipParRight(C.renderTo('canvas3')(withDrawing)),
-      IO.zipLeft(
-        IO.sync(() => {
-          ;(document.getElementById('restart') as HTMLButtonElement).disabled = false
-          ;(document.getElementById('restart') as HTMLButtonElement).addEventListener('click', main)
-        })
-      )
-    )
-  )
-}
-main()
