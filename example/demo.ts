@@ -1,6 +1,8 @@
+/**
+  * These are examples from the `README` for this project
+  */
 import * as IO from '@effect/io/Effect'
 import * as Duration from '@effect/data/Duration'
-import * as Context from '@effect/data/Context'
 import { pipe } from '@fp-ts/core/Function'
 
 import * as Color from '../src/Color'
