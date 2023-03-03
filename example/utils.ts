@@ -8,8 +8,7 @@ export const isButton = liftPredicate(
   (el: unknown): el is HTMLButtonElement => el instanceof HTMLButtonElement
 )
 export const liveRestartButton = pipe(
-  IO.sync(() => isButton(document.getElementById('restart'))),
-  IO.flatMap(IO.fromOption),
+  IO.fromOption<HTMLButtonElement>(isButton(document.getElementById('restart'))),
   IO.orDie,
   IO.toLayer(RestartButton)
 )

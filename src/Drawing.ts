@@ -56,12 +56,13 @@ import * as M from '@effect/data/typeclass/Monoid'
 import * as O from '@effect/data/Option'
 import * as RA from '@effect/data/ReadonlyArray'
 
+import { ImageSource } from './Canvas/definition'
 import { drawShape } from './Drawable/Shape'
 import { drawsDrawing, renderDrawing} from './Drawable/Drawing'
 import { Drawable } from './Drawable'
 import { Color } from './Color'
 import { Font } from './Font'
-import { Point, Shape } from './Shape'
+import { Point, Shape, point } from './Shape'
 import * as C from './Canvas'
 import {pipe} from '@effect/data/Function'
 
@@ -330,6 +331,32 @@ export interface Shadow {
 }
 
 /**
+ * Represents an `ImageSource` with a top-left corner at `x` and `y`,
+ * a width and a height
+*
+* @category model
+* @since 2.0.0
+ */
+export interface Image {
+  readonly _tag: 'Image'
+
+  /**
+   * The position of the top-left corner on the x-axis.
+   */
+  readonly source: Point
+  /**
+   * The position of the top-left corner on the x-axis
+   * of the source image
+   */
+  readonly dest?: Point
+  /**
+   * The source of the image data
+   */
+  readonly image: ImageSource
+}
+
+
+/**
  * Represents a shape that can be drawn to the canvas.
  *
  * @category model
@@ -345,6 +372,7 @@ export type Drawing =
   | Text
   | Translate
   | WithShadow
+  | Image
 
 // -------------------------------------------------------------------------------------
 // constructors
@@ -475,6 +503,19 @@ export const text: (font: Font, x: number, y: number, style: FillStyle, text: st
   y,
   style,
   text
+})
+
+/**
+ * Constructs an image `Shape`
+ *
+ * @category constructors
+ * @since 2.0.0
+ */
+export const image = (image: ImageSource, source: Point, dest?: Point) => (<Drawing>{
+  _tag: 'Image',
+  image,
+  source,
+  dest
 })
 
 /**
@@ -640,7 +681,7 @@ export function cached(drawing: Drawing) {
       IO.zipRight(C.getImageData(0, 0, width, height)),
       IO.flatMap(_ => IO.tryPromise(() => createImageBitmap(_))),
       C.renderTo(canvas),
-      IO.orDie,
+      IO.map(img => image(img, point(0, 0))),
     ))
   })
 }

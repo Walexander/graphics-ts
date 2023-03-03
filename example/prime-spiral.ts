@@ -16,7 +16,7 @@ import * as Stream from '@effect/stream/Stream'
 import { toggleButton, RestartButton, liveRestartButton, loopCircle } from './utils'
 
 export function main() {
-  return IO.runPromise(primeSpiral)
+  return IO.runPromise(primeSpiral(771))
 }
 export const spinIt =  pipe(
   IO.unit(),
@@ -26,15 +26,17 @@ export const spinIt =  pipe(
       IO.unit(),
       IO.zipRight(C.getImageData(0, 0, width, height)),
       IO.flatMap(imageData => IO.tryPromise(() => createImageBitmap(imageData))),
-      IO.zipLeft(C.setDimensions({ width, height })),
-      IO.tap(imageBitmap =>
+      IO.map(_ => pipe(
+        D.image(_, Shape.point(width / -2, height / -2)),
+      )),
+      IO.tap(drawing =>
         loopCircle(angle =>
           C.withContext(
             pipe(
               C.clearRect(0, 0, width, height),
               IO.zipRight(C.translate(width / 2, height / 2)),
-              IO.zipRight(C.rotate(angle)),
-              IO.zipRight(C.drawImage(imageBitmap, width / -2, height / -2)),
+              IO.zipRight(C.rotate(-angle / 4)),
+              IO.zipRight(D.render(drawing)),
               IO.zipRight(IO.delay(IO.unit(), millis(16)))
             )
           )
@@ -52,7 +54,7 @@ const initialize = pipe(
     IO.zipRight(C.clearRect(0, 0, width, height)),
     IO.zipRight(C.translate(width / 2, height / 2)),
   )),
-  IO.zipRight(C.scale(2.5, 2.5)),
+  IO.zipRight(C.scale(3.5, 3.5)),
   IO.zipRight(IO.serviceWithEffect(RestartButton, toggleButton(main))),
   IO.as(null)
 )
@@ -72,11 +74,9 @@ function spiralMaker(total: number) {
         num
       }
     ]),
-    // Stream.tap(({ num }) =>
-    //   num < 1e2 && num % 1e1 == 0 ||
-    //   num % 1e2 == 0
-    //     ? IO.delay(IO.unit(), millis(16)) : IO.unit()
-    // ),
+    Stream.tap(({ isPrime }) =>
+      isPrime ? IO.delay(IO.unit(), millis(16)) : IO.unit()
+    ),
     Stream.tap(updateText(total)),
     Stream.map(turtleDraw),
     Stream.mapEffect(fn => IO.serviceWithEffect(Turtle2d.Tag, fn)),
@@ -92,7 +92,7 @@ function turtleDraw({ num, isPrime, nextSquare }: CellParams) {
         C.setLineWidth(isPrime ? 3 : 1),
         C.setStrokeStyle(isPrime ? 'transparent' : Color.toCss(Color.hsla(0, 0, 0, 0.25))),
       ]),
-      IO.zipRight(turtle.drawForward(2)),
+      IO.zipRight(turtle.drawForward(3)),
       IO.tap(({ position: [x, y] }) => isPrime ?
         C.setFillStyle(Color.toCss(Color.hsla(
           Math.atan2(y, x) * 180 / Math.PI,
@@ -103,7 +103,7 @@ function turtleDraw({ num, isPrime, nextSquare }: CellParams) {
       IO.tap(({ position }) =>
         isPrime ? C.fillPath(C.arc(position[0], position[1], 2, 0, Math.PI * 2)) : IO.unit()
       ),
-      IO.zipRight(turtle.drawForward(2))
+      IO.zipRight(turtle.drawForward(3))
     )
   function turnAmount(candidate: number, oddRoot: number) {
     const lastOdd = oddRoot - 2
@@ -162,9 +162,9 @@ function sieveChunk(primes: Chunk.Chunk<number>, candidate: number) {
 }
 
 
-const primeSpiral =  pipe(
+const primeSpiral =  (total: number) => pipe(
   Stream.fromEffect(initialize),
-  Stream.merge(spiralMaker(2978)),
+  Stream.merge(spiralMaker(total)),
   Stream.runLast,
   IO.flatMap(state =>
     pipe(

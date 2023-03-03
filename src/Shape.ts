@@ -8,7 +8,6 @@ import { Foldable } from '@effect/data/typeclass/Foldable'
 import * as RA from '@effect/data/ReadonlyArray'
 import * as M from '@effect/data/typeclass/Monoid'
 import {pipe} from '@effect/data/Function'
-import { ImageSource } from './Canvas/definition'
 
 // -------------------------------------------------------------------------------------
 // model
@@ -227,32 +226,6 @@ export interface Rect {
    */
   readonly height: number
 }
-
-/**
- * Represents an `ImageSource` with a top-left corner at `x` and `y`,
- * a width and a height
-*
-* @category model
-* @since 2.0.0
- */
-export interface Image {
-  readonly _tag: 'Image'
-
-  /**
-   * The position of the top-left corner on the x-axis.
-   */
-  readonly source: Point
-  /**
-   * The position of the top-left corner on the x-axis
-   * of the source image
-   */
-  readonly dest?: Point
-  /**
-   * The source of the image data
-   */
-  readonly image: ImageSource
-}
-
 /**
  * Represents a shape that can be drawn.
  *
@@ -304,19 +277,6 @@ export const angle = (angle: Angle): number => {
  * @since 1.0.0
  */
 export const point = (x: number, y: number): Point => ({ x, y })
-
-/**
- * Constructs an image `Shape`
- *
- * @category constructors
- * @since 2.0.0
- */
-export const image = (image: ImageSource, source: Point, dest?: Point) => ({
-  _tag: 'Image',
-  image,
-  source,
-  dest
-})
 
 /**
  * Constructs an `Arc` shape.

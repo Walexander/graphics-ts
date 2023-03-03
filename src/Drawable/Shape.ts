@@ -66,8 +66,7 @@ export const withDelay = (delay: Duration.Duration) =>
   )
 
 function DrawsShapeImpl(canvas: Surface): Drawable.Drawable<Shape> {
-  return draw
-  function draw(shape: Shape): IO.Effect<never, never, void> {
+  return function draw(shape: Shape): IO.Effect<never, never, void> {
     switch (shape._tag) {
       case 'Arc':
         return canvas.arc(shape.x, shape.y, shape.r, shape.start, shape.end, shape.anticlockwise)

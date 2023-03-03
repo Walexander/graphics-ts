@@ -66,7 +66,7 @@ function DrawsDrawingImpl(
     return IO.provideService(render_(drawing), C.Tag, canvas)
   }
 
-  function render_(drawing: Drawing) {
+  function render_(drawing: Drawing): IO.Effect<CanvasRenderingContext2D, never, void> {
     switch (drawing._tag) {
       case 'Clipped':
         return C.withContext(
@@ -106,6 +106,7 @@ function DrawsDrawingImpl(
             )
           )
         )
+
       case 'Rotate':
         return C.withContext(
           pipe(C.rotate(drawing.angle), IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing))))
@@ -151,6 +152,8 @@ function DrawsDrawingImpl(
             IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing)))
           )
         )
+      case 'Image':
+        return C.drawImage(drawing.image, drawing.source.x, drawing.source.y)
     }
   }
 }
