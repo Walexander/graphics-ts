@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <title>graphics-ts</title>
+<style>
+#root {
+display: flex;
+flex-wrap: wrap;
+justify-content: space-between;
+}
+#root > * {
+  flex-basis: 100%;
+  min-width: 300px;
+}
+@media(min-width: 768px) {
+  #root > * {
+    flex-basis: 50%;
+  }
+}
+canvas {
+  width: 100%;
+}
+</style>
+    <script type="module" crossorigin src="/graphics-ts/example/assets/snowflake-a4a129db.js"></script>
+    <link rel="modulepreload" crossorigin href="/graphics-ts/example/assets/utils-5523c140.js">
+  </head>
+  <body>
+    <button id="restart">Restart</button>
+    <div id="root">
+
+      <div>
+        <h2>Heard you like pentagons</h2>
+        <canvas id="canvas1" width="600" height="600" style="border: 1px solid black;"></canvas> </div>
+      <div>
+      <h2>Clipped Rectangle Animation Loop</h2>
+        <canvas id="canvas2" width="600" height="600" style="border: 1px solid black;"></canvas> </div>
+    </div>
+    
+  </body>
+</html>
