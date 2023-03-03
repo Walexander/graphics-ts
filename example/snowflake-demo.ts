@@ -21,11 +21,13 @@ const canvasDemo = pipe(
       // Since we want these to render to separate canvases
       // we provide them individually
       renderTo(CANVAS_TWO_ID)(clippingDemo),
-      renderTo(CANVAS_ONE_ID)(snowFlakes(6)),
+      renderTo(CANVAS_ONE_ID)(snowFlakes(6))
     ])
   ),
   IO.zipLeft(IO.serviceWithEffect(RestartButton, toggleButton(main))),
   IO.provideSomeLayer(liveRestartButton)
 )
 
-export function main() { IO.runPromise(canvasDemo) }
+export function main() {
+  IO.runPromise(canvasDemo)
+}

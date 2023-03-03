@@ -15,8 +15,8 @@ export const liveRestartButton = pipe(
 
 export const toggleButton = (handler: () => void) => (button: HTMLButtonElement) =>
   IO.sync(() => {
-    button.disabled ?
-      button.addEventListener('click', handler)
+    button.disabled
+      ? button.addEventListener('click', handler)
       : button.removeEventListener('click', handler)
     button.disabled = !button.disabled
   })

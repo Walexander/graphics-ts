@@ -1,6 +1,6 @@
 /**
-  * These are examples from the `README` for this project
-  */
+ * These are examples from the `README` for this project
+ */
 import * as IO from '@effect/io/Effect'
 import * as Duration from '@effect/data/Duration'
 import { pipe } from '@effect/data/Function'
@@ -47,9 +47,7 @@ export function main() {
     IO.serviceWithEffect(RestartButton, toggleButton(main)),
     IO.zipRight(C.renderTo('canvas2')(drawDirect)),
     IO.zipParRight(C.renderTo('canvas3')(withDrawing)),
-    IO.zipRight(
-      IO.serviceWithEffect(RestartButton, toggleButton(main))
-    ),
+    IO.zipRight(IO.serviceWithEffect(RestartButton, toggleButton(main))),
     IO.provideSomeLayer(liveRestartButton),
     IO.runPromise
   )

@@ -153,14 +153,12 @@ function setText(text: string) {
 const intsPlusPrimality = pipe(
   Stream.range(2, Number.MAX_SAFE_INTEGER),
   Stream.mapAccum(Chunk.empty<number>(), sieveChunk),
-  Stream.flatten
 )
 function sieveChunk(primes: Chunk.Chunk<number>, candidate: number) {
   const isPrime = candidate > 1 && Chunk.every(primes, prime => candidate % prime !== 0)
   const value = [candidate, isPrime] as const
-  return [isPrime ? primes.append(candidate) : primes, Stream.succeed(value)] as const
+  return [isPrime ? primes.append(candidate) : primes, value] as const
 }
-
 
 const primeSpiral =  (total: number) => pipe(
   Stream.fromEffect(initialize),
@@ -190,4 +188,3 @@ const primeSpiral =  (total: number) => pipe(
 function fillEnd({position: [x, y]}: Turtle2d.TurtleState) {
   return D.fill(Shape.circle(x, y, 4), D.fillStyle(Color.hsla(0, 0.5, 0, 0.5)))
 }
-

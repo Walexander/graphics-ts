@@ -25,7 +25,7 @@ export function snowFlakes(iters: number) {
     // with a slight delay between shapes
     withDelay(millis(16)),
     // Provide a live instance for `Drawable<Shape>`
-    IO.provideSomeLayer(DrawsShapesLive),
+    IO.provideSomeLayer(DrawsShapesLive)
   )
 }
 
@@ -34,20 +34,21 @@ export function snowFlakes(iters: number) {
 function loopFlakes(total: number) {
   return IO.loopDiscard(
     total,
-    (z) => z <= total,
-    (z) => z + 1,
-    (z) => pipe(
-      C.dimensions,
-      // Make our snowflake
-      IO.tap(({width, height}) =>  C.clearRect(0, 0, width, height)),
-      IO.map(({width, height}) => flakeDrawing(z, 5, width, height)),
-      // Now, time how long it takes to draw
-      IO.flatMap(drawing => IO.timed(D.draw(drawing))),
-      // Log the duration, but keep the previous result
-      IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration.millis}ms`)),
-      // Pause to allow the user to behold the wonder
-      // IO.zipLeft(pipe(IO.unit(), IO.delay(Duration.seconds(1))))
-    )
+    z => z <= total,
+    z => z + 1,
+    z =>
+      pipe(
+        C.dimensions,
+        // Make our snowflake
+        IO.tap(({ width, height }) => C.clearRect(0, 0, width, height)),
+        IO.map(({ width, height }) => flakeDrawing(z, 5, width, height)),
+        // Now, time how long it takes to draw
+        IO.flatMap(drawing => IO.timed(D.draw(drawing))),
+        // Log the duration, but keep the previous result
+        IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration.millis}ms`))
+        // Pause to allow the user to behold the wonder
+        // IO.zipLeft(pipe(IO.unit(), IO.delay(Duration.seconds(1))))
+      )
   )
 }
 
@@ -89,36 +90,33 @@ function snowflake(n: number, sides: number): D.Drawing {
   const polygon = S.polygon(sides)
   const color = colors[n % colors.length]
 
-  return n <= 0 ? D.monoidDrawing.empty : pipe(
-    // get our immediate "child" drawing
-    snowflake(n - 1, sides),
-    // scale it down so it fits around the pentagon
-    D.scale(scale, scale),
-    // translate it up
-    D.translate(0, Math.cos(Math.PI / sides) * (1 + scale)),
-    child => pipe(
-      RA.range(0, sides - 1),
-      RA.map((j) =>
-        pipe(
-          // copy the child
-          child,
-          // and rotate it so its placed on the polygon
-          D.rotate((Math.PI / (sides / 2)) * (j + 0.5))
-        )
-      ),
-      D.many
-    ),
-    // prepend a unit polygon to the drawing
-    (children) => D.combine(
-      D.fill(polygon, D.fillStyle(color)),
-      children
-    ),
-  )
+  return n <= 0
+    ? D.monoidDrawing.empty
+    : pipe(
+        // get our immediate "child" drawing
+        snowflake(n - 1, sides),
+        // scale it down so it fits around the pentagon
+        D.scale(scale, scale),
+        // translate it up
+        D.translate(0, Math.cos(Math.PI / sides) * (1 + scale)),
+        child =>
+          pipe(
+            RA.range(0, sides - 1),
+            RA.map(j =>
+              pipe(
+                // copy the child
+                child,
+                // and rotate it so its placed on the polygon
+                D.rotate((Math.PI / (sides / 2)) * (j + 0.5))
+              )
+            ),
+            D.many
+          ),
+        // prepend a unit polygon to the drawing
+        children => D.combine(D.fill(polygon, D.fillStyle(color)), children)
+      )
 }
 
-function clear(width:number, height: number) {
-  return D.fill(
-    S.rect(0, 0, width, height),
-    D.fillStyle(Color.hsla(0, 0,100, 0.0))
-  )
+function clear(width: number, height: number) {
+  return D.fill(S.rect(0, 0, width, height), D.fillStyle(Color.hsla(0, 0, 100, 0.0)))
 }

@@ -27,9 +27,11 @@ export const clippingDemo = pipe(
       nextCircle,
       ([, circle]) =>
         pipe(
-          IO.unit(),
-          IO.zipRight(C.clearRect(0, 0, 600, 600)),
-          IO.zipRight(D.render(clippedRect(circle))),
+          D.combineAll([
+            D.fill(S.rect(0, 0, 600, 600), D.fillStyle(Color.white)),
+            clippedRect(circle)
+          ]),
+          D.render,
           IO.zipRight((IO.delay(Duration.millis(16))(IO.unit())))
         )
     )
@@ -53,15 +55,10 @@ function nextCircle([loops, circle]: [number, S.Arc]): [number, S.Arc] {
   ]
 }
 const backgroundSquares = pipe(
-  RA.range(0, 2),
-  RA.flatMap(row =>
-    pipe(
-      RA.range(0, 2),
-      RA.map(col =>
-        D.fill(S.rect(col * 200, row * 200, 150, 150), D.fillStyle(Color.hsl(0, 1, 0.5)))
-      )
-    )
-  )
+  RA.makeBy(3, row => RA.makeBy(3, col =>
+    D.fill(S.rect(col * 200, row * 200, 150, 150), D.fillStyle(Color.hsl(0, 1, 0.5))
+  ))),
+  RA.flatMap(_ => _)
 )
 
 /**
