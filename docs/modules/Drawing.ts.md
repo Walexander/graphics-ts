@@ -12,8 +12,8 @@ when using the `Canvas` module directly and instead allows us to be more declara
 Taking the MDN example from the `Canvas` documentation,
 
 ```ts
-import { pipe } from '@fp-ts/core/Function'
-import * as RA from '@fp-ts/core/ReadonlyArray'
+import { pipe } from '@effect/data/Function'
+import * as RA from '@effect/data/ReadonlyArray'
 import * as Color from 'graphics-ts/lib/Color'
 import * as E from '@effect/io/Effect'
 import * as C from 'graphics-ts/Canvas'
@@ -69,6 +69,7 @@ Added in v1.0.0
   - [combineAll](#combineall)
   - [fill](#fill)
   - [fillStyle](#fillstyle)
+  - [image](#image)
   - [lineWidth](#linewidth)
   - [many](#many)
   - [outline](#outline)
@@ -94,6 +95,7 @@ Added in v1.0.0
   - [Drawing (type alias)](#drawing-type-alias)
   - [Fill (interface)](#fill-interface)
   - [FillStyle (interface)](#fillstyle-interface)
+  - [Image (interface)](#image-interface)
   - [Many (interface)](#many-interface)
   - [Outline (interface)](#outline-interface)
   - [OutlineStyle (interface)](#outlinestyle-interface)
@@ -103,6 +105,8 @@ Added in v1.0.0
   - [Text (interface)](#text-interface)
   - [Translate (interface)](#translate-interface)
   - [WithShadow (interface)](#withshadow-interface)
+- [utils](#utils)
+  - [cached](#cached)
 
 ---
 
@@ -181,6 +185,18 @@ export declare const fillStyle: (color: Color) => FillStyle
 ```
 
 Added in v1.0.0
+
+## image
+
+Constructs an image `Shape`
+
+**Signature**
+
+```ts
+export declare const image: (image: ImageSource, source: Point, dest?: Point | undefined) => Drawing
+```
+
+Added in v2.0.0
 
 ## lineWidth
 
@@ -374,7 +390,7 @@ Gets a `Monoid` instance for `FillStyle`.
 **Signature**
 
 ```ts
-export declare const monoidFillStyle: M.Monoid<{ readonly color: O.Option<Color> }>
+export declare const monoidFillStyle: M.Monoid<FillStyle>
 ```
 
 Added in v1.0.0
@@ -443,7 +459,7 @@ Represents a shape that can be drawn to the canvas.
 **Signature**
 
 ```ts
-export type Drawing = Clipped | Fill | Outline | Many | Rotate | Scale | Text | Translate | WithShadow
+export type Drawing = Clipped | Fill | Outline | Many | Rotate | Scale | Text | Translate | WithShadow | Image
 ```
 
 Added in v1.0.0
@@ -488,6 +504,35 @@ export interface FillStyle {
 ```
 
 Added in v1.0.0
+
+## Image (interface)
+
+Represents an `ImageSource` with a top-left corner at `x` and `y`,
+a width and a height
+
+**Signature**
+
+```ts
+export interface Image {
+  readonly _tag: 'Image'
+
+  /**
+   * The position of the top-left corner on the x-axis.
+   */
+  readonly source: Point
+  /**
+   * The position of the top-left corner on the x-axis
+   * of the source image
+   */
+  readonly dest?: Point
+  /**
+   * The source of the image data
+   */
+  readonly image: ImageSource
+}
+```
+
+Added in v2.0.0
 
 ## Many (interface)
 
@@ -725,3 +770,15 @@ export interface WithShadow {
 ```
 
 Added in v1.0.0
+
+# utils
+
+## cached
+
+**Signature**
+
+```ts
+export declare function cached(drawing: Drawing)
+```
+
+Added in v2.0.0

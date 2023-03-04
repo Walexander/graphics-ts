@@ -33,21 +33,24 @@ Later, we can use `C.renderTo` to provide the real canvas.
 import * as C from 'graphics-ts/Canvas'
 import * as IO from '@effect/io/Effect'
 const rectangle = C.use((canvas) => {
-  canvas.moveTo(50, 50)
-  canvas.setFillStyle = 'magenta'
-  canvas.fillRect(10, 10, 100, 100)
+  canvas.fillStyle = 'magenta'
+  canvas.translate(50, 50)
+  canvas.fillRect(-20, -20, 40, 40)
 })
 void IO.runPromise(C.renderTo('canvasId')(rectangle))
 ```
 
 ## Using
+
 There are a few ways you can use this library, each building on top of the previous.
   1. Thread a canvas rendering context to your existing functions.
-  2. Use ithe `Canvas` module methods directly.
-  3. Use the `Drawing` and `Shape` modules.
-  4. Create custom or enhance existing `Drawable` instances.
+  2. Using the `Canvas` methods directly.
+  3. Use `Drawing` / `Shape` modules
 
-### Level 1: `Canvas.useContext`
+
+View these [simple examples](examples/).
+
+### Level 1: `Canvas.use`
 This library (more specifically dependeny injection features of the `Effect` library)
 can simplify providing a canvas to your existing code.  For example, you might have
 functions such as
@@ -73,14 +76,11 @@ void IO.runPromise(pipe(
   C.renderTo('canvas')
 ))
 ```
-or you can use `Effect` functions to combine them
+and you can use `Effect` functions to combine them
 
 ```ts
-void IO.runPromise(
-  C.renderTo('canvas3')(
-    IO.collectAllDiscard([C.use(drawCircle), C.use(drawRect)])
-  )
-)
+const demoUse = IO.collectAllDiscard([C.use(drawCircle), C.use(drawRect)])
+IO.runPromise(C.renderTo('canvas')(demoUse))
 ```
 
 ### Level 2: `Canvas` methods
@@ -96,25 +96,22 @@ const drawNestedRect = IO.collectAll([
 ])
 ```
 
-With this drawing function, we can use `IO.loopDiscard` to rotate the canvas
-and, with a small delay between each, animate it.
+With this drawing function, we can use `IO.loopDiscard` to rotate the canvas 360 degrees.
+By delaying each call by 16 ms, we can animate this rotation
 
 ```ts
-void pipe(
-  C.translate(50, 50),
-  IO.zipRight(
-    IO.loopDiscard(
-      0,
-      _ => _ <= 360,
-      z => z + 1,
-      z => IO.delay(rotateRect(z), Duration.millis(16))
-    )
-  ),
-  C.renderTo('canvas3'),
-  IO.runPromise
+function rotatesAndDrawsRect(rads: number) {
+  return C.withContext(
+    IO.collectAllDiscard([C.clearRect(-50, -50, 100, 100), C.rotate(rads), drawNestedRect])
+  )
+}
+const drawDirect = C.withContext(
+  IO.collectAll([
+    C.translate(50, 50),
+    loopCircle(z => IO.delay(rotatesAndDrawsRect(z), Duration.millis(16)))
+  ])
 )
 ```
-
 
 ### Level 3: `Drawing` and `Shape`
 The above code works, but it's difficult to reason about a bunch of strokes on a canvas.  Instead, the high-level API provided by the `Drawing` and `Shape` modules make it easy to construct pure data structures which can later be rendered to the canvas.
@@ -155,15 +152,16 @@ void IO.runPromise(C.renderTo('canvas3')(withDrawing))
 
 ## Example
 
-To run the example, clone the repository and run the following:
+To run the examples, clone the repository and run the following.
 
 ```
 pnpm install
 pnpm start
 open http://localhost:5173/
 ```
-
+Examples can also be viewed [the published examples](examples/):
+### Snowflakes
 <img alt="snowflake" src="./docs/snowflake.png" style="display: block; width: 100%; max-width: 800px; margin-bottom: 1em;">
-<img alt="snowflake" src="./docs/spiral.png" style="display: block; width: 100%; max-width: 800px; margin-bottom: 1em;">
+### Prime Spiral
+<img alt="prime spiral" src="./docs/spiral.png" style="display: block; width: 100%; max-width: 800px; margin-bottom: 1em;">
 
-Adapted from https://github.com/purescript-contrib/purescript-drawing/blob/master/test/Main.purs

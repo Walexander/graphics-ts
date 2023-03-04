@@ -21,8 +21,8 @@ canvas {
   flex-wrap: wrap;
 }
 </style>
-    <script type="module" crossorigin src="/graphics-ts/example/assets/main-da1d76eb.js"></script>
-    <link rel="modulepreload" crossorigin href="/graphics-ts/example/assets/utils-5523c140.js">
+    <script type="module" crossorigin src="/graphics-ts/example/assets/main-76f49516.js"></script>
+    <link rel="modulepreload" crossorigin href="/graphics-ts/example/assets/utils-c738ae3f.js">
   </head>
   <body>
     <h2>Other Examples</h2>
@@ -31,11 +31,27 @@ canvas {
       <li><a href="./prime-spiral.html">Prime Spiral</a></li>
     </ul>
     <h2>From the Readme</h2>
-    <button id="restart">Restart</button>
-    
-    <div id="root">
-      <canvas id="canvas2" width="100" height="100" style="border: 1px solid black;"></canvas>
-      <canvas id="canvas3" width="100" height="100" style="border: 1px solid black;"></canvas>
-    </div>
+    <section style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    <h3>Level 1</h3>
+      <div>
+        <canvas id="canvas" width="100" height="100" style="border: 1px solid black;"></canvas>
+      </div>
+      
+    </section>
+    <section style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+      <h3>Level 2 & 3</h3>
+      <button id="restart">Restart</button>
+      
+      <div id="root">
+        <div>
+          <h4>Direct Canvas Calls</h4>
+          <canvas id="canvas2" width="100" height="100" style="border: 1px solid black;"></canvas>
+        </div>
+        <div>
+          <h4>Via `Drawing`</h4>
+          <canvas id="canvas3" width="100" height="100" style="border: 1px solid black;"></canvas>
+        </div>
+      </div>
+    </section>
   </body>
 </html>

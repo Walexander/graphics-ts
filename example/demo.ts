@@ -17,6 +17,16 @@ const drawNestedRect = IO.collectAll([
   C.setStrokeStyle(Color.toCss(Color.hsla(180, 0.5, 0.25, 1))),
   C.strokePath(C.rect(-5, -5, 10, 10))
 ])
+function drawRect(canvas: CanvasRenderingContext2D) {
+  canvas.fillStyle = 'magenta'
+  canvas.fillRect(40, 40, 20, 20)
+}
+function drawCircle(canvas: CanvasRenderingContext2D) {
+  canvas.fillStyle= 'purple'
+  canvas.arc(50, 50, 25, 0, Math.PI * 2)
+  canvas.fill()
+  console.log('here')
+}
 
 function rotatesAndDrawsRect(rads: number) {
   return C.withContext(
@@ -37,11 +47,17 @@ const nestedRectDrawing = D.combineAll([
 ])
 
 const rotateRectDrawing = (z: number) => pipe(nestedRectDrawing, D.rotate(z), D.translate(50, 50))
+export const demoUse = IO.collectAllDiscard([
+  C.use(drawCircle),
+  C.use(drawRect),
+])
 
 const withDrawing = C.withContext(
   loopCircle(z => IO.delay(D.render(rotateRectDrawing(-z)), Duration.millis(16)))
 )
 // IO.fromOption(fromNullable(document.getElementById('restart')))
+declare const shape: S.Shape
+
 export function main() {
   return pipe(
     IO.serviceWithEffect(RestartButton, toggleButton(main)),
