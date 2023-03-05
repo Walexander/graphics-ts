@@ -159,9 +159,11 @@ pnpm install
 pnpm start
 open http://localhost:5173/
 ```
-Examples can also be viewed [the published examples](examples/):
+See the [examples](example/) [here](https://walexander.github.io/graphics-ts/example/)
+
 ### Snowflakes
 <img alt="snowflake" src="./docs/snowflake.png" style="display: block; width: 100%; max-width: 800px; margin-bottom: 1em;">
+
 ### Prime Spiral
 <img alt="prime spiral" src="./docs/spiral.png" style="display: block; width: 100%; max-width: 800px; margin-bottom: 1em;">
 
