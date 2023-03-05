@@ -164,7 +164,8 @@ pnpm install
 pnpm start
 open http://localhost:5173/
 ```
-See the [examples](https://github.com/Walexander/graphics-ts/example/) [here](example/)
+* [Example source](example/)
+* [Running](https://walexander.github.io/graphics-ts/example/)
 
 ### Snowflakes
 <img alt="snowflake" src="./snowflake.png" style="display: block; width: 100%; max-width: 800px; margin-bottom: 1em;">
