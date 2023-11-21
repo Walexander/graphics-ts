@@ -71,7 +71,7 @@ Tagged `TurtleSurface` service
 **Signature**
 
 ```ts
-export declare const TurtleSurfaceTag: Context.Tag<Drawable.turtle2d.TurtleSurface>
+export declare const TurtleSurfaceTag: Context.Tag<Drawable.turtle2d.TurtleSurface, Drawable.turtle2d.TurtleSurface>
 ```
 
 Added in v2.0.0
@@ -85,7 +85,7 @@ Summon a `Drawable<Turtle2d>` instance
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<Drawable.Drawable<TurtleMove>>
+export declare const Tag: Context.Tag<Drawable.Drawable<TurtleMove>, Drawable.Drawable<TurtleMove>>
 ```
 
 Added in v2.0.0

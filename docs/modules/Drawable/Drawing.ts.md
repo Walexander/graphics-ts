@@ -15,6 +15,7 @@ Added in v2.0.0
 - [instances](#instances)
   - [Live](#live)
   - [Tag](#tag)
+  - [withDelayN](#withdelayn)
 - [operators](#operators)
   - [drawsDrawing](#drawsdrawing)
   - [renderDrawing](#renderdrawing)
@@ -30,7 +31,11 @@ A Live `Drawable` layer that renders to a `CanvasRenderingContext2D`
 **Signature**
 
 ```ts
-export declare const Live: Layer<Drawable<Shape> | CanvasRenderingContext2D, never, Drawable<Drawing>>
+export declare const Live: Layer.Layer<
+  Drawable.Drawable<Shape> | CanvasRenderingContext2D,
+  never,
+  Drawable.Drawable<Drawing>
+>
 ```
 
 Added in v2.0.0
@@ -42,7 +47,23 @@ The `Drawable` instance for a `Drawing` type
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<Drawable<Drawing>>
+export declare const Tag: Context.Tag<Drawable.Drawable<Drawing>, Drawable.Drawable<Drawing>>
+```
+
+Added in v2.0.0
+
+## withDelayN
+
+Modifies any `Drawable<Shape>` instance to pause
+for `delay` after `N` shapes are drawn
+
+**Signature**
+
+```ts
+export declare const withDelayN: (
+  delay: Duration.Duration,
+  count: number
+) => <R, E, A>(self: IO.Effect<R, E, A>) => IO.Effect<Drawable.Drawable<Drawing> | R, E, A>
 ```
 
 Added in v2.0.0
@@ -57,7 +78,7 @@ from the context
 **Signature**
 
 ```ts
-export declare function drawsDrawing(drawing: Drawing): IO.Effect<Drawable<Drawing>, never, void>
+export declare function drawsDrawing(drawing: Drawing): IO.Effect<Drawable.Drawable<Drawing>, never, void>
 ```
 
 Added in v2.0.0

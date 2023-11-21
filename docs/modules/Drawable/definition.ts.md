@@ -46,7 +46,7 @@ The service tag constructor.
 **Signature**
 
 ```ts
-export declare const Tag: <A, K extends string = string>(key: K) => Context.Tag<Drawable<A>>
+export declare const Tag: <A, K extends string = string>(key: K) => Context.Tag<Drawable<A>, Drawable<A>>
 ```
 
 Added in v2.0.0

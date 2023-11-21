@@ -31,6 +31,7 @@ Added in v2.0.0
   - [TextBaseline (type alias)](#textbaseline-type-alias)
   - [TextMetrics\_ (interface)](#textmetrics_-interface)
 - [tag](#tag)
+  - [GradientTag](#gradienttag)
   - [Tag](#tag)
 
 ---
@@ -370,6 +371,18 @@ Added in v1.0.0
 
 # tag
 
+## GradientTag
+
+Summon a `CanvasGradient` from the environment
+
+**Signature**
+
+```ts
+export declare const GradientTag: Context.Tag<CanvasGradient, CanvasGradient>
+```
+
+Added in v2.0.0
+
 ## Tag
 
 Summon a `CanvasRenderingContext2D`
@@ -377,7 +390,7 @@ Summon a `CanvasRenderingContext2D`
 **Signature**
 
 ```ts
-export declare const Tag: Tag$<CanvasRenderingContext2D>
+export declare const Tag: Context.Tag<CanvasRenderingContext2D, CanvasRenderingContext2D>
 ```
 
 Added in v2.0.0

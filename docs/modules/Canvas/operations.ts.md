@@ -138,7 +138,7 @@ Gets the dimensions of the canvas in pixels.
 **Signature**
 
 ```ts
-export declare const dimensions: IO.Effect<CanvasRenderingContext2D, never, CanvasDimensions>
+export declare const dimensions: Effect<CanvasRenderingContext2D, never, CanvasDimensions>
 ```
 
 Added in v1.0.0
@@ -148,7 +148,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const getHeight: LazyArg<IO.Effect<CanvasRenderingContext2D, never, number>>
+export declare const getHeight: LazyArg<Effect<CanvasRenderingContext2D, never, number>>
 ```
 
 Added in v1.0.0
@@ -158,7 +158,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const getWidth: LazyArg<IO.Effect<CanvasRenderingContext2D, never, number>>
+export declare const getWidth: LazyArg<Effect<CanvasRenderingContext2D, never, number>>
 ```
 
 Added in v1.0.0
@@ -170,7 +170,7 @@ Gets the canvas height in pixels.
 **Signature**
 
 ```ts
-export declare const height: IO.Effect<CanvasRenderingContext2D, never, number>
+export declare const height: Effect<CanvasRenderingContext2D, never, number>
 ```
 
 Added in v1.0.0
@@ -218,7 +218,7 @@ Gets the canvas width in pixels.
 **Signature**
 
 ```ts
-export declare const width: IO.Effect<CanvasRenderingContext2D, never, number>
+export declare const width: Effect<CanvasRenderingContext2D, never, number>
 ```
 
 Added in v2.0.0
@@ -232,7 +232,7 @@ Gets the current global alpha.
 **Signature**
 
 ```ts
-export declare const globalAlpha: IO.Effect<CanvasRenderingContext2D, never, number>
+export declare const globalAlpha: Effect<CanvasRenderingContext2D, never, number>
 ```
 
 Added in v1.1.0
@@ -244,7 +244,7 @@ Gets the current global composite operation type for the canvas context.
 **Signature**
 
 ```ts
-export declare const globalCompositeOperation: IO.Effect<CanvasRenderingContext2D, never, string>
+export declare const globalCompositeOperation: Effect<CanvasRenderingContext2D, never, string>
 ```
 
 Added in v1.0.0
@@ -257,7 +257,7 @@ Gets the current image smoothing property for the canvas context. Determines whe
 **Signature**
 
 ```ts
-export declare const imageSmoothingEnabled: IO.Effect<CanvasRenderingContext2D, never, boolean>
+export declare const imageSmoothingEnabled: Effect<CanvasRenderingContext2D, never, boolean>
 ```
 
 Added in v1.1.0
@@ -295,7 +295,7 @@ Create a data URL for the canvas.
 **Signature**
 
 ```ts
-export declare const toDataURL: IO.Effect<CanvasRenderingContext2D, never, string>
+export declare const toDataURL: Effect<CanvasRenderingContext2D, never, string>
 ```
 
 Added in v1.0.0
@@ -309,7 +309,7 @@ Gets the current fill style for the canvas context.
 **Signature**
 
 ```ts
-export declare const fillStyle: IO.Effect<CanvasRenderingContext2D, never, string | CanvasGradient | CanvasPattern>
+export declare const fillStyle: Effect<CanvasRenderingContext2D, never, string | CanvasGradient | CanvasPattern>
 ```
 
 Added in v1.0.0
@@ -354,7 +354,7 @@ export declare const createLinearGradient: (
   y0: number,
   x1: number,
   y1: number
-) => IO.Effect<CanvasRenderingContext2D, never, CanvasGradient>
+) => Effect<CanvasRenderingContext2D, never, CanvasGradient>
 ```
 
 Added in v1.0.0
@@ -369,7 +369,7 @@ Creates a new canvas pattern (repeatable image).
 export declare const createPattern: (
   source: ImageSource,
   repetition: PatternRepetition
-) => IO.Effect<CanvasRenderingContext2D, never, Option<CanvasPattern>>
+) => Effect<CanvasRenderingContext2D, never, Option.Option<CanvasPattern>>
 ```
 
 Added in v1.0.0
@@ -388,7 +388,7 @@ export declare const createRadialGradient: (
   x1: number,
   y1: number,
   r1: number
-) => IO.Effect<CanvasRenderingContext2D, never, CanvasGradient>
+) => Effect<CanvasRenderingContext2D, never, CanvasGradient>
 ```
 
 Added in v1.0.0
@@ -406,7 +406,7 @@ export declare const drawImage: (
   imageSource: ImageSource,
   offsetX: number,
   offsetY: number
-) => IO.Effect<CanvasRenderingContext2D, never, void>
+) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -428,7 +428,7 @@ export declare const drawImageFull: (
   canvasOffsetY: number,
   canvasImageWidth: number,
   canvasImageHeight: number
-) => IO.Effect<CanvasRenderingContext2D, never, void>
+) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -446,7 +446,7 @@ export declare const drawImageScale: (
   offsetY: number,
   width: number,
   height: number
-) => IO.Effect<CanvasRenderingContext2D, never, void>
+) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -474,7 +474,7 @@ export declare const putImageData: (
   imageData: ImageData,
   dx: number,
   dy: number
-) => IO.Effect<CanvasRenderingContext2D, never, void>
+) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -494,7 +494,7 @@ export declare const putImageDataFull: (
   dirtyY: number,
   dirtyW: number,
   dirtyH: number
-) => IO.Effect<CanvasRenderingContext2D, never, void>
+) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -506,7 +506,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const getLineJoin: LazyArg<IO.Effect<CanvasRenderingContext2D, never, CanvasLineJoin>>
+export declare const getLineJoin: LazyArg<Effect<CanvasRenderingContext2D, never, CanvasLineJoin>>
 ```
 
 Added in v1.0.0
@@ -518,7 +518,7 @@ Lazily get the current miter limit for the canvas context.
 **Signature**
 
 ```ts
-export declare const getMiterLimit: LazyArg<IO.Effect<CanvasRenderingContext2D, never, number>>
+export declare const getMiterLimit: LazyArg<Effect<CanvasRenderingContext2D, never, number>>
 ```
 
 Added in v1.0.0
@@ -530,7 +530,7 @@ Gets the current line cap type for the canvas context.
 **Signature**
 
 ```ts
-export declare const lineCap: IO.Effect<CanvasRenderingContext2D, never, CanvasLineCap>
+export declare const lineCap: Effect<CanvasRenderingContext2D, never, CanvasLineCap>
 ```
 
 Added in v1.0.0
@@ -542,7 +542,7 @@ Gets the current line dash pattern for the canvas context.
 **Signature**
 
 ```ts
-export declare const lineDash: IO.Effect<CanvasRenderingContext2D, never, number[]>
+export declare const lineDash: Effect<CanvasRenderingContext2D, never, number[]>
 ```
 
 Added in v1.0.0
@@ -554,7 +554,7 @@ Gets the current line dash offset, or "phase", for the canvas context.
 **Signature**
 
 ```ts
-export declare const lineDashOffset: IO.Effect<CanvasRenderingContext2D, never, number>
+export declare const lineDashOffset: Effect<CanvasRenderingContext2D, never, number>
 ```
 
 Added in v1.0.0
@@ -566,7 +566,7 @@ gets the current line join type for the canvas context.
 **Signature**
 
 ```ts
-export declare const lineJoin: IO.Effect<CanvasRenderingContext2D, never, CanvasLineJoin>
+export declare const lineJoin: Effect<CanvasRenderingContext2D, never, CanvasLineJoin>
 ```
 
 Added in v2.0.0
@@ -576,7 +576,7 @@ Added in v2.0.0
 **Signature**
 
 ```ts
-export declare const lineWidth: IO.Effect<CanvasRenderingContext2D, never, number>
+export declare const lineWidth: Effect<CanvasRenderingContext2D, never, number>
 ```
 
 Added in v2.0.0
@@ -588,7 +588,7 @@ Gets the current miter limit for the canvas context.
 **Signature**
 
 ```ts
-export declare const miterLimit: IO.Effect<CanvasRenderingContext2D, never, number>
+export declare const miterLimit: Effect<CanvasRenderingContext2D, never, number>
 ```
 
 Added in v2.0.0
@@ -698,7 +698,7 @@ Begin a path on the canvas.
 **Signature**
 
 ```ts
-export declare const beginPath: IO.Effect<CanvasRenderingContext2D, never, void>
+export declare const beginPath: Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -734,7 +734,7 @@ Closes the current canvas path.
 **Signature**
 
 ```ts
-export declare const closePath: IO.Effect<CanvasRenderingContext2D, never, void>
+export declare const closePath: Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -749,7 +749,7 @@ Draws a focus ring around the current or given path, if the specified element is
 export declare const drawFocusIfNeeded: (
   element: HTMLElement,
   path2d?: Path2D | undefined
-) => IO.Effect<CanvasRenderingContext2D, never, void>
+) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -785,7 +785,7 @@ Fill the current path on the canvas.
 export declare const fill: (
   f?: 'evenodd' | 'nonzero' | undefined,
   p?: Path2D | undefined
-) => IO.Effect<CanvasRenderingContext2D, never, void>
+) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -825,7 +825,7 @@ export declare const isPointInStroke: (
   x: number,
   y: number,
   path?: Path2D | undefined
-) => IO.Effect<CanvasRenderingContext2D, never, boolean>
+) => Effect<CanvasRenderingContext2D, never, boolean>
 ```
 
 Added in v1.0.0
@@ -837,7 +837,7 @@ Move the canvas path to the specified point while drawing a line segment.
 **Signature**
 
 ```ts
-export declare const lineTo: (x: number, y: number) => IO.Effect<CanvasRenderingContext2D, never, void>
+export declare const lineTo: (x: number, y: number) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -866,7 +866,7 @@ export declare const quadraticCurveTo: (
   cpy: number,
   x: number,
   y: number
-) => IO.Effect<CanvasRenderingContext2D, never, void>
+) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -890,7 +890,7 @@ Convenience function for drawing a stroked path.
 **Signature**
 
 ```ts
-export declare const strokePath: <R, E, A>(f: Render<A, E, R>) => IO.Effect<CanvasRenderingContext2D | R, E, A>
+export declare const strokePath: <R, E, A>(f: Render<A, E, R>) => Effect.Effect<CanvasRenderingContext2D | R, E, A>
 ```
 
 Added in v1.0.0
@@ -904,7 +904,7 @@ Gets `ImageData` for the specified rectangle.
 **Signature**
 
 ```ts
-export declare const createImageData: (sw: number, sh: number) => IO.Effect<CanvasRenderingContext2D, never, ImageData>
+export declare const createImageData: (sw: number, sh: number) => Effect<CanvasRenderingContext2D, never, ImageData>
 ```
 
 Added in v1.0.0
@@ -916,9 +916,7 @@ Creates a copy of an existing `ImageData` object.
 **Signature**
 
 ```ts
-export declare const createImageDataCopy: (
-  imageData: ImageData
-) => IO.Effect<CanvasRenderingContext2D, never, ImageData>
+export declare const createImageDataCopy: (imageData: ImageData) => Effect<CanvasRenderingContext2D, never, ImageData>
 ```
 
 Added in v1.0.0
@@ -982,7 +980,7 @@ Gets the current shadow blur radius for the canvas context.
 **Signature**
 
 ```ts
-export declare const getShadowBlur: LazyArg<IO.Effect<CanvasRenderingContext2D, never, number>>
+export declare const getShadowBlur: LazyArg<Effect<CanvasRenderingContext2D, never, number>>
 ```
 
 Added in v1.0.0
@@ -994,7 +992,7 @@ Gets the current shadow color for the canvas context.
 **Signature**
 
 ```ts
-export declare const getShadowColor: LazyArg<IO.Effect<CanvasRenderingContext2D, never, string>>
+export declare const getShadowColor: LazyArg<Effect<CanvasRenderingContext2D, never, string>>
 ```
 
 Added in v1.0.0
@@ -1054,7 +1052,7 @@ Gets the current shadow blur radius for the canvas context.
 **Signature**
 
 ```ts
-export declare const shadowBlur: IO.Effect<CanvasRenderingContext2D, never, number>
+export declare const shadowBlur: Effect<CanvasRenderingContext2D, never, number>
 ```
 
 Added in v2.0.0
@@ -1066,7 +1064,7 @@ Gets the current shadow color for the canvas context.
 **Signature**
 
 ```ts
-export declare const shadowColor: IO.Effect<CanvasRenderingContext2D, never, string>
+export declare const shadowColor: Effect<CanvasRenderingContext2D, never, string>
 ```
 
 Added in v2.0.0
@@ -1078,7 +1076,7 @@ Sets the current shadow x-offset for the canvas context.
 **Signature**
 
 ```ts
-export declare const shadowOffsetX: IO.Effect<CanvasRenderingContext2D, never, number>
+export declare const shadowOffsetX: Effect<CanvasRenderingContext2D, never, number>
 ```
 
 Added in v2.0.0
@@ -1090,7 +1088,7 @@ Gets the current shadow y-offset for the canvas context.
 **Signature**
 
 ```ts
-export declare const shadowOffsetY: IO.Effect<CanvasRenderingContext2D, never, number>
+export declare const shadowOffsetY: Effect<CanvasRenderingContext2D, never, number>
 ```
 
 Added in v2.0.0
@@ -1119,7 +1117,7 @@ Restore the previous canvas context.
 **Signature**
 
 ```ts
-export declare const restore: IO.Effect<CanvasRenderingContext2D, never, void>
+export declare const restore: Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -1131,7 +1129,7 @@ Save the current canvas context.
 **Signature**
 
 ```ts
-export declare const save: IO.Effect<CanvasRenderingContext2D, never, void>
+export declare const save: Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -1170,7 +1168,7 @@ Gets the current stroke style for the canvas context.
 **Signature**
 
 ```ts
-export declare const strokeStyle: IO.Effect<CanvasRenderingContext2D, never, string | CanvasGradient | CanvasPattern>
+export declare const strokeStyle: Effect<CanvasRenderingContext2D, never, string | CanvasGradient | CanvasPattern>
 ```
 
 Added in v1.0.0
@@ -1189,7 +1187,7 @@ export declare const fillText: (
   x: number,
   y: number,
   mw?: number | undefined
-) => IO.Effect<CanvasRenderingContext2D, never, void>
+) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -1201,7 +1199,7 @@ Gets the current font.
 **Signature**
 
 ```ts
-export declare const font: IO.Effect<CanvasRenderingContext2D, never, string>
+export declare const font: Effect<CanvasRenderingContext2D, never, string>
 ```
 
 Added in v1.0.0
@@ -1213,7 +1211,7 @@ Gets the current font.
 **Signature**
 
 ```ts
-export declare const getFont: LazyArg<IO.Effect<CanvasRenderingContext2D, never, string>>
+export declare const getFont: LazyArg<Effect<CanvasRenderingContext2D, never, string>>
 ```
 
 Added in v2.0.0
@@ -1225,7 +1223,7 @@ Get the text measurements for the specified text.
 **Signature**
 
 ```ts
-export declare const measureText: (text: string) => IO.Effect<CanvasRenderingContext2D, never, TextMetrics>
+export declare const measureText: (text: string) => Effect<CanvasRenderingContext2D, never, TextMetrics>
 ```
 
 Added in v1.0.0
@@ -1285,7 +1283,7 @@ Gets the current text alignment.
 **Signature**
 
 ```ts
-export declare const textAlign: IO.Effect<CanvasRenderingContext2D, never, CanvasTextAlign>
+export declare const textAlign: Effect<CanvasRenderingContext2D, never, CanvasTextAlign>
 ```
 
 Added in v1.0.0
@@ -1297,7 +1295,7 @@ Gets the current text baseline.
 **Signature**
 
 ```ts
-export declare const textBaseline: IO.Effect<CanvasRenderingContext2D, never, CanvasTextBaseline>
+export declare const textBaseline: Effect<CanvasRenderingContext2D, never, CanvasTextBaseline>
 ```
 
 Added in v1.0.0
@@ -1311,7 +1309,7 @@ Gets the current transformation matrix being applied to the canvas context.
 **Signature**
 
 ```ts
-export declare const getTransform: IO.Effect<CanvasRenderingContext2D, never, DOMMatrix>
+export declare const getTransform: Effect<CanvasRenderingContext2D, never, DOMMatrix>
 ```
 
 Added in v1.0.0
@@ -1323,7 +1321,7 @@ Apply rotation to the current canvas context transform.
 **Signature**
 
 ```ts
-export declare const rotate: (angle: number) => IO.Effect<CanvasRenderingContext2D, never, void>
+export declare const rotate: (angle: number) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -1335,7 +1333,7 @@ Apply scale to the current canvas context transform.
 **Signature**
 
 ```ts
-export declare const scale: (scaleX: number, scaleY: number) => IO.Effect<CanvasRenderingContext2D, never, void>
+export declare const scale: (scaleX: number, scaleY: number) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -1380,7 +1378,7 @@ export declare const transform: (
   m22: number,
   m31: number,
   m32: number
-) => IO.Effect<CanvasRenderingContext2D, never, void>
+) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0
@@ -1392,7 +1390,7 @@ Translate the current canvas context transform.
 **Signature**
 
 ```ts
-export declare const translate: (x: number, y: number) => IO.Effect<CanvasRenderingContext2D, never, void>
+export declare const translate: (x: number, y: number) => Effect<CanvasRenderingContext2D, never, void>
 ```
 
 Added in v1.0.0

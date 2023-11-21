@@ -14,6 +14,8 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
+- [combinator](#combinator)
+  - [pointWithin](#pointwithin)
 - [constructors](#constructors)
   - [angle](#angle)
   - [arc](#arc)
@@ -40,8 +42,22 @@ Added in v1.0.0
   - [Radians (interface)](#radians-interface)
   - [Rect (interface)](#rect-interface)
   - [Shape (type alias)](#shape-type-alias)
+- [operations](#operations)
+  - [translate](#translate)
 
 ---
+
+# combinator
+
+## pointWithin
+
+**Signature**
+
+```ts
+export declare function pointWithin(min: Point, max: Point)
+```
+
+Added in v2.0.0
 
 # constructors
 
@@ -88,7 +104,9 @@ Constructs a closed `Path` shape from a `Foldable` of `Point`s.
 **Signature**
 
 ```ts
-export declare function closed<F extends TypeLambda>(F: Foldable<F>): <R, O, E>(fa: Kind<F, R, O, E, Point>) => Path
+export declare function closed<F extends TypeLambda>(
+  F: Foldable.Foldable<F>
+): <R, O, E>(fa: Kind<F, R, O, E, Point>) => Path
 ```
 
 Added in v1.0.0
@@ -145,7 +163,9 @@ Constructs an open `Path` shape from a `Foldable` of `Point`s.
 **Signature**
 
 ```ts
-export declare function path<F extends TypeLambda>(F: Foldable<F>): <R, O, E>(fa: Kind<F, R, O, E, Point>) => Path
+export declare function path<F extends TypeLambda>(
+  F: Foldable.Foldable<F>
+): <R, O, E>(fa: Kind<F, R, O, E, Point>) => Path
 ```
 
 Added in v1.0.0
@@ -207,7 +227,7 @@ The `Monoid` instance for a `Path`.
 **Signature**
 
 ```ts
-export declare const monoidPath: M.Monoid<Path>
+export declare const monoidPath: Monoid.Monoid<Path>
 ```
 
 Added in v1.0.0
@@ -472,6 +492,20 @@ Represents a shape that can be drawn.
 
 ```ts
 export type Shape = Arc | Composite | Ellipse | Path | Rect
+```
+
+Added in v1.0.0
+
+# operations
+
+## translate
+
+Translate a path by the given vector
+
+**Signature**
+
+```ts
+export declare function translate(vector: Point): (path: Path) => Path
 ```
 
 Added in v1.0.0

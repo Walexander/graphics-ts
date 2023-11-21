@@ -12,10 +12,9 @@ when using the `Canvas` module directly and instead allows us to be more declara
 Taking the MDN example from the `Canvas` documentation,
 
 ```ts
-import { pipe } from '@effect/data/Function'
-import * as RA from '@effect/data/ReadonlyArray'
+import { Effect as E, ReadonlyArray as RA } from 'effect'
+import { pipe } from '@effect/Function'
 import * as Color from 'graphics-ts/lib/Color'
-import * as E from '@effect/io/Effect'
 import * as C from 'graphics-ts/Canvas'
 import * as S from 'graphics-ts/Shape'
 
@@ -105,8 +104,6 @@ Added in v1.0.0
   - [Text (interface)](#text-interface)
   - [Translate (interface)](#translate-interface)
   - [WithShadow (interface)](#withshadow-interface)
-- [utils](#utils)
-  - [cached](#cached)
 
 ---
 
@@ -399,17 +396,13 @@ Added in v1.0.0
 
 Gets a `Monoid` instance for `OutlineStyle`.
 
+import \* as D from 'graphics-ts/Drawing'
+D.monoidOutlineStyle.combineAll([])
+
 **Signature**
 
 ```ts
 export declare const monoidOutlineStyle: M.Monoid<OutlineStyle>
-```
-
-**Example**
-
-```ts
-import * as D from 'graphics-ts/Drawing'
-D.monoidOutlineStyle.combineAll([])
 ```
 
 Added in v1.0.0
@@ -770,15 +763,3 @@ export interface WithShadow {
 ```
 
 Added in v1.0.0
-
-# utils
-
-## cached
-
-**Signature**
-
-```ts
-export declare function cached(drawing: Drawing)
-```
-
-Added in v2.0.0

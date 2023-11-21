@@ -81,8 +81,8 @@ The classic 2D Turtle graphics api. You can
 
 ```ts
 export interface Turtle2d {
-  drawForward: (length: number) => IO.Effect<never, never, TurtleState>
-  turn: (angle: number) => IO.Effect<never, never, TurtleState>
+  drawForward: (length: number) => Effect.Effect<never, never, TurtleState>
+  turn: (angle: number) => Effect.Effect<never, never, TurtleState>
 }
 ```
 
@@ -123,7 +123,7 @@ Summon a `Turtle2d` service
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<Turtle2d>
+export declare const Tag: Context.Tag<Turtle2d, Turtle2d>
 ```
 
 Added in v2.0.0

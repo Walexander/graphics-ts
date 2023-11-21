@@ -75,7 +75,7 @@ Summon a `Drawable` instance for `Shape`
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<Drawable.Drawable<Shape>>
+export declare const Tag: Context.Tag<Drawable.Drawable<Shape>, Drawable.Drawable<Shape>>
 ```
 
 Added in v2.0.0

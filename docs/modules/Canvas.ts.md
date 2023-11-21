@@ -35,26 +35,25 @@ and call IO.collectAllDiscard to generate the effect. Then we `renderTo(#id)`
 to provide it with the canvas and, finally, run the effect to a Promise
 
 ```ts
-import { pipe } from '@effect/data/Function'
-import * as E from '@effect/io/Effect'
+import { pipe } from 'effect/Function'
+import {Effect} from 'effect'
 import * as C from 'graphics-ts/Canvas'
 
-const triangle = IO.collectAllDiscard([
+const triangle = IO.all([
   C.beginPath,
   C.moveTo(75, 50),
   C.lineTo(100, 75),
   C.lineTo(100, 25),
   C.setFillStyle('black'),
   C.fill(),
-])
+], { discard: true  })
 
-IO.runPromise(
-  pipe(
-    triangle,
-    C.renderTo('canvas'),
-    IO.catchAll((error) => Effect.logError(`Error rendering to #canvas: ${error.message}`))
-  )
-)
+(triangle.pipe(
+ C.renderTo('canvas'),
+ Effect.catchAll(error => Effect.logError(`Error rendering to #canvas: ${error.message}`))
+ Effect.runPromise
+))
+
 ```
 
 While this may seem somewhat verbose compared to its non-functional counterpart above,
