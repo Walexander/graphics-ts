@@ -1,5 +1,5 @@
-import * as IO from '@effect/io/Effect'
-import { pipe } from '@effect/data/Function'
+import { Effect } from 'effect'
+import { pipe } from 'effect/Function'
 import { testM, testCanvas } from './utils'
 import type { Mock } from 'vitest'
 import { assert, beforeEach, describe, expect } from 'vitest'
@@ -17,7 +17,6 @@ const CANVAS_HEIGHT = 600
 
 let focusTarget: HTMLElement
 
-const Effect = IO
 const Canvas = C
 
 beforeEach(() => {
@@ -92,8 +91,8 @@ describe('Canvas', () => {
     it('should get a data URL for the canvas', () =>
       pipe(
         C.toDataURL,
-        IO.tap((_) => Effect.log(`The url is ${_}`)),
-        IO.map((dataURL) => assert.deepStrictEqual(dataURL, 'data:image/png;base64,00'))
+        Effect.tap((_) => Effect.log(`The url is ${_}`)),
+        Effect.map((dataURL) => assert.deepStrictEqual(dataURL, 'data:image/png;base64,00'))
       ))
   })
 
@@ -101,8 +100,8 @@ describe('Canvas', () => {
     const fillStyle = '#0000ff'
     it('should set the current fill style', () =>
       pipe(
-        IO.zipLeft(IO.service(C.Tag), C.setFillStyle(fillStyle)),
-        IO.map((ctx) => assert.equal(ctx.fillStyle, fillStyle))
+        Effect.zipLeft((C.Tag), C.setFillStyle(fillStyle)),
+        Effect.map((ctx) => assert.equal(ctx.fillStyle, fillStyle))
       ))
   })
 
@@ -110,18 +109,18 @@ describe('Canvas', () => {
     it('should get the current font', () =>
       pipe(
         C.getFont(),
-        IO.zip(Effect.service(Canvas.Tag)),
-        IO.map(([font, ctx]) => assert.strictEqual(font, ctx.font))
+        Effect.zip((Canvas.Tag)),
+        Effect.map(([font, ctx]) => assert.strictEqual(font, ctx.font))
       ))
     it('font', () =>
       pipe(
         C.getFont(),
-        IO.map((font) => assert.equal(font, '10px sans-serif'))
+        Effect.map((font) => assert.equal(font, '10px sans-serif'))
       ))
     it('setFont', () =>
       pipe(
         C.setFont('12px serif'),
-        IO.zipRight(Canvas.getFont()),
+        Effect.zipRight(Canvas.getFont()),
         Effect.map((font) => assert.equal(font, '12px serif'))
       ))
   })
@@ -169,25 +168,25 @@ describe('Canvas', () => {
   it('moveTo', () =>
     pipe(
       Canvas.moveTo(0, 0),
-      Effect.flatMap((_) => Effect.service(Canvas.Tag)),
+      Effect.flatMap((_) => (Canvas.Tag)),
       Effect.map((ctx) => expect(ctx.moveTo as Mock).to.have.toHaveBeenCalledWith(0, 0))
     ))
   it('lineTo', () =>
     pipe(
       Canvas.lineTo(0, 0),
-      Effect.flatMap((_) => Effect.service(Canvas.Tag)),
+      Effect.flatMap((_) => (Canvas.Tag)),
       Effect.map((ctx) => expect(ctx.lineTo as Mock).to.have.toHaveBeenCalledWith(0, 0))
     ))
   it('fill', () =>
     pipe(
       Canvas.fill(),
-      Effect.zipRight(Effect.service(Canvas.Tag)),
+      Effect.zipRight((Canvas.Tag)),
       Effect.map((ctx) => expect(ctx.fill as Mock).to.have.toHaveBeenCalledWith())
     ))
   it('stroke', () =>
     pipe(
       Canvas.stroke(),
-      Effect.flatMap((_) => Effect.service(Canvas.Tag)),
+      Effect.flatMap((_) => (Canvas.Tag)),
       Effect.map((ctx) => expect(ctx.stroke as Mock).to.have.toHaveBeenCalledWith())
     ))
 
@@ -195,19 +194,19 @@ describe('Canvas', () => {
     it('save', () =>
       pipe(
         Canvas.save,
-        Effect.flatMap((_) => Effect.service(Canvas.Tag)),
+        Effect.flatMap((_) => (Canvas.Tag)),
         Effect.map((ctx) => expect(ctx.save as Mock).to.have.toHaveBeenCalledWith())
       ))
     it('restore', () =>
       pipe(
         Canvas.restore,
-        Effect.flatMap((_) => Effect.service(Canvas.Tag)),
+        Effect.flatMap((_) => (Canvas.Tag)),
         Effect.map((ctx) => expect(ctx.restore as Mock).to.have.toHaveBeenCalledWith())
       ))
     describe('withContext', () => {
       it('calls save, runs program then restore', () =>
         pipe(
-          IO.zipLeft(IO.service(C.Tag), C.withContext(C.beginPath)),
+          Effect.zipLeft((C.Tag), C.withContext(C.beginPath)),
           Effect.map((ctx) => {
             expect(ctx.save as Mock).to.have.toHaveBeenCalled()
             expect(ctx.beginPath as Mock).to.have.toHaveBeenCalled()
@@ -220,9 +219,9 @@ describe('Canvas', () => {
           Canvas.withContext(pipe(Canvas.beginPath, Effect.zipLeft(Effect.die(`Failure`)))),
           (effect) => Effect.catchAllDefect(effect, _ => pipe(
             Effect.logError(`failed running withContext effect`),
-            Effect.zipRight(Effect.service(Canvas.Tag))
+            Effect.zipRight((Canvas.Tag))
           )),
-          Effect.zipRight(IO.service(C.Tag)),
+          Effect.zipRight((C.Tag)),
           Effect.map((ctx) => {
             expect(ctx.restore as Mock).to.have.toHaveBeenCalledOnce()
           })
@@ -235,8 +234,8 @@ describe('Canvas', () => {
       const globalAlpha = 0.5
       return pipe(
         C.setGlobalAlpha(globalAlpha),
-        IO.zipRight(IO.service(C.Tag)),
-        IO.map((ctx) => assert.strictEqual(ctx.globalAlpha, globalAlpha))
+        Effect.zipRight((C.Tag)),
+        Effect.map((ctx) => assert.strictEqual(ctx.globalAlpha, globalAlpha))
       )
     })
   })
@@ -246,8 +245,8 @@ describe('Canvas', () => {
       const globalCompositeOperation = 'multiply'
       return pipe(
         C.setGlobalCompositeOperation(globalCompositeOperation),
-        IO.zipRight(C.globalCompositeOperation),
-        IO.map((op) => assert.strictEqual(op, globalCompositeOperation))
+        Effect.zipRight(C.globalCompositeOperation),
+        Effect.map((op) => assert.strictEqual(op, globalCompositeOperation))
       )
     })
   })
@@ -257,8 +256,8 @@ describe('Canvas', () => {
       const imageSmoothingEnabled = true
       return pipe(
         C.setImageSmoothingEnabled(imageSmoothingEnabled),
-        IO.zipRight(C.imageSmoothingEnabled),
-        IO.map((op) => assert.strictEqual(op, imageSmoothingEnabled))
+        Effect.zipRight(C.imageSmoothingEnabled),
+        Effect.map((op) => assert.strictEqual(op, imageSmoothingEnabled))
       )
     })
   })
@@ -267,8 +266,8 @@ describe('Canvas', () => {
       const lineCap = 'round'
       return pipe(
         C.setLineCap(lineCap),
-        IO.zipRight(C.lineCap),
-        IO.map((op) => assert.strictEqual(op, lineCap))
+        Effect.zipRight(C.lineCap),
+        Effect.map((op) => assert.strictEqual(op, lineCap))
       )
     })
   })
@@ -278,8 +277,8 @@ describe('Canvas', () => {
       const expected = 4
       return pipe(
         C.setLineDashOffset(expected),
-        IO.zipRight(C.lineDashOffset),
-        IO.map((actual) => assert.strictEqual(actual, expected))
+        Effect.zipRight(C.lineDashOffset),
+        Effect.map((actual) => assert.strictEqual(actual, expected))
       )
     })
   })
@@ -289,8 +288,8 @@ describe('Canvas', () => {
       const expected = 'round'
       return pipe(
         C.setLineJoin(expected),
-        IO.zipRight(C.lineJoin),
-        IO.map((actual) => assert.strictEqual(actual, expected))
+        Effect.zipRight(C.lineJoin),
+        Effect.map((actual) => assert.strictEqual(actual, expected))
       )
     })
   })
@@ -300,8 +299,8 @@ describe('Canvas', () => {
       const expected = 5
       return pipe(
         C.setLineWidth(expected),
-        IO.zipRight(C.lineWidth),
-        IO.map((actual) => assert.strictEqual(actual, expected))
+        Effect.zipRight(C.lineWidth),
+        Effect.map((actual) => assert.strictEqual(actual, expected))
       )
     })
   })
@@ -312,8 +311,8 @@ describe('Canvas', () => {
       const expected = 10
       return pipe(
         C.setShadowBlur(expected),
-        IO.zipRight(C.shadowBlur),
-        IO.map((actual) => assert.strictEqual(actual, expected))
+        Effect.zipRight(C.shadowBlur),
+        Effect.map((actual) => assert.strictEqual(actual, expected))
       )
     })
   })
@@ -322,8 +321,8 @@ describe('Canvas', () => {
       const expected = '#0000ff'
       return pipe(
         C.setShadowColor(expected),
-        IO.zipRight(C.shadowColor),
-        IO.map((actual) => assert.strictEqual(actual, expected))
+        Effect.zipRight(C.shadowColor),
+        Effect.map((actual) => assert.strictEqual(actual, expected))
       )
     })
   })
@@ -333,8 +332,8 @@ describe('Canvas', () => {
       const expected = 20
       return pipe(
         C.setShadowOffsetX(expected),
-        IO.zipRight(C.shadowOffsetX),
-        IO.map((actual) => assert.strictEqual(actual, expected))
+        Effect.zipRight(C.shadowOffsetX),
+        Effect.map((actual) => assert.strictEqual(actual, expected))
       )
     })
   })
@@ -344,8 +343,8 @@ describe('Canvas', () => {
       const expected = 20
       return pipe(
         C.setShadowOffsetY(expected),
-        IO.zipRight(C.shadowOffsetY),
-        IO.map((actual) => assert.strictEqual(actual, expected))
+        Effect.zipRight(C.shadowOffsetY),
+        Effect.map((actual) => assert.strictEqual(actual, expected))
       )
     })
   })
@@ -355,8 +354,8 @@ describe('Canvas', () => {
       const expected = '#0000ff'
       return pipe(
         C.setStrokeStyle(expected),
-        IO.zipRight(C.strokeStyle),
-        IO.map((actual) => assert.strictEqual(actual, expected))
+        Effect.zipRight(C.strokeStyle),
+        Effect.map((actual) => assert.strictEqual(actual, expected))
       )
     })
   })
@@ -365,16 +364,16 @@ describe('Canvas', () => {
     testM('should get the current text align', () => {
       return pipe(
         C.textAlign,
-        IO.zip(IO.service(C.Tag)),
-        IO.map(([actual, ctx]) => assert.strictEqual(actual, ctx.textAlign))
+        Effect.zip((C.Tag)),
+        Effect.map(([actual, ctx]) => assert.strictEqual(actual, ctx.textAlign))
       )
     })
     testM('should set the current text align', () => {
       const expected = 'center'
       return pipe(
         C.setTextAlign(expected),
-        IO.zipRight(C.textAlign),
-        IO.map((actual) => assert.strictEqual(actual, expected))
+        Effect.zipRight(C.textAlign),
+        Effect.map((actual) => assert.strictEqual(actual, expected))
       )
     })
   })
@@ -383,16 +382,16 @@ describe('Canvas', () => {
     testM('should get the current text baseline', () =>
       pipe(
         C.textBaseline,
-        IO.zip(IO.service(C.Tag)),
-        IO.map(([actual, ctx]) => assert.strictEqual(actual, ctx.textBaseline))
+        Effect.zip((C.Tag)),
+        Effect.map(([actual, ctx]) => assert.strictEqual(actual, ctx.textBaseline))
       )
     )
     testM('should set', () => {
       const expected = 'hanging'
       return pipe(
         C.setTextBaseline(expected),
-        IO.zipRight(C.textBaseline),
-        IO.map((actual) => assert.strictEqual(actual, expected))
+        Effect.zipRight(C.textBaseline),
+        Effect.map((actual) => assert.strictEqual(actual, expected))
       )
     })
   })
@@ -419,7 +418,7 @@ height="${CANVAS_HEIGHT}"
       testM('should render an arc to the canvas', () => {
         const arc = S.arc(100, 75, 50, S.radians(0), S.radians(2 * Math.PI))
         // Test
-        const expected = IO.sync(() => {
+        const expected = Effect.sync(() => {
           // Actual
           testCtx.arc(arc.x, arc.y, arc.r, arc.start, arc.end)
           return (testCtx as any).__getEvents()
@@ -443,7 +442,7 @@ height="${CANVAS_HEIGHT}"
         })
         const sut = pipe(
           C.arcTo(x1, y1, x2, y2, r),
-          IO.zipRight(IO.service(C.Tag))
+          Effect.zipRight((C.Tag))
         )
         return testCanvas(sut, expected)
       })
@@ -451,7 +450,7 @@ height="${CANVAS_HEIGHT}"
 
     describe('beginPath', () => {
       testM('should begin drawing a path', () => {
-        const actual = IO.zipLeft(IO.service(C.Tag), C.beginPath)
+        const actual = Effect.zipLeft((C.Tag), C.beginPath)
         const expected = Effect.sync(() => {
           testCtx.beginPath()
           return testCtx
@@ -473,14 +472,14 @@ height="${CANVAS_HEIGHT}"
         // Test
         const test = pipe(
           C.strokePath(
-            IO.collectAllDiscard([
+            Effect.all([
               C.beginPath,
               C.moveTo(point.x, point.y),
               C.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, x, y)
-            ])
+            ], { discard: true })
           ),
-          IO.zipRight(IO.service(C.Tag)),
-          IO.map((ctx) => expect(ctx.bezierCurveTo as Mock).toHaveBeenCalledWith(cpx1, cpy1, cpx2, cpy2, x, y))
+          Effect.zipRight((C.Tag)),
+          Effect.map((ctx) => expect(ctx.bezierCurveTo as Mock).toHaveBeenCalledWith(cpx1, cpy1, cpx2, cpy2, x, y))
         )
         return test
       })
@@ -491,8 +490,8 @@ height="${CANVAS_HEIGHT}"
         const rect = S.rect(10, 20, 150, 100)
         return pipe(
           C.clearRect(rect.x, rect.y, rect.width, rect.height),
-          IO.zipRight(IO.service(Canvas.Tag)),
-          IO.map((ctx) => expect(ctx.clearRect as Mock).toHaveBeenCalledWith(rect.x, rect.y, rect.width, rect.height))
+          Effect.zipRight((Canvas.Tag)),
+          Effect.map((ctx) => expect(ctx.clearRect as Mock).toHaveBeenCalledWith(rect.x, rect.y, rect.width, rect.height))
         )
       })
     })
@@ -501,12 +500,12 @@ height="${CANVAS_HEIGHT}"
         // Test
         const sut = pipe(
           C.beginPath,
-          IO.zipRight(C.clip()),
-          IO.zipRight(IO.service(Canvas.Tag)),
+          Effect.zipRight(C.clip()),
+          Effect.zipRight((Canvas.Tag)),
         )
 
         // Actual
-        const expected = IO.sync( () => {
+        const expected = Effect.sync( () => {
           testCtx.beginPath()
           testCtx.clip()
           return (testCtx as any).__getEvents()
@@ -519,12 +518,12 @@ height="${CANVAS_HEIGHT}"
         // Test
         const sut = pipe(
           C.beginPath,
-          IO.zipRight(C.clip(fillRule)),
-          IO.zipRight(IO.service(Canvas.Tag)),
+          Effect.zipRight(C.clip(fillRule)),
+          Effect.zipRight((Canvas.Tag)),
         )
 
         // Actual
-        const expected = IO.sync( () => {
+        const expected = Effect.sync( () => {
           testCtx.beginPath()
           testCtx.clip(fillRule)
           return (testCtx as any).__getEvents()
@@ -537,10 +536,10 @@ height="${CANVAS_HEIGHT}"
         const fillRule = 'nonzero'
         const path = new Path2D()
         path.rect(10, 10, 100, 100)
-        const sut = pipe(C.beginPath, IO.zipRight(C.clip(fillRule, path)),
-          IO.zipRight(IO.service(Canvas.Tag)),
+        const sut = pipe(C.beginPath, Effect.zipRight(C.clip(fillRule, path)),
+          Effect.zipRight((Canvas.Tag)),
         )
-        const expected = IO.sync(() => {
+        const expected = Effect.sync(() => {
           testCtx.beginPath()
           testCtx.clip(path, fillRule)
           return testCtx
@@ -554,11 +553,11 @@ height="${CANVAS_HEIGHT}"
       testM('should close the current path', () => {
         const sut = pipe(
           C.beginPath,
-          IO.zipRight(C.stroke()),
-          IO.zipRight(C.closePath),
-          IO.zipRight(IO.service(Canvas.Tag)),
+          Effect.zipRight(C.stroke()),
+          Effect.zipRight(C.closePath),
+          Effect.zipRight((Canvas.Tag)),
         )
-        const expected = IO.sync(() => {
+        const expected = Effect.sync(() => {
           testCtx.beginPath()
           testCtx.stroke()
           testCtx.closePath()
@@ -573,13 +572,13 @@ height="${CANVAS_HEIGHT}"
         const sw = 100
         const sh = 50
         const sut = C.createImageData(sw, sh)
-        const expected = IO.sync(() => {
+        const expected = Effect.sync(() => {
           return testCtx.createImageData(sw, sh)
         })
         return pipe(
           sut,
-          IO.zip(expected),
-          IO.map(([sut, expected]) => assert.deepStrictEqual(sut, expected))
+          Effect.zip(expected),
+          Effect.map(([sut, expected]) => assert.deepStrictEqual(sut, expected))
         )
       })
     })
@@ -590,8 +589,8 @@ height="${CANVAS_HEIGHT}"
         const sh = 50
         return pipe(
           C.createImageData(sw, sh),
-          IO.flatMap((d) => pipe(C.createImageDataCopy(d), IO.zip(IO.succeed(d)))),
-          IO.map(([copy, original]) => assert.deepStrictEqual(copy, original))
+          Effect.flatMap((d) => pipe(C.createImageDataCopy(d), Effect.zip(Effect.succeed(d)))),
+          Effect.map(([copy, original]) => assert.deepStrictEqual(copy, original))
         )
       })
     })

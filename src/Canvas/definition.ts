@@ -3,8 +3,9 @@
 * @since 2.0.0
 *
 */
-import { Effect } from '@effect/io/Effect'
-import { Tag as Tag$ } from '@effect/data/Context'
+import { Effect, Context } from 'effect'
+const { Tag: Tag$ } = Context
+type Effect<R, E, A> = Effect.Effect<R, E, A>
 
 /**
  * Represents the management of a `CanvasRenderingContext2D` as *reading* from the
@@ -25,6 +26,12 @@ export interface Render<A, E = never, R = unknown> extends Effect<R | CanvasRend
  * @since 1.0.0
  */
 export interface Gradient<A> extends Render<A> {}
+/**
+* Summon a `CanvasGradient` from the environment
+* @category tag
+* @since 2.0.0
+*/
+export const GradientTag = Tag$<CanvasGradient>()
 
 /**
  * Represents an error attempting to obtain a valid `CanvasRenderingContext2D`, typically

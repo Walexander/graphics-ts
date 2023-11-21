@@ -3,11 +3,13 @@
  *
  * @since 1.0.0
  */
-import { Kind, TypeLambda } from '@effect/data/HKT'
-import { Foldable } from '@effect/data/typeclass/Foldable'
-import * as RA from '@effect/data/ReadonlyArray'
-import * as M from '@effect/data/typeclass/Monoid'
-import {pipe} from '@effect/data/Function'
+import { Kind, TypeLambda } from 'effect/HKT'
+import * as Foldable from '@effect/typeclass/Foldable'
+import * as RA from 'effect/ReadonlyArray'
+import { Foldable as ReadonlyArrayFoldable, getMonoid} from '@effect/typeclass/data/ReadonlyArray'
+import * as Boolean from '@effect/typeclass/data/Boolean'
+import * as Monoid from '@effect/typeclass/Monoid'
+import {pipe} from 'effect/Function'
 
 // -------------------------------------------------------------------------------------
 // model
@@ -278,6 +280,14 @@ export const angle = (angle: Angle): number => {
  */
 export const point = (x: number, y: number): Point => ({ x, y })
 
+export function pointWithin (min: Point, max: Point) {
+  return function (self: Point) {
+    return self.x > min.x && self.y > min.y && self.x < max.y && self.y < max.y
+  }
+
+}
+
+
 /**
  * Constructs an `Arc` shape.
  *
@@ -361,7 +371,7 @@ export const ellipse = (
  * @category constructors
  * @since 1.0.0
  */
-export function closed<F extends TypeLambda>(F: Foldable<F>): <R, O, E>(fa: Kind<F, R, O, E, Point>) => Path {
+export function closed<F extends TypeLambda>(F: Foldable.Foldable<F>): <R, O, E>(fa: Kind<F, R, O, E, Point>) => Path {
   return F.reduce(monoidPath.empty, (b, a) => ({
     _tag: 'Path',
     closed: true,
@@ -375,12 +385,25 @@ export function closed<F extends TypeLambda>(F: Foldable<F>): <R, O, E>(fa: Kind
  * @category constructors
  * @since 1.0.0
  */
-export function path<F extends TypeLambda>(F: Foldable<F>): <R, O, E>(fa: Kind<F, R, O, E,Point>) => Path {
+export function path<F extends TypeLambda>(F: Foldable.Foldable<F>): <R, O, E>(fa: Kind<F, R, O, E,Point>) => Path {
   return F.reduce(monoidPath.empty, (b, a) => ({
     _tag: 'Path',
     closed: false,
     points: RA.append(a)(b.points)
   }))
+}
+
+const plusPoint = (p1: Point) => (p2: Point) => point(p1.x + p2.x, p1.y + p2.y)
+/**
+* Translate a path by the given vector
+*
+* @category operations
+* @since 1.0.0
+*/
+export function translate(vector: Point): (path: Path) => Path {
+  const $path = path(ReadonlyArrayFoldable)
+  const $plus = plusPoint(vector)
+  return (path: Path) => $path(path.points.map($plus))
 }
 
 /**
@@ -402,11 +425,15 @@ export const rect = (x: number, y: number, width: number, height: number): Rect 
  * @category constructors
  * @since 2.0.0
  */
-export const polygon = (sides: number): Shape => pipe(
-  RA.range(0, sides - 1),
-  RA.map((n) => pipe(n * Math.PI / (sides / 2), (theta) => point(Math.sin(theta), Math.cos(theta)))),
-  closed(RA.Foldable)
-)
+
+export const polygon = (sides: number): Shape =>
+  pipe(
+    RA.range(0, sides - 1),
+    RA.map(n =>
+      pipe((n * Math.PI) / (sides / 2), theta => point(Math.sin(theta), Math.cos(theta)))
+    ),
+    closed(ReadonlyArrayFoldable)
+  )
 
 // -------------------------------------------------------------------------------------
 // instances
@@ -418,13 +445,13 @@ export const polygon = (sides: number): Shape => pipe(
  * @category instances
  * @since 1.0.0
  */
-export const monoidPath: M.Monoid<Path> = M.struct({
-  _tag: <M.Monoid<Path['_tag']>>{
+export const monoidPath: Monoid.Monoid<Path> = Monoid.struct({
+  _tag: <Monoid.Monoid<Path['_tag']>>{
     combineAll: () => 'Path' as const,
     combineMany: () => ('Path') as const,
     combine: () => ('Path') as const,
     empty: 'Path'
   },
-  closed: M.booleanSome,
-  points: RA.getMonoid<Point>()
+  closed: Boolean.MonoidSome,
+  points: getMonoid<Point>(), 
 })

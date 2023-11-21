@@ -1,5 +1,5 @@
-import * as IO from '@effect/io/Effect'
-import { pipe } from '@effect/data/Function'
+import { Effect as IO } from 'effect'
+import { pipe } from 'effect/Function'
 import { it as vit, assert } from 'vitest'
 import * as DS from '../src/Drawable/Shape'
 import * as DD from '../src/Drawable/Drawing'
@@ -29,25 +29,31 @@ export const testM = (
   vit(label, () =>
     pipe(
       test(),
-      IO.provideSomeLayer(DD.Live),
-      IO.provideSomeLayer(DS.Live),
+      IO.provide(DD.Live),
+      IO.provide(DS.Live),
       C.renderTo('canvas'),
       IO.runPromise
     )
   )
 
 export const testDrawing = (
-  eff: IO.Effect<Drawable<Shape>|Drawable<Drawing>|CanvasRenderingContext2D, never, CanvasRenderingContext2D>,
+  eff: IO.Effect<
+    Drawable<Shape> | Drawable<Drawing> | CanvasRenderingContext2D,
+    never,
+    CanvasRenderingContext2D
+  >,
   actual: IO.Effect<never, never, any>
 ) =>
   pipe(
     eff,
-    IO.map((ctx) => (ctx as any).__getEvents()),
-    IO.zip(pipe(
-      actual,
-      IO.map(ctx => '__getEvents' in ctx ? ctx.__getEvents() : ctx)
-    )),
-    IO.map(([a, b]) => assert.deepStrictEqual(a, b)),
+    IO.map(ctx => (ctx as any).__getEvents()),
+    IO.zip(
+      pipe(
+        actual,
+        IO.map(ctx => ('__getEvents' in ctx ? ctx.__getEvents() : ctx))
+      )
+    ),
+    IO.map(([a, b]) => assert.deepStrictEqual(a, b))
   )
 
 export const testCanvas = (
@@ -63,4 +69,3 @@ export const testCanvas = (
     )),
     IO.map(([a, b]) => assert.deepStrictEqual(a, b))
   )
-

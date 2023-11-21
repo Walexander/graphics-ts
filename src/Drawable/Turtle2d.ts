@@ -1,12 +1,11 @@
 /** @since 2.0.0 */
-import * as IO from '@effect/io/Effect'
-import * as Layer from '@effect/io/Layer'
+import { Effect, Context, Layer } from 'effect'
+
 import * as Drawable from '../Drawable'
 import * as C from '../Canvas'
 import { Canvas2d } from '../Canvas/definition'
-import * as Context from '@effect/data/Context'
 import { TurtleMove } from '../Turtle2d'
-import { flow } from '@effect/data/Function'
+import { flow } from 'effect/Function'
 
 /**
  *
@@ -33,18 +32,18 @@ export const TurtleSurfaceTag = Context.Tag<TurtleSurface>()
  * @category instances
  * @since 2.0.0
  */
-export const TurtleSurfaceCanvas = IO.toLayer(
-  IO.serviceWith(C.Tag, canvas => TurtleSurfaceImpl(canvas)),
-  TurtleSurfaceTag
+export const TurtleSurfaceCanvas = Layer.effect(
+  TurtleSurfaceTag,
+  C.Tag.pipe(Effect.map(canvas => TurtleSurfaceImpl(canvas)))
 )
 // implement the actual turtle surface
 function TurtleSurfaceImpl(canvas: CanvasRenderingContext2D) {
-  const provide = IO.provideService(C.Tag, canvas)
+  const provide = Effect.provideService(C.Tag, canvas)
   return <TurtleSurface>{
     moveTo: flow(C.moveTo, provide),
     lineTo: flow(C.lineTo, provide),
-    beginPath: provide(IO.as(C.beginPath, void null)),
-    stroke: provide(IO.as(C.stroke(), void null))
+    beginPath: provide(Effect.as(C.beginPath, void null)),
+    stroke: provide(Effect.as(C.stroke(), void null))
   }
 }
 
@@ -65,18 +64,17 @@ export const Tag = Context.Tag<Drawable.Drawable<TurtleMove>>()
  */
 export const Live = Layer.provide(
   TurtleSurfaceCanvas,
-  IO.toLayer(
-    IO.serviceWith(TurtleSurfaceTag, surface => DrawsTurtleImpl(surface)),
-    Tag
+  Layer.effect(Tag,
+    (TurtleSurfaceTag.pipe(Effect.map(surface => DrawsTurtleImpl(surface))))
   )
 )
 
 function DrawsTurtleImpl(surface: TurtleSurface): Drawable.Drawable<TurtleMove> {
-  return ([[x0, y0], [x1, y1]]: TurtleMove): IO.Effect<never, never, void> =>
-    IO.collectAllDiscard([
+  return ([[x0, y0], [x1, y1]]: TurtleMove): Effect.Effect<never, never, void> =>
+    Effect.all([
       surface.beginPath,
       surface.moveTo(x0, y0),
       surface.lineTo(x1, y1),
       surface.stroke
-    ])
+    ], { discard: true })
 }

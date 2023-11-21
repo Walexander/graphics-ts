@@ -1,10 +1,10 @@
-import * as IO from '@effect/io/Effect'
-import * as RA from '@effect/data/ReadonlyArray'
-import { pipe } from '@effect/data/Function'
+import { Effect } from 'effect'
+import { pipe } from 'effect/Function'
 import { it, beforeEach, describe, expect } from 'vitest'
 import * as Shape from '../../src/Shape'
 import * as C from '../../src/Canvas'
 import * as DS from '../../src/Drawable/Shape'
+import { Foldable } from '@effect/typeclass/data/ReadonlyArray'
 
 
 describe('Drawable/Shape', () => {
@@ -19,12 +19,11 @@ describe('Drawable/Shape', () => {
   function testM(shape: Shape.Shape, assertion: (ctx: CanvasRenderingContext2D) => void) {
     return pipe(
       DS.drawShape(shape),
-      IO.zipRight(IO.serviceWith(C.Tag, assertion)),
-      IO.provideSomeLayer(DS.Live),
+      Effect.zipRight(Effect.map(C.Tag, assertion))),
+      Effect.provide(DS.Live),
       C.renderTo(CANVAS_ID),
-      IO.orDie,
-      IO.runPromise
-    )
+      Effect.orDie,
+      Effect.runPromise
   }
 
   describe('circle', () => {
@@ -87,16 +86,17 @@ describe('Drawable/Shape', () => {
       { x: 0, y: 1 },
       { x: 2, y: 3 }
     ]
+    const closed = Shape.closed(Foldable)(path)
     it('should move to the head of the path', () => {
       return pipe(
-        testM(Shape.closed(RA.Foldable)(path), (canvas) => {
+        testM(closed, (canvas) => {
           expect(canvas.moveTo).toHaveBeenCalledWith(path[0].x, path[0].y)
         })
       )
     })
     it('should line to the next element', () => {
       return pipe(
-        testM(Shape.closed(RA.Foldable)(path), (canvas) => {
+        testM(closed, (canvas) => {
           expect(canvas.lineTo).toHaveBeenCalledWith(path[1].x, path[1].y)
         })
       )
@@ -104,7 +104,7 @@ describe('Drawable/Shape', () => {
     describe('closed', () => {
       it('should call closePath', () => {
         return pipe(
-          testM(Shape.closed(RA.Foldable)(path), (canvas) => {
+          testM(closed, (canvas) => {
             expect(canvas.closePath).toHaveBeenCalledWith()
           })
         )
@@ -113,7 +113,7 @@ describe('Drawable/Shape', () => {
     describe('open', () => {
       it('should not close open path', () => {
         return pipe(
-          testM(Shape.path(RA.Foldable)(path), (canvas) => {
+          testM(closed, (canvas) => {
             expect(canvas.closePath).not.toHaveBeenCalled()
           })
         )

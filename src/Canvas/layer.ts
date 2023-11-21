@@ -1,12 +1,7 @@
 /**
  * @since 2.0.0
  */
-import * as IO from '@effect/io/Effect'
-import * as Layer from '@effect/io/Layer'
-import { fromNullable } from '@effect/data/Option'
-import { liftPredicate } from '@effect/data/Either'
-import { flow, pipe } from '@effect/data/Function'
-
+import { Effect as IO, Layer, Option, Either } from 'effect'
 import { CanvasError, Tag } from './definition'
 
 /**
@@ -30,7 +25,7 @@ export function renderTo(canvas: string | HTMLElement | CanvasRenderingContext2D
       : canvas instanceof HTMLElement
       ? fromElement(canvas)
       : fromCanvas(canvas)
-  return IO.provideSomeLayer(layer)
+  return IO.provide(layer.pipe(Layer.tapError(() => IO.log(`i got an error for ${canvas}`))))
 }
 
 /**
@@ -56,6 +51,7 @@ export function fromCanvas(
 export function fromElement(
   element: HTMLElement
 ): Layer.Layer<never, CanvasError, CanvasRenderingContext2D> {
+  
   return Layer.effect(Tag, IO.flatMap(isCanvas(element), getContext))
 }
 function getContextById(id: string): IO.Effect<never, CanvasError, CanvasRenderingContext2D> {
@@ -66,18 +62,15 @@ function getContextById(id: string): IO.Effect<never, CanvasError, CanvasRenderi
 * @since 2.0.0
 */
 export function elementById(id: string): IO.Effect<never, CanvasError, HTMLCanvasElement> {
-  return pipe(
-    IO.sync(() => document.getElementById(id)),
-    IO.flatMap(fromOption),
+  return IO.sync(() => document.getElementById(id)).pipe(
+    IO.flatMap(Option.fromNullable),
     IO.mapError(() => new CanvasError(`No such element with id ${id} exists`)),
     IO.flatMap(isCanvas)
   )
 }
-const fromOption = flow(fromNullable, IO.fromOption)
 function getContext(element: HTMLCanvasElement) {
-  return pipe(
-    IO.sync(() => element.getContext('2d')),
-    IO.flatMap(fromOption),
+  return IO.sync(() => element.getContext('2d')).pipe(
+    IO.flatMap(Option.fromNullable),
     IO.mapError((_) => new CanvasError(`${element.id} is not an instance of HTMLCanvasElement`))
   )
 }
@@ -90,11 +83,7 @@ function getContext(element: HTMLCanvasElement) {
 export const renderToCanvas =
   (canvas: CanvasRenderingContext2D) => renderTo(canvas)
 
-const isCanvas = flow(
-  liftPredicate(
-    (element): element is HTMLCanvasElement => element instanceof HTMLCanvasElement,
-    () => new CanvasError(`element is not an instance of HTMLCanvasElement`)
-  ),
-  IO.fromEither
-)
-
+const isCanvas = (canvas: unknown): Either.Either<CanvasError, HTMLCanvasElement> =>  
+  canvas instanceof HTMLCanvasElement ? Either.right(canvas) : Either.left(
+    new CanvasError(`element is not an instance of HTMLCanvasElement`)
+  )

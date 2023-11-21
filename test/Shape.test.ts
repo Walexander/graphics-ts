@@ -1,5 +1,5 @@
-import * as ROA from '@effect/data/ReadonlyArray'
-import { pipe } from '@effect/data/Function'
+import { Foldable } from '@effect/typeclass/data/ReadonlyArray'
+import { pipe } from 'effect/Function'
 import { assert, describe, it } from 'vitest'
 
 import * as S from '../src/Shape'
@@ -81,9 +81,9 @@ describe('Shape', () => {
 
   describe('composite', () => {
     it('should construct a composite of shapes', () => {
-      const firstPath = S.path(ROA.Foldable)([S.point(10, 20), S.point(30, 40), S.point(50, 60)])
+      const firstPath = S.path(Foldable)([S.point(10, 20), S.point(30, 40), S.point(50, 60)])
 
-      const secondPath = S.closed(ROA.Foldable)(Object.values({
+      const secondPath = S.closed(Foldable)(Object.values({
         first: S.point(10, 20),
         second: S.point(30, 40),
         third: S.point(50, 60)
@@ -152,7 +152,7 @@ describe('Shape', () => {
   describe('closed', () => {
     it('should construct a closed path from a foldable structure', () => {
       const pointsArray: ReadonlyArray<any> = [S.point(10, 20), S.point(30, 40), S.point(50, 60)]
-      assert.deepStrictEqual(pipe(pointsArray, S.closed(ROA.Foldable)), {
+      assert.deepStrictEqual(pipe(pointsArray, S.closed(Foldable)), {
         _tag: 'Path',
         closed: true,
         points: [
@@ -187,7 +187,7 @@ describe('Shape', () => {
   describe('path', () => {
     it('should construct an open path from a foldable structure', () => {
       const pointsArray: ReadonlyArray<any> = [S.point(10, 20), S.point(30, 40), S.point(50, 60)]
-      assert.deepStrictEqual(pipe(pointsArray, S.path(ROA.Foldable)), {
+      assert.deepStrictEqual(pipe(pointsArray, S.path(Foldable)), {
         _tag: 'Path',
         closed: false,
         points: [

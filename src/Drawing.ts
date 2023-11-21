@@ -5,10 +5,9 @@
  * Taking the MDN example from the `Canvas` documentation,
  *
  * ```ts
- * import { pipe } from '@effect/data/Function'
- * import * as RA from '@effect/data/ReadonlyArray'
+ * import { Effect as E, ReadonlyArray as RA } from 'effect'
+ * import { pipe } from '@effect/Function'
  * import * as Color from 'graphics-ts/lib/Color'
- * import * as E from '@effect/io/Effect'
  * import * as C from 'graphics-ts/Canvas'
  * import * as S from 'graphics-ts/Shape'
  *
@@ -50,24 +49,20 @@
  *
  * @since 1.0.0
  */
-import * as IO from '@effect/io/Effect'
-import * as SG from '@effect/data/typeclass/Semigroup'
-import * as M from '@effect/data/typeclass/Monoid'
-import * as O from '@effect/data/Option'
-import * as RA from '@effect/data/ReadonlyArray'
-
+import * as SG from '@effect/typeclass/Semigroup'
+import * as M from '@effect/typeclass/Monoid'
+import * as Option from '@effect/typeclass/data/Option'
+import { Effect as IO, Option as O } from 'effect'
 import { ImageSource } from './Canvas/definition'
 import { drawShape } from './Drawable/Shape'
 import { drawsDrawing, renderDrawing} from './Drawable/Drawing'
 import { Drawable } from './Drawable'
 import { Color } from './Color'
 import { Font } from './Font'
-import { Point, Shape, point } from './Shape'
-import * as C from './Canvas'
-import {pipe} from '@effect/data/Function'
+import { Point, Shape } from './Shape'
 
-const readonlyArrayMonoidDrawing = RA.getMonoid<Drawing>()
-const firstSome = <A>() => M.fromSemigroup(O.getFirstSomeSemigroup<A>(), O.none<A>())
+const readonlyArrayMonoidDrawing = M.array<Drawing>()
+const firstSome = <A>() => Option.getOptionalMonoid( SG.first<A>() )
 const getFirstMonoidColor = firstSome<Color>()
 const getFirstMonoidNumber = firstSome<number>()
 const getFirstMonoidPoint = firstSome<Point>()
@@ -666,25 +661,6 @@ export const monoidDrawing: M.Monoid<Drawing> = M.fromSemigroup(
   ),
   many(readonlyArrayMonoidDrawing.empty)
 )
-
-/**
-* @category utils
-* @since 2.0.0
-*/
-export function cached(drawing: Drawing) {
-  return IO.gen(function* ($) {
-    const canvas = yield* $(IO.sync(() => document.createElement('canvas')))
-    const { width, height } = yield *$(C.dimensions)
-    return yield *$(pipe(
-      C.setDimensions({width, height}),
-      IO.zipRight(render(drawing)),
-      IO.zipRight(C.getImageData(0, 0, width, height)),
-      IO.flatMap(_ => IO.tryPromise(() => createImageBitmap(_))),
-      C.renderTo(canvas),
-      IO.map(img => image(img, point(0, 0))),
-    ))
-  })
-}
 
 /**
  * Collect an Iterable of Drawings into one bigger shape

@@ -1,15 +1,13 @@
 /** @since 2.0.0 */
-import * as IO from '@effect/io/Effect'
-import { flow, pipe } from '@effect/data/Function'
-import { Drawable } from '../Drawable'
+import * as Drawable from '../Drawable'
 import { Tag as ShapeTag, Live as ShapeLive } from './Shape'
 import * as C from '../Canvas'
 import { Shape } from '../Shape'
 import { toCss } from '../Color'
 import { Drawing } from '../Drawing'
-import * as Context from '@effect/data/Context'
-import * as O from '@effect/data/Option'
 import { showFont } from '../Font'
+import { Layer, Effect as IO, Option as O, Duration, Context } from 'effect'
+import { flow, pipe } from 'effect/Function'
 
 /**
  * The `Drawable` instance for a `Drawing` type
@@ -17,7 +15,7 @@ import { showFont } from '../Font'
  * @category instances
  * @since 2.0.0
  */
-export const Tag = Context.Tag<Drawable<Drawing>>()
+export const Tag = Context.Tag<Drawable.Drawable<Drawing>>()
 /**
  * A Live `Drawable` layer that renders to a `CanvasRenderingContext2D`
  *
@@ -25,10 +23,11 @@ export const Tag = Context.Tag<Drawable<Drawing>>()
  * @since 2.0.0
  */
 export const Live = pipe(
-  IO.service(ShapeTag),
-  IO.zip(IO.service(C.Tag)),
-  IO.map(([draws, canvas]) => DrawsDrawingImpl(draws, canvas)),
-  IO.toLayer(Tag)
+  ShapeTag.pipe(
+    IO.zip(C.Tag),
+    IO.map(([draws, canvas]) => DrawsDrawingImpl(draws, canvas)),
+    Layer.effect(Tag),
+  )
 )
 /**
  * Draws a `Drawing` using a `Drawable<Drawing>`
@@ -37,8 +36,8 @@ export const Live = pipe(
  * @category operators
  * @since 2.0.0
  */
-export function drawsDrawing(drawing: Drawing): IO.Effect<Drawable<Drawing>, never, void> {
-  return IO.serviceWithEffect(Tag, drawer => drawer(drawing))
+export function drawsDrawing(drawing: Drawing): IO.Effect<Drawable.Drawable<Drawing>, never, void> {
+  return Tag.pipe(IO.tap(draws => draws(drawing)))
 }
 
 /**
@@ -49,115 +48,147 @@ export function drawsDrawing(drawing: Drawing): IO.Effect<Drawable<Drawing>, nev
  * @since 1.0.0
  */
 export function renderDrawing(drawing: Drawing): IO.Effect<CanvasRenderingContext2D, never, void> {
-  return pipe(
-    IO.serviceWithEffect(Tag, drawer => drawer(drawing)),
-    IO.provideSomeLayer(Live),
-    IO.provideSomeLayer(ShapeLive)
+  return Tag.pipe(
+    IO.flatMap(drawer => drawer(drawing)),
+    IO.provide(Live),
+    IO.provide(ShapeLive)
   )
 }
 
 function DrawsDrawingImpl(
-  drawShape: Drawable<Shape>,
+  drawShape: Drawable.Drawable<Shape>,
   canvas: CanvasRenderingContext2D
-): Drawable<Drawing> {
-  return draw
+): Drawable.Drawable<Drawing> {
+  const drawEffect = IO.provideService(C.Tag, canvas)
 
   function draw(drawing: Drawing): IO.Effect<never, never, void> {
-    return IO.provideService(render_(drawing), C.Tag, canvas)
+    return render_(drawing).pipe(drawEffect)
   }
+
+  return draw
 
   function render_(drawing: Drawing): IO.Effect<CanvasRenderingContext2D, never, void> {
     switch (drawing._tag) {
       case 'Clipped':
-        return C.withContext(
-          pipe(
-            C.beginPath,
-            IO.zipRight(drawShape(drawing.shape)),
-            IO.zipRight(C.clip()),
-            IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing)))
-          )
-        )
+        return IO.all([
+          C.beginPath,
+          drawShape(drawing.shape),
+          C.clip(),
+          IO.suspend(() => draw(drawing.drawing))
+        ]).pipe(C.withContext)
 
       case 'Fill':
-        return C.withContext(
-          pipe(
-            applyStyle(drawing.style.color, flow(toCss, C.setFillStyle)),
-            IO.zipRight(C.fillPath(drawShape(drawing.shape)))
-          )
-        )
+        return IO.all(
+          [
+            applyStyle(drawing.style.color, color => C.setFillStyle(toCss(color))),
+            C.fillPath(drawShape(drawing.shape))
+          ],
+          { discard: true }
+        ).pipe(C.withContext)
 
       case 'Many':
-        return pipe(
-          IO.service(C.Tag),
-          IO.zipLeft(IO.forEachDiscard(drawing.drawings, _ => draw(_)))
-        )
+        return IO.forEach(drawing.drawings, render_, { discard: true })
+          // IO.service(C.Tag),
+          // IO.zipLeft(IO.forEachDiscard(drawing.drawings, _ => draw(_)))
 
       case 'Outline':
-        return pipe(
-          IO.service(C.Tag),
-          IO.zipLeft(
-            pipe(
-              IO.collectAllDiscard([
-                applyStyle(drawing.style.color, flow(toCss, C.setStrokeStyle)),
-                applyStyle(drawing.style.lineWidth, C.setLineWidth),
-                C.strokePath(drawShape(drawing.shape))
-              ]),
-              C.withContext
-            )
-          )
-        )
+        return IO.all(
+          [
+            applyStyle(drawing.style.color, flow(toCss, C.setStrokeStyle)),
+            applyStyle(drawing.style.lineWidth, C.setLineWidth),
+            C.strokePath(drawShape(drawing.shape))
+          ],
+          { discard: true }
+        ).pipe(C.withContext)
 
       case 'Rotate':
-        return C.withContext(
-          pipe(C.rotate(drawing.angle), IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing))))
+        return C.rotate(drawing.angle).pipe(
+          IO.zipRight(IO.suspend(() => draw(drawing.drawing))),
+          C.withContext,
         )
 
       case 'Scale':
-        return C.withContext(
-          pipe(
-            C.scale(drawing.scaleX, drawing.scaleY),
-            IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing)))
+        return IO.all([
+          C.scale(drawing.scaleX, drawing.scaleY).pipe(
+            IO.zipRight(IO.suspend(() => draw(drawing.drawing)))
           )
-        )
+        ]).pipe(C.withContext)
 
       case 'Text':
-        return pipe(
-          IO.collectAllDiscard([
-            C.setFont(showFont.show(drawing.font)),
-            applyStyle(drawing.style.color, flow(toCss, C.setFillStyle)),
-            C.fillText(drawing.text, drawing.x, drawing.y)
-          ]),
-          C.withContext,
-          IO.zipRight(IO.service(C.Tag))
-        )
+        return IO.all([
+          C.setFont(showFont.show(drawing.font)),
+          applyStyle(drawing.style.color, flow(toCss, C.setFillStyle)),
+          C.fillText(drawing.text, drawing.x, drawing.y)
+        ]).pipe(C.withContext)
 
       case 'Translate':
-        return C.withContext(
-          pipe(
-            C.translate(drawing.translateX, drawing.translateY),
-            IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing)))
-          )
+        return C.translate(drawing.translateX, drawing.translateY).pipe(
+          IO.zipRight(IO.suspend(() => draw(drawing.drawing))),
+          C.withContext
         )
 
-      case 'WithShadow':
-        return C.withContext(
-          pipe(
-            IO.collectAllDiscard([
-              applyStyle(drawing.shadow.color, flow(toCss, C.setShadowColor)),
-              applyStyle(drawing.shadow.blur, C.setShadowBlur),
-              applyStyle(drawing.shadow.offset, o =>
-                pipe(C.setShadowOffsetX(o.x), IO.zipRight(C.setShadowOffsetY(o.y)))
-              )
-            ]),
-            IO.zipRight(IO.suspendSucceed(() => draw(drawing.drawing)))
+      case 'WithShadow': return IO.all(
+          [
+            applyStyle(drawing.shadow.color, flow(toCss, C.setShadowColor)),
+            applyStyle(drawing.shadow.blur, C.setShadowBlur),
+            applyStyle(drawing.shadow.offset, ({ x, y }) =>
+              C.setShadowOffsetX(x).pipe(IO.zipRight(C.setShadowOffsetY(y)))
+            )
+          ],
+          { discard: true }
+        ).pipe(
+            IO.zipRight(IO.suspend(() => draw(drawing.drawing))),
+            C.withContext,
           )
-        )
+
       case 'Image':
         return C.drawImage(drawing.image, drawing.source.x, drawing.source.y)
     }
   }
 }
-const applyStyle = <A>(
+const applyStyle = <A, B = unknown>(
   o: O.Option<A>,
-  f: (a: A) => IO.Effect<CanvasRenderingContext2D, never, unknown>
-) => pipe(IO.fromOption(o), IO.flatMap(f), IO.orElse(IO.unit))
+  f: (a: A) => IO.Effect<CanvasRenderingContext2D, never, B>
+) => o.pipe(IO.flatMap(f), IO.orElse(() => IO.unit))
+
+
+/**
+ * Modifies any `Drawable<Shape>` instance to pause
+ * for `delay` after `N` shapes are drawn
+ *
+ * @category instances
+ * @since 2.0.0
+ */
+
+export const withDelayN = (delay: Duration.Duration, count: number) => {
+  let queue: Drawing[] = []
+  const pushShape = (shape: Drawing) => {
+    return IO.sync(() => {
+      queue.push(shape)
+      return queue
+    })
+  }
+  const flushQueue = (draws: Drawable.Drawable<Drawing>, queue: Drawing[]) =>
+    pipe(
+      IO.log(
+        `getting all of the shapes out: ${queue.length}: ${JSON.stringify(queue.map(_ => _._tag))}`
+      ),
+      IO.zipRight(IO.forEach(queue, draws)),
+      IO.zipRight(IO.sync(() => (queue.length = 0))), // <-- Sneaky?  or dumb?
+      IO.zipLeft(IO.log(`DONE flushing the shapes: ${queue.length}:`))
+    )
+  return IO.updateService(
+    Tag,
+    draws =>
+      function _draws(drawing: Drawing): IO.Effect<never, never, void> {
+        return drawing._tag == 'Many'
+          ? IO.log(`got an effect to draw ${drawing._tag}`).pipe(
+              IO.zipRight(IO.forEach(drawing.drawings, pushShape)),
+              IO.zipRight(IO.sync(() => queue)),
+              IO.flatMap(queue => (queue.length < count ? IO.unit : flushQueue(draws, queue))),
+              IO.delay(delay)
+            )
+          : _draws(drawing)
+      }
+  )
+}

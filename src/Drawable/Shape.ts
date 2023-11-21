@@ -1,14 +1,10 @@
 /** @since 2.0.0 */
-import * as IO from '@effect/io/Effect'
-import * as Layer from '@effect/io/Layer'
-import * as RA from '@effect/data/ReadonlyArray'
-import { flow, pipe } from '@effect/data/Function'
+import { Layer, Effect as IO, Context, ReadonlyArray as RA, Duration } from 'effect'
+import { flow, pipe } from 'effect/Function'
 import * as Drawable from '../Drawable'
 import * as C from '../Canvas'
 import { Canvas2d } from '../Canvas/definition'
 import { Shape } from '../Shape'
-import * as Context from '@effect/data/Context'
-import * as Duration from '@effect/data/Duration'
 /**
  * The Canvas operations required to draw a `Shape`
 *
@@ -24,10 +20,8 @@ interface Surface
 * @since 2.0.0
 */
 const SurfaceTag = Context.Tag<Surface>()
-const CanvasSurface = IO.toLayer(
-  IO.serviceWith(C.Tag, canvas => CanvasSurfaceImpl(canvas)),
-  SurfaceTag
-)
+
+const CanvasSurface = Layer.effect(SurfaceTag, C.Tag.pipe(IO.map(CanvasSurfaceImpl)))
 
 /**
  * Summon a `Drawable` instance for `Shape`
@@ -45,10 +39,7 @@ export const Tag = Context.Tag<Drawable.Drawable<Shape>>()
  */
 export const Live: Layer.Layer<CanvasRenderingContext2D, never, Drawable.Drawable<Shape>> = Layer.provide(
   CanvasSurface,
-  Layer.effect(
-    Tag,
-    IO.serviceWith(SurfaceTag, c => DrawsShapeImpl(c))
-  )
+  Layer.effect(Tag, SurfaceTag.pipe(IO.map(DrawsShapeImpl)))
 )
 
 /**
@@ -72,7 +63,7 @@ function DrawsShapeImpl(canvas: Surface): Drawable.Drawable<Shape> {
         return canvas.arc(shape.x, shape.y, shape.r, shape.start, shape.end, shape.anticlockwise)
 
       case 'Composite':
-        return IO.forEachParDiscard(shape.shapes, s => draw(s))
+        return IO.forEach(shape.shapes, s => draw(s), { concurrency: shape.shapes.length })
 
       case 'Ellipse':
         return canvas.ellipse(
@@ -89,13 +80,13 @@ function DrawsShapeImpl(canvas: Surface): Drawable.Drawable<Shape> {
       case 'Path':
         return pipe(
           shape.points,
-          RA.match(IO.unit, ([head, ...tail]) =>
-            IO.tuple(
-              canvas.moveTo(head.x, head.y),
-              IO.forEach(tail, ({ x, y }) => canvas.lineTo(x, y))
+          RA.match({
+            onEmpty: () => IO.unit,
+            onNonEmpty: ([head, ...tail]) => canvas.moveTo(head.x, head.y).pipe(
+              IO.zipRight(IO.forEach(tail, ({x, y}) => canvas.lineTo(x, y))),
+              IO.zipRight(shape.closed ? canvas.closePath : IO.unit)
             )
-          ),
-          IO.zipRight(shape.closed ? canvas.closePath : IO.unit())
+          })
         )
 
       case 'Rect':
@@ -122,4 +113,4 @@ function CanvasSurfaceImpl(canvas: CanvasRenderingContext2D): Surface {
   * @category combinators
   * @since 2.0.0
   */
-export const drawShape = (shape: Shape) => IO.serviceWithEffect(Tag, drawer => drawer(shape))
+export const drawShape = (shape: Shape) => Tag.pipe(IO.flatMap(drawer => drawer(shape)))

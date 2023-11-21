@@ -1,5 +1,5 @@
-import * as O from '@effect/data/Option'
-import { pipe } from '@effect/data/Function'
+import { Option as O  } from 'effect'
+import { pipe } from 'effect/Function'
 import { it, assert, describe } from 'vitest'
 
 import * as F from '../src/Font'

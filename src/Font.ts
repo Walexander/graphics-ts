@@ -1,10 +1,10 @@
 /**
  * @since 1.0.0
  */
-import * as O from '@effect/data/Option'
-import { isEmpty } from '@effect/data/String'
-import { not } from '@effect/data/Boolean'
-import { flow, constant } from '@effect/data/Function'
+import { Option as O } from 'effect'
+import { isEmpty } from 'effect/String'
+import { not } from 'effect/Boolean'
+import { flow, constant } from 'effect/Function'
 
 // -------------------------------------------------------------------------------------
 // model

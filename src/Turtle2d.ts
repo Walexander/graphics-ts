@@ -1,14 +1,11 @@
 /**
  * @since 2.0.0
  */
-import * as IO from '@effect/io/Effect'
-import * as Layer from '@effect/io/Layer'
-import * as Ref from '@effect/io/Ref'
-import * as Context from '@effect/data/Context'
+import { Layer, Effect, Ref, Context } from 'effect'
+import { pipe } from 'effect/Function'
 import { Drawable } from './Drawable/definition'
 import { Tag as DrawsTurtlesTag } from './Drawable/Turtle2d'
-import { pipe } from '@effect/data/Function'
-import {dimensions} from './Canvas'
+import { dimensions } from './Canvas'
 
 /**
 * The classic 2D Turtle graphics api.  You can
@@ -19,8 +16,8 @@ import {dimensions} from './Canvas'
  * @since 2.0.0
  */
 export interface Turtle2d {
-  drawForward: (length: number) => IO.Effect<never, never, TurtleState>
-  turn: (angle: number) => IO.Effect<never, never, TurtleState>
+  drawForward: (length: number) => Effect.Effect<never, never, TurtleState>
+  turn: (angle: number) => Effect.Effect<never, never, TurtleState>
 }
 /**
 * The turtle's state
@@ -50,13 +47,12 @@ export const Tag = Context.Tag<Turtle2d>()
 *
 **/
 export function Live(state: TurtleState): Layer.Layer<Drawable<TurtleMove>, never, Turtle2d> {
-  return IO.toLayer(
-    IO.gen(function* ($) {
+  return Layer.effect(Tag,
+    Effect.gen(function* ($) {
       const ref = yield* $(Ref.make(state))
-      const draw = yield* $(IO.service(DrawsTurtlesTag))
+      const draw = yield* $(DrawsTurtlesTag)
       return new Turtle2dImpl(ref, draw)
     }),
-    Tag
   )
 }
 /**
@@ -65,14 +61,19 @@ export function Live(state: TurtleState): Layer.Layer<Drawable<TurtleMove>, neve
 * @category instance
 * @since 2.0.0
 */
-export function centeredLive(theta = 0): Layer.Layer<Drawable<TurtleMove> | CanvasRenderingContext2D, never, Turtle2d> {
-  return Layer.effect(Tag, IO.gen(function *($){
-    const {width, height} = yield *$(dimensions)
-    const position = [width / 2, height /2] as const
-    const ref = yield * $(Ref.make<TurtleState>({ theta, position }))
-    const draw = yield* $(IO.service(DrawsTurtlesTag))
-    return new Turtle2dImpl(ref, draw)
-  }))
+export function centeredLive(
+  theta = 0
+): Layer.Layer<Drawable<TurtleMove> | CanvasRenderingContext2D, never, Turtle2d> {
+  return Layer.effect(
+    Tag,
+    Effect.gen(function* ($) {
+      const { width, height } = yield* $(dimensions)
+      const position = [width / 2, height / 2] as const
+      const ref = yield* $(Ref.make<TurtleState>({ theta, position }))
+      const draw = yield * $(DrawsTurtlesTag)
+      return new Turtle2dImpl(ref, draw)
+    })
+  )
 }
 /**
 * Construct a turtle starting at the origin.
@@ -91,16 +92,16 @@ export type TurtleMove = [TurtleState['position'], TurtleState['position']]
 
 class Turtle2dImpl implements Turtle2d {
   constructor(readonly state: Ref.Ref<TurtleState>, readonly draw: Drawable<TurtleMove>) {}
-  drawForward(length: number): IO.Effect<never, never, TurtleState> {
+  drawForward(length: number): Effect.Effect<never, never, TurtleState> {
     return pipe(
       Ref.get(this.state),
-      IO.map(state0 => [state0, move(state0, length)] as const),
-      IO.tap(([s1, p2]) => this.draw(<TurtleMove>[s1.position, p2])),
-      IO.map(([{theta}, position]) => ({theta, position})),
-      IO.flatMap((updated) => IO.as(Ref.set(this.state, updated), updated))
+      Effect.map(state0 => [state0, move(state0, length)] as const),
+      Effect.tap(([s1, p2]) => this.draw(<TurtleMove>[s1.position, p2])),
+      Effect.map(([{theta}, position]) => ({theta, position})),
+      Effect.flatMap((updated) => Effect.as(Ref.set(this.state, updated), updated))
     )
   }
-  turn(angle: number): IO.Effect<never, never, TurtleState> {
+  turn(angle: number): Effect.Effect<never, never, TurtleState> {
     return Ref.updateAndGet(this.state, ({ theta, position }) => ({
       theta: theta + angle,
       position

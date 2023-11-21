@@ -37,8 +37,8 @@ canvas {
       <script type=module>
         import { demoUse } from './demo.ts'
         import { renderTo } from '../src/Canvas.ts'
-        import { runPromise } from '@effect/io/Effect'
-        void runPromise(renderTo('canvas')(demoUse))
+        import { Effect } from 'effect'
+        void Effect.runPromise(renderTo('canvas')(demoUse))
       </script>
     </section>
     <section style="display: flex; flex-direction: column; justify-content: center; align-items: center;">

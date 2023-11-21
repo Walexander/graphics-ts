@@ -1,55 +1,50 @@
 /**
  * Adapted from https://github.com/purescript-contrib/purescript-drawing/blob/master/test/Main.purs
  */
-import * as IO from '@effect/io/Effect'
-import * as RA from '@effect/data/ReadonlyArray'
-import { pipe } from '@effect/data/Function'
 import { Live as DrawsShapesLive, withDelay } from '../src/Drawable/Shape'
 import { Live as DrawsDrawingsLive } from '../src/Drawable/Drawing'
-import { millis } from '@effect/data/Duration'
+import { pipe, Duration,Effect as IO, ReadonlyArray as RA } from 'effect'
 import * as Color from '../src/Color'
 import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
 import * as S from '../src/Shape'
-
+void withDelay
 export function snowFlakes(iters: number) {
   return pipe(
     // this is our main program.
     // It has dependencies on the CanvasRenderingContext2D
     // and a `Drawable<Drawing>`
-    loopFlakes(iters), // IO.Effect<CanvasRenderingContext2D | Drawable<D.Drawing>, C.CanvasError, void>
+    loopFlakes(iters),
+
     // First, provide the Drawable instance for our Drawings
-    // This depends on a `Drawable<Shape>` service
-    IO.provideSomeLayer(DrawsDrawingsLive),
+    // This depends on a `Drawable<Shape>`
+    IO.provide(DrawsDrawingsLive),
     // This allows us to animate drawing
     // with a slight delay between shapes
-    withDelay(millis(16)),
+    withDelay(Duration.millis(16)),
     // Provide a live instance for `Drawable<Shape>`
-    IO.provideSomeLayer(DrawsShapesLive)
+    IO.provide(DrawsShapesLive)
   )
 }
 
 // this is our main rendering loop.
 // it iteratively draws a new `snowflake(1..total)` every `1/iteration` seconds
 function loopFlakes(total: number) {
-  return IO.loopDiscard(
-    total,
-    z => z <= total,
-    z => z + 1,
-    z =>
-      pipe(
-        C.dimensions,
-        // Make our snowflake
+  return IO.loop(total, {
+    while: z => z <= total,
+    step: z => z + 1,
+    body: z =>
+      C.dimensions.pipe(
         IO.tap(({ width, height }) => C.clearRect(0, 0, width, height)),
         IO.map(({ width, height }) => flakeDrawing(z, 5, width, height)),
         // Now, time how long it takes to draw
         IO.flatMap(drawing => IO.timed(D.draw(drawing))),
         // Log the duration, but keep the previous result
-        IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration.millis}ms`))
+        IO.tap(([duration]) => IO.logInfo(`snowflake(${z}) took ${duration}ms`)),
         // Pause to allow the user to behold the wonder
-        // IO.zipLeft(pipe(IO.unit(), IO.delay(Duration.seconds(1))))
+        IO.zipLeft(pipe(IO.unit, IO.delay('1 seconds')))
       )
-  )
+  })
 }
 
 //
@@ -58,7 +53,7 @@ function flakeDrawing(z: number, sides: number, width: number, height: number) {
     // generate a snowflake drawing for this iteration
     snowflake(z, sides),
     // scale the whole thing by 25%
-    D.scale(width / (sides - 1.5), height / (sides - 1.5)),
+    D.scale(width / 3.75, height / 3.75),
     // translate it to the middle of the canvas
     D.translate(width / 2, height / 2),
     // add a shadow
@@ -71,7 +66,6 @@ function flakeDrawing(z: number, sides: number, width: number, height: number) {
   ])
 }
 
-const scale = 375 / 1000
 const colors: ReadonlyArray<Color.Color> = [
   Color.hsla(60, 0.6, 0.5, 1),
   Color.hsla(55, 0.65, 0.55, 1),
@@ -89,8 +83,9 @@ const colors: ReadonlyArray<Color.Color> = [
 function snowflake(n: number, sides: number): D.Drawing {
   const polygon = S.polygon(sides)
   const color = colors[n % colors.length]
+  const scale = 0.375
 
-  return n <= 0
+  const drawing = n <= 0
     ? D.monoidDrawing.empty
     : pipe(
         // get our immediate "child" drawing
@@ -115,6 +110,7 @@ function snowflake(n: number, sides: number): D.Drawing {
         // prepend a unit polygon to the drawing
         children => D.combine(D.fill(polygon, D.fillStyle(color)), children)
       )
+  return drawing
 }
 
 function clear(width: number, height: number) {

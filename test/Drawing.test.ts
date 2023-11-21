@@ -1,7 +1,6 @@
-import * as IO from '@effect/io/Effect'
-import * as O from '@effect/data/Option'
-import * as ROA from '@effect/data/ReadonlyArray'
-import { pipe } from '@effect/data/Function'
+import { Foldable } from '@effect/typeclass/data/ReadonlyArray'
+import { pipe } from 'effect/Function'
+import { Effect as IO, Option as O, Equal } from 'effect'
 import { beforeEach, describe, it, assert } from 'vitest'
 
 import * as Color from '../src/Color'
@@ -12,6 +11,7 @@ import * as S from '../src/Shape'
 import { testM, testDrawing, testCanvas } from './utils'
 
 describe('Drawing', () => {
+  const getCanvas = IO.zipRight(C.Tag.pipe(IO.map((canvas) => canvas)))
   describe('fillStyle', () => {
     it('should construct a fill style', () => {
       const color = Color.hsla(140, 0.3, 0.5, 0.9)
@@ -27,9 +27,7 @@ describe('Drawing', () => {
       const first = D.fillStyle(Color.black)
       const second = D.fillStyle(Color.white)
 
-      assert.deepStrictEqual(D.monoidFillStyle.combineAll([first, second]), {
-        color: O.some(Color.black)
-      })
+      assert(D.monoidFillStyle.combineAll([first, second]).color[Equal.symbol](O.some(Color.black)))
     })
 
     describe('example', () => {
@@ -43,7 +41,8 @@ describe('Drawing', () => {
           D.outlineColor(Color.white),
           D.lineWidth(5)
         ])
-        assert.deepStrictEqual(actual, expected)
+        assert(actual.color[Equal.symbol](expected.color))
+        assert(actual.lineWidth[Equal.symbol](expected.lineWidth))
       })
     })
   })
@@ -195,6 +194,7 @@ describe('Drawing', () => {
       const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
       const scale = D.scale(10, 20)(drawing)
 
+
       assert.deepStrictEqual(scale, {
         _tag: 'Scale',
         scaleX: 10,
@@ -243,7 +243,6 @@ describe('Drawing', () => {
       ])
       const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
       const withShadow = D.withShadow(shadow)(drawing)
-
       assert.deepStrictEqual(withShadow, {
         _tag: 'WithShadow',
         shadow,
@@ -323,7 +322,7 @@ height="${CANVAS_HEIGHT}"
           return (testCtx as any).__getEvents()
         })
         const test =  testCanvas(
-          IO.zipRight(D.render(drawing), IO.service(C.Tag)),
+          IO.zipRight(D.render(drawing), C.Tag),
           expected,
         )
         return IO.runPromise(C.renderTo(CANVAS_ID)(test))
@@ -351,29 +350,35 @@ height="${CANVAS_HEIGHT}"
           testCtx.restore()
           return (testCtx as any).__getEvents()
         })
-        return testDrawing(IO.zipRight(IO.service(C.Tag))(D.draw(drawing)), actual)
+        return testDrawing(IO.zipRight(C.Tag)(D.draw(drawing)).pipe(getCanvas), actual)
       })
-      testM('should draw an outlined drawing', () => {
-        const shape = S.rect(50, 50, 100, 100)
-        const drawing = D.outline(shape, D.outlineColor(Color.white))
-        // Test
 
-        // Actual
-        const actual = IO.sync(() => {
-          testCtx.save()
-          testCtx.strokeStyle = pipe(Color.white, Color.toCss)
-          testCtx.beginPath()
-          testCtx.rect(shape.x, shape.y, shape.width, shape.height)
-          testCtx.stroke()
-          testCtx.restore()
-          return (testCtx as any).__getEvents()
+      describe('outlined', () => {
+        testM('should draw an outlined drawing', () => {
+          const shape = S.rect(50, 50, 100, 100)
+          const drawing = D.outline(shape, D.outlineColor(Color.white))
+          // Test
+
+          // Actual
+          const actual = IO.sync(() => {
+            testCtx.save()
+            testCtx.strokeStyle = pipe(Color.white, Color.toCss)
+            testCtx.beginPath()
+            testCtx.rect(shape.x, shape.y, shape.width, shape.height)
+            testCtx.stroke()
+            testCtx.restore()
+            return (testCtx as any).__getEvents()
+          })
+          const eff =  D.draw(drawing).pipe(
+            IO.zipRight(C.Tag.pipe(
+              IO.map((canvas: any) => canvas.__getEvents()),
+            )),
+            IO.zip(actual),
+            IO.map(([a, b]) => assert.deepStrictEqual(a, b))
+          )
+          return eff
         })
-        return pipe(
-          D.draw(drawing),
-          IO.map((ctx) => (ctx as any).__getEvents()),
-          IO.zip(actual),
-          IO.map(([a, b]) => assert.deepStrictEqual(a, b))
-        )
+
       })
 
       testM('should draw a rotated drawing', () => {
@@ -395,11 +400,9 @@ height="${CANVAS_HEIGHT}"
           testCtx.restore()
           return (testCtx as any).__getEvents()
         })
-        return pipe(
-          D.draw(drawing),
-          IO.map((ctx) => (ctx as any).__getEvents()),
-          IO.zip(actual),
-          IO.map(([a, b]) => assert.deepStrictEqual(a, b))
+        return testDrawing(
+          D.draw(drawing).pipe(getCanvas),
+          actual,
         )
       })
 
@@ -407,7 +410,10 @@ height="${CANVAS_HEIGHT}"
         const scaleX = 5
         const scaleY = 5
         const shape = S.arc(10, 20, 5, S.degrees(100), S.degrees(200))
-        const drawing = pipe(D.outline(shape, D.outlineColor(Color.white)), D.scale(scaleX, scaleY))
+        const drawing = pipe(
+          D.outline(shape, D.outlineColor(Color.white)),
+          D.scale(scaleX, scaleY)
+        )
         // Test
         const actual = IO.sync(() => {
           // Actual
@@ -422,12 +428,7 @@ height="${CANVAS_HEIGHT}"
           testCtx.restore()
           return (testCtx as any).__getEvents()
         })
-        return pipe(
-          D.draw(drawing),
-          IO.map((ctx) => (ctx as any).__getEvents()),
-          IO.zip(actual),
-          IO.map(([a, b]) => assert.deepStrictEqual(a, b))
-        )
+        return testDrawing(D.draw(drawing).pipe(getCanvas), actual)
       })
 
       testM('should draw text', () => {
@@ -449,7 +450,7 @@ height="${CANVAS_HEIGHT}"
           testCtx.restore()
           return (testCtx as any).__getEvents()
         })
-        return testDrawing(pipe(D.draw(drawing), IO.zipRight(IO.service(C.Tag))), actual)
+        return testDrawing(D.draw(drawing).pipe(getCanvas), actual)
       })
 
       testM('should draw a translated drawing', () => {
@@ -474,7 +475,7 @@ height="${CANVAS_HEIGHT}"
           return (testCtx as any).__getEvents()
         })
         return testDrawing(
-          IO.zipRight(IO.service(C.Tag))(D.draw(drawing)),
+          IO.zipRight(C.Tag)(D.draw(drawing)).pipe(getCanvas),
           actual)
       })
 
@@ -482,7 +483,7 @@ height="${CANVAS_HEIGHT}"
         const blurRadius = 10
         const offset = S.point(2, 2)
         const rect = S.rect(10, 20, 100, 200)
-        const path = S.path(ROA.Foldable)([S.point(1, 2), S.point(3, 4), S.point(5, 6)])
+        const path = S.path(Foldable)([S.point(1, 2), S.point(3, 4), S.point(5, 6)])
         const shape = S.composite([rect, path])
         const shadow = D.monoidShadow.combineAll([
           D.shadowColor(Color.black),
@@ -512,7 +513,8 @@ height="${CANVAS_HEIGHT}"
           testCtx.restore()
           return (testCtx as any).__getEvents()
           })
-        return testDrawing(IO.zipRight(IO.service(C.Tag))(D.draw(drawing)), actual)
+        return testDrawing(IO.zipRight(C.Tag)(D.draw(drawing))
+          .pipe(getCanvas), actual)
       })
     })
   })

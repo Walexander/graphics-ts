@@ -2,15 +2,11 @@
 /**
  * Adapted from https://github.com/purescript-contrib/purescript-drawing/blob/master/test/Main.purs
  */
-import * as IO from '@effect/io/Effect'
-import * as Duration from '@effect/data/Duration'
-import * as RA from '@effect/data/ReadonlyArray'
-import { pipe } from '@effect/data/Function'
+import { pipe, Duration, Effect as IO, ReadonlyArray as RA } from 'effect'
 
 import { Live as DrawsShapesLive } from '../src/Drawable/Shape'
 import { Live as DrawsDrawingsLive } from '../src/Drawable/Drawing'
 import * as Color from '../src/Color'
-import * as C from '../src/Canvas'
 import * as D from '../src/Drawing'
 import * as S from '../src/Shape'
 
@@ -19,29 +15,24 @@ import * as S from '../src/Shape'
  * and then renders a clipped rect drawing
  */
 export const clippingDemo = pipe(
-  IO.unit(),
-  IO.zipRight(
-    IO.loopDiscard(
-      <[number, S.Arc]>[0, S.circle(300, 300, 100)],
-      ([loops]) => loops < 2,
-      nextCircle,
-      ([, circle]) =>
-        pipe(
-          D.combineAll([
-            D.fill(S.rect(0, 0, 600, 600), D.fillStyle(Color.white)),
-            clippedRect(circle)
-          ]),
-          D.render,
-          IO.zipRight((IO.delay(Duration.millis(16))(IO.unit())))
-        )
-    )
-  ),
+  IO.loop(
+    <[number, S.Arc]>[0, S.circle(300, 300, 100)],
+    {
+      while: ([loops]) => loops < 2,
+      step: nextCircle,
+      body: ([, circle]) => D.render(D.combineAll([
+          D.fill(S.rect(0, 0, 600, 600), D.fillStyle(Color.white)),
+          clippedRect(circle)
+      ])).pipe(IO.zipRight(IO.delay(IO.unit, Duration.millis(16))))
+    },
+  ).pipe(
       // give our program a way to draw `Drawing`
-      IO.provideSomeLayer(DrawsDrawingsLive),
+      IO.provide(DrawsDrawingsLive),
       // give that a way to draw `Shape`
-      IO.provideSomeLayer(DrawsShapesLive),
+      IO.provide(DrawsShapesLive),
       // finally, provide our an actual canvas
-  IO.forever
+      IO.forever
+    ),
 )
 // a circle that gets bigger up to a radius of 300
 // then gets smaller down to a radius of 100
