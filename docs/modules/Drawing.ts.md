@@ -166,7 +166,7 @@ Constructs a `Drawing` from a `Fill` `Shape`.
 **Signature**
 
 ```ts
-export declare const fill: (shape: Shape, style: FillStyle) => Drawing
+export declare const fill: { (shape: Shape, style: FillStyle): Drawing; (style: FillStyle): (shape: Shape) => Drawing }
 ```
 
 Added in v1.0.0
@@ -226,7 +226,10 @@ Constructs a `Drawing` from an `Outline` `Shape`.
 **Signature**
 
 ```ts
-export declare const outline: (shape: Shape, style: OutlineStyle) => Drawing
+export declare const outline: {
+  (shape: Shape, style: OutlineStyle): Drawing
+  (style: OutlineStyle): (shape: Shape) => Drawing
+}
 ```
 
 Added in v1.0.0
@@ -250,7 +253,10 @@ Applies rotation to the transform of a `Drawing`.
 **Signature**
 
 ```ts
-export declare function rotate(angle: number): (drawing: Drawing) => Drawing
+export declare const rotate: {
+  (drawing: Drawing, angle: number): Drawing
+  (angle: number): (drawing: Drawing) => Drawing
+}
 ```
 
 Added in v1.0.0
@@ -262,7 +268,10 @@ Applies scale to the transform of a `Drawing`.
 **Signature**
 
 ```ts
-export declare function scale(scaleX: number, scaleY: number): (drawing: Drawing) => Drawing
+export declare const scale: {
+  (drawing: Drawing, scaleX: number, scaleY: number): Drawing
+  (scaleX: number, scaleY: number): (drawing: Drawing) => Drawing
+}
 ```
 
 Added in v1.0.0
@@ -322,7 +331,10 @@ Applies translation to the transform of a `Drawing`.
 **Signature**
 
 ```ts
-export declare function translate(translateX: number, translateY: number): (drawing: Drawing) => Drawing
+export declare const translate: {
+  (drawing: Drawing, translateX: number, translateY: number): Drawing
+  (translateX: number, translateY: number): (drawing: Drawing) => Drawing
+}
 ```
 
 Added in v1.0.0
@@ -334,7 +346,10 @@ Applies `Shadow` to a `Drawing`.
 **Signature**
 
 ```ts
-export declare function withShadow(shadow: Shadow): (drawing: Drawing) => Drawing
+export declare const withShadow: {
+  (drawing: Drawing, shadow: Shadow): Drawing
+  (shadow: Shadow): (drawing: Drawing) => Drawing
+}
 ```
 
 Added in v1.0.0

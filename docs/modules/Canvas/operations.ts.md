@@ -125,7 +125,7 @@ Added in v2.0.0
   - [transform](#transform)
   - [translate](#translate)
 - [utils](#utils)
-  - [use](#use)
+  - [useCanvas](#usecanvas)
 
 ---
 
@@ -315,8 +315,6 @@ export declare const fillStyle: Effect<CanvasRenderingContext2D, never, string |
 Added in v1.0.0
 
 ## setFillStyle
-
-Sets the current fill style for the canvas context.
 
 **Signature**
 
@@ -1278,8 +1276,6 @@ Added in v1.0.0
 
 ## textAlign
 
-Gets the current text alignment.
-
 **Signature**
 
 ```ts
@@ -1397,14 +1393,14 @@ Added in v1.0.0
 
 # utils
 
-## use
+## useCanvas
 
 Get access to a raw canvas 2d context and go crazy
 
 **Signature**
 
 ```ts
-export declare function use<A = void>(f: (canvas: CanvasRenderingContext2D) => A)
+export declare function useCanvas<A = void>(f: (canvas: CanvasRenderingContext2D) => A)
 ```
 
 Added in v2.0.0

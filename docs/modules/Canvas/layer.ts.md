@@ -13,6 +13,7 @@ Added in v2.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [layer](#layer)
+  - [CanvasRenderingContext2DSettings](#canvasrenderingcontext2dsettings)
   - [elementById](#elementbyid)
   - [fromCanvas](#fromcanvas)
   - [fromElement](#fromelement)
@@ -24,6 +25,21 @@ Added in v2.0.0
 ---
 
 # layer
+
+## CanvasRenderingContext2DSettings
+
+Optional canvas rendering context settings, including willReadFrequently
+
+**Signature**
+
+```ts
+export declare const CanvasRenderingContext2DSettings: Context.Tag<
+  CanvasRenderingContext2DSettings,
+  CanvasRenderingContext2DSettings
+>
+```
+
+Added in v2.0.0
 
 ## elementById
 
