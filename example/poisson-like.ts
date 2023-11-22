@@ -1,4 +1,4 @@
-import { Effect as IO, pipe, Chunk, Option as O, Duration, Stream } from 'effect'
+import { Console, Effect as IO, pipe, Chunk, Option as O, Duration, Stream } from 'effect'
 import * as Num from '@effect/typeclass/data/Number'
 
 import * as Shape from '../src/Shape'
@@ -8,7 +8,7 @@ import * as Drawing from '../src/Drawing'
 import { randomAngle, nextCircle, randomDistance, collides } from './point-cloud'
 export function main() {
   return void pipe(
-    IO.log(`starting`),
+    Console.log(`starting`),
     IO.zipRight(Canvas.dimensions),
     IO.tap(_ => IO.forEach([
       draw(0.5, 60, 40, Shape.point(-200, -200)),
@@ -56,11 +56,10 @@ function draw(bounds: number, minDistance: number, retries = 10, offset = Shape.
         )
       ),
       IO.tap(([duration, count]) =>
-        IO.log(
-          `-- time taken: ${Duration.match(duration, {
-            onMillis: _ => _ + 'ms',
-            onNanos: _ => (_ / BigInt(1e6)) + 'ms',
-          })} -- total points: ${O.getOrElse(() => 0)(count)} --`
+        Console.log(`
+-- Bounds: ${bounds}, MinDist = ${minDistance}, retries = ${retries}
+-- time taken: ${Duration.toSeconds(duration).toFixed(3)}s
+-- total points: ${O.getOrElse(() => 0)(count)}`
         )
       )
     )
@@ -86,7 +85,6 @@ function pointCloudStream(
     Stream.repeatValue(null),
     Stream.mapAccumEffect(seed, ([source, previous], _) => {
       return pipe(
-        // IO.log(`starting iteration from index ${source} / ${i}`),
         IO.unit,
         IO.zipRight(mapper([source, previous])),
         IO.map(

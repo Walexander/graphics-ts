@@ -49,8 +49,8 @@ const rotateRectDrawing = (z: number) => pipe(
   D.rotate(z),
 )
 export const demoUse = IO.zip(
-  C.use(drawCircle),
-  C.use(drawRect),
+  C.useCanvas(drawCircle),
+  C.useCanvas(drawRect),
 )
 
 const withDrawing = C.withContext(IO.all([
