@@ -1,6 +1,6 @@
 /** @since 2.0.0 */
 import { Effect, ReadonlyArray as RA, Option } from 'effect'
-import { pipe, constant  } from 'effect/Function'
+import { pipe, constant } from 'effect/Function'
 const { fromNullable } = Option
 type Effect<R, E, A> = Effect.Effect<R, E, A>
 import {
@@ -23,7 +23,7 @@ import {
  * @category box
  * @since 2.0.0
  */
-export const width = withCanvas(ctx => Effect.sync(() => ctx.canvas.width))
+export const width = useCanvas(ctx => ctx.canvas.width)
 /**
  * @since 1.0.0
  * @category box
@@ -37,11 +37,7 @@ export const getWidth = constant(width)
  * @since 1.0.0
  */
 export function setWidth(width: number) {
-  return withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.canvas.width = width
-    })
-  )
+  return useCanvas(ctx => (ctx.canvas.width = width))
 }
 
 /**
@@ -50,7 +46,7 @@ export function setWidth(width: number) {
  *  @category box
  * @since 1.0.0
  */
-export const height = withCanvas(ctx => Effect.sync(() => ctx.canvas.height))
+export const height = useCanvas(ctx => ctx.canvas.height)
 /**
  * @since 1.0.0
  * @category box
@@ -64,11 +60,7 @@ export const getHeight = constant(height)
  * @since 1.0.0
  */
 export function setHeight(height: number) {
-  return withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.canvas.height = height
-    })
-  )
+  return useCanvas(ctx => (ctx.canvas.height = height))
 }
 
 /**
@@ -102,10 +94,8 @@ export function setDimensions(dims: CanvasDimensions) {
  * @category conversion
  * @since 1.0.0
  */
-export const toDataURL = withCanvas(ctx => Effect.sync(() => ctx.canvas.toDataURL()))
-
+export const toDataURL = useCanvas(ctx => ctx.canvas.toDataURL())
 /**
- * Sets the current fill style for the canvas context.
  *
  * @category fill styles
  * @since 1.0.0
@@ -113,7 +103,8 @@ export const toDataURL = withCanvas(ctx => Effect.sync(() => ctx.canvas.toDataUR
 
 export const setFillStyle: (
   style: string | CanvasGradient | CanvasPattern
-) => Effect<CanvasRenderingContext2D, never, void> = (style) => use(ctx => {
+) => Effect<CanvasRenderingContext2D, never, void> = style =>
+  useCanvas(ctx => {
     ctx.fillStyle = style
   })
 /**
@@ -123,14 +114,14 @@ export const setFillStyle: (
  * @since 1.0.0
  */
 
-export const fillStyle = use(ctx => ctx.fillStyle)
+export const fillStyle = useCanvas(ctx => ctx.fillStyle)
 /**
  * Gets the current font.
  *
  * @category text
  * @since 1.0.0
  */
-export const font = withCanvas(ctx => Effect.sync(() => ctx.font))
+export const font = useCanvas(ctx => ctx.font)
 /**
  * Gets the current font.
  *
@@ -146,12 +137,10 @@ export const getFont = constant(font)
  * @since 1.0.0
  */
 export function setFont(font: string) {
-  return withCanvas(ctx =>
-    pipe(
-      Effect.sync(() => (ctx.font = font)),
-      Effect.as(ctx)
-    )
-  )
+  return useCanvas(ctx => {
+      ctx.font = font;
+      return ctx
+  })
 }
 
 /**
@@ -160,7 +149,7 @@ export function setFont(font: string) {
  * @category compositing
  * @since 1.1.0
  */
-export const globalAlpha = withCanvas(ctx => Effect.sync(() => ctx.globalAlpha))
+export const globalAlpha = useCanvas(ctx => ctx.globalAlpha)
 /**
  * Sets the current global alpha for the canvas context.
  *
@@ -168,7 +157,10 @@ export const globalAlpha = withCanvas(ctx => Effect.sync(() => ctx.globalAlpha))
  * @since 1.0.0
  */
 export function setGlobalAlpha(globalAlpha: number) {
-  return withCanvas(ctx => Effect.sync(() => (ctx.globalAlpha = globalAlpha)))
+  return useCanvas(ctx => {
+    ctx.globalAlpha = globalAlpha
+    return ctx
+  })
 }
 
 /**
@@ -177,9 +169,7 @@ export function setGlobalAlpha(globalAlpha: number) {
  * @category compositing
  * @since 1.0.0
  */
-export const globalCompositeOperation = withCanvas(ctx =>
-  Effect.sync(() => ctx.globalCompositeOperation)
-)
+export const globalCompositeOperation = useCanvas(ctx => ctx.globalCompositeOperation)
 
 /**
  * Sets the current global composite operation type for the canvas context.
@@ -203,7 +193,7 @@ export function setGlobalCompositeOperation(globalCompositeOperation: GlobalComp
  * @since 1.1.0
  */
 
-export const imageSmoothingEnabled = withCanvas(ctx => Effect.sync(() => ctx.imageSmoothingEnabled))
+export const imageSmoothingEnabled = useCanvas(ctx => ctx.imageSmoothingEnabled)
 
 /**
  * Sets the current image smoothing property for the canvas context. Determines whether scaled images are smoothed
@@ -213,12 +203,10 @@ export const imageSmoothingEnabled = withCanvas(ctx => Effect.sync(() => ctx.ima
  * @since 1.0.0
  */
 export function setImageSmoothingEnabled(enable: boolean) {
-  return withCanvas(ctx =>
-    pipe(
-      Effect.sync(() => (ctx.imageSmoothingEnabled = enable)),
-      Effect.as(ctx)
-    )
-  )
+  return useCanvas(ctx => {
+    ctx.imageSmoothingEnabled = enable
+    return ctx
+  })
 }
 
 /**
@@ -228,7 +216,10 @@ export function setImageSmoothingEnabled(enable: boolean) {
  * @since 1.0.0
  */
 export function setLineCap(cap: LineCap) {
-  return withCanvas(ctx => Effect.sync(() => (ctx.lineCap = cap)))
+  return useCanvas(ctx => {
+    ctx.lineCap = cap
+    return ctx
+  })
 }
 /**
  * Gets the current line cap type for the canvas context.
@@ -236,7 +227,7 @@ export function setLineCap(cap: LineCap) {
  * @category line styles
  * @since 1.0.0
  */
-export const lineCap = withCanvas(ctx => Effect.sync(() => ctx.lineCap))
+export const lineCap = useCanvas(ctx => ctx.lineCap)
 
 /**
  * Sets the current line dash offset, or "phase", for the canvas context.
@@ -245,9 +236,10 @@ export const lineCap = withCanvas(ctx => Effect.sync(() => ctx.lineCap))
  * @since 1.0.0
  */
 export function setLineDashOffset(offset: number) {
-  return withCanvas(ctx =>
-    Effect.sync(() => ctx.lineDashOffset = offset )
-  )
+  return useCanvas(ctx => {
+    ctx.lineDashOffset = offset
+    return ctx
+  })
 }
 /**
  * Gets the current line dash offset, or "phase", for the canvas context.
@@ -255,7 +247,7 @@ export function setLineDashOffset(offset: number) {
  * @category line styles
  * @since 1.0.0
  */
-export const lineDashOffset = withCanvas(ctx => Effect.sync(() => ctx.lineDashOffset))
+export const lineDashOffset = useCanvas(ctx => ctx.lineDashOffset)
 
 /**
  * Sets the current line join type for the canvas context.
@@ -264,11 +256,10 @@ export const lineDashOffset = withCanvas(ctx => Effect.sync(() => ctx.lineDashOf
  * @since 1.0.0
  */
 export function setLineJoin(join: LineJoin) {
-  return withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.lineJoin = join
-    })
-  )
+  return useCanvas(ctx => {
+    ctx.lineJoin = join
+    return ctx
+  })
 }
 /**
  * gets the current line join type for the canvas context.
@@ -276,7 +267,7 @@ export function setLineJoin(join: LineJoin) {
  * @category line styles
  * @since 2.0.0
  */
-export const lineJoin = withCanvas(ctx => Effect.sync(() => ctx.lineJoin))
+export const lineJoin = useCanvas(ctx => ctx.lineJoin)
 /**
  * @category line styles
  * @since 1.0.0
@@ -290,15 +281,16 @@ export const getLineJoin = constant(lineJoin)
  * @since 1.0.0
  */
 export function setLineWidth(lineWidth: number) {
-  return use(ctx => {
+  return useCanvas(ctx => {
     ctx.lineWidth = lineWidth
+    return ctx
   })
 }
 /**
  * @category line styles
  * @since 2.0.0
  * */
-export const lineWidth = withCanvas(ctx => pipe(Effect.sync(() => ctx.lineWidth)))
+export const lineWidth = useCanvas(ctx => ctx.lineWidth)
 
 /**
  * Sets the current miter limit for the canvas context.
@@ -307,12 +299,10 @@ export const lineWidth = withCanvas(ctx => pipe(Effect.sync(() => ctx.lineWidth)
  * @since 1.0.0
  */
 export function setMiterLimit(miterLimit: number) {
-  return withCanvas(ctx =>
-    pipe(
-      Effect.sync(() => (ctx.miterLimit = miterLimit)),
-      Effect.as(ctx)
-    )
-  )
+  return useCanvas(ctx => {
+    ctx.miterLimit = miterLimit
+    return ctx
+  })
 }
 /**
  * Gets the current miter limit for the canvas context.
@@ -320,8 +310,8 @@ export function setMiterLimit(miterLimit: number) {
  * @category line styles
  * @since 2.0.0
  */
-export const miterLimit: Effect<CanvasRenderingContext2D, never, number> = withCanvas(ctx =>
-  Effect.sync(() => ctx.miterLimit)
+export const miterLimit: Effect<CanvasRenderingContext2D, never, number> = useCanvas(
+  ctx => ctx.miterLimit
 )
 /**
  * Lazily get the current miter limit for the canvas context.
@@ -331,7 +321,6 @@ export const miterLimit: Effect<CanvasRenderingContext2D, never, number> = withC
  */
 export const getMiterLimit = constant(miterLimit)
 
-
 /**
  * Sets the current stroke style for the canvas context.
  *
@@ -339,7 +328,7 @@ export const getMiterLimit = constant(miterLimit)
  * @since 1.0.0
  */
 export function setStrokeStyle(style: string) {
-  return use(ctx => {
+  return useCanvas(ctx => {
     ctx.strokeStyle = style
   })
 }
@@ -349,7 +338,7 @@ export function setStrokeStyle(style: string) {
  * @category stroke styles
  * @since 1.0.0
  */
-export const strokeStyle = use(c => c.strokeStyle)
+export const strokeStyle = useCanvas(c => c.strokeStyle)
 /**
  * Sets the current shadow blur radius for the canvas context.
  *
@@ -357,12 +346,10 @@ export const strokeStyle = use(c => c.strokeStyle)
  * @since 1.0.0
  */
 export function setShadowBlur(blur: number) {
-  return withCanvas(ctx =>
-    pipe(
-      Effect.sync(() => (ctx.shadowBlur = blur)),
-      Effect.as(ctx)
-    )
-  )
+  return useCanvas(ctx => {
+    ctx.shadowBlur = blur
+    return ctx
+  })
 }
 /**
  * Gets the current shadow blur radius for the canvas context.
@@ -370,7 +357,7 @@ export function setShadowBlur(blur: number) {
  * @category shadow
  * @since 2.0.0
  */
-export const shadowBlur = withCanvas(ctx => Effect.sync(() => ctx.shadowBlur))
+export const shadowBlur = useCanvas(ctx => ctx.shadowBlur)
 /**
  * Gets the current shadow blur radius for the canvas context.
  *
@@ -386,7 +373,7 @@ export const getShadowBlur = constant(shadowBlur)
  * @since 1.0.0
  */
 export function setShadowColor(color: string) {
-  return withCanvas(ctx => Effect.sync(() => (ctx.shadowColor = color)))
+  return useCanvas(ctx => (ctx.shadowColor = color))
 }
 /**
  * Gets the current shadow color for the canvas context.
@@ -394,7 +381,7 @@ export function setShadowColor(color: string) {
  * @category shadow
  * @since 2.0.0
  */
-export const shadowColor = withCanvas(ctx => pipe(Effect.sync(() => ctx.shadowColor)))
+export const shadowColor = useCanvas(ctx => ctx.shadowColor)
 /**
  * Gets the current shadow color for the canvas context.
  *
@@ -423,7 +410,7 @@ export function setShadowOffsetX(offsetX: number) {
  * @category shadow
  * @since 2.0.0
  */
-export const shadowOffsetX = withCanvas(ctx => pipe(Effect.sync(() => ctx.shadowOffsetX)))
+export const shadowOffsetX = useCanvas(ctx => ctx.shadowOffsetX)
 
 /**
  * Sets the current shadow y-offset for the canvas context.
@@ -445,15 +432,13 @@ export function setShadowOffsetY(offsetY: number) {
  * @category shadow
  * @since 2.0.0
  */
-export const shadowOffsetY = withCanvas(ctY => pipe(Effect.sync(() => ctY.shadowOffsetY)))
-
+export const shadowOffsetY = useCanvas(ctY => ctY.shadowOffsetY)
 /**
- * Gets the current text alignment.
  *
  * @category text
  * @since 1.0.0
  */
-export const textAlign = use(ctx => ctx.textAlign)
+export const textAlign = useCanvas(ctx => ctx.textAlign)
 
 /**
  * Sets the current text alignment.
@@ -485,7 +470,7 @@ export const textBaseline = withCanvas(ctx => Effect.sync(() => ctx.textBaseline
  * @since 1.0.0
  */
 export function setTextBaseline(textBaseline: TextBaseline) {
-  return use(ctx => {
+  return useCanvas(ctx => {
     ctx.textBaseline = textBaseline
   })
 }
@@ -530,7 +515,7 @@ export function arcTo(x1: number, y1: number, x2: number, y2: number, radius: nu
  * @category paths
  * @since 1.0.0
  */
-export const beginPath = use(ctx => {
+export const beginPath = useCanvas(ctx => {
   ctx.beginPath()
 })
 
@@ -693,7 +678,7 @@ export const drawImageScale = (
   width: number,
   height: number
 ) =>
-  use(ctx => {
+  useCanvas(ctx => {
     ctx.drawImage(imageSource, offsetX, offsetY, width, height)
   })
 
@@ -714,7 +699,7 @@ export const drawImageFull = (
   canvasImageWidth: number,
   canvasImageHeight: number
 ) =>
-  use(ctx => {
+  useCanvas(ctx => {
     ctx.drawImage(
       imageSource,
       offsetX,
@@ -849,10 +834,8 @@ export function isPointInPath(x: number, y: number, fillRule?: FillRule, path?: 
  * @since 1.0.0
  */
 export const isPointInStroke = (x: number, y: number, path?: Path2D) =>
-  withCanvas(ctx =>
-    Effect.sync(() =>
-      typeof path !== 'undefined' ? ctx.isPointInStroke(path, x, y) : ctx.isPointInStroke(x, y)
-    )
+  useCanvas(ctx =>
+    typeof path !== 'undefined' ? ctx.isPointInStroke(path, x, y) : ctx.isPointInStroke(x, y)
   )
 /**
  * Move the canvas path to the specified point while drawing a line segment.
@@ -861,7 +844,7 @@ export const isPointInStroke = (x: number, y: number, path?: Path2D) =>
  * @since 1.0.0
  */
 export const lineTo = (x: number, y: number) =>
-  use(ctx => {
+  useCanvas(ctx => {
     ctx.lineTo(x, y)
   })
 
@@ -871,7 +854,8 @@ export const lineTo = (x: number, y: number) =>
  * @category text
  * @since 1.0.0
  */
-export const measureText = (text: string) => withCanvas(ctx => Effect.sync(() => ctx.measureText(text)))
+export const measureText = (text: string) =>
+  useCanvas(ctx => ctx.measureText(text))
 
 /**
  * Move the canvas path to the specified point without drawing a line segment.
@@ -880,11 +864,9 @@ export const measureText = (text: string) => withCanvas(ctx => Effect.sync(() =>
  * @since 1.0.0
  */
 export function moveTo(x: number, y: number) {
-  return withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.moveTo(x, y)
-    })
-  )
+  return useCanvas(ctx => {
+    ctx.moveTo(x, y)
+  })
 }
 
 /**
@@ -894,11 +876,7 @@ export function moveTo(x: number, y: number) {
  * @since 1.0.0
  */
 export const putImageData = (imageData: ImageData, dx: number, dy: number) =>
-  withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.putImageData(imageData, dx, dy)
-    })
-  )
+  useCanvas(ctx => ctx.putImageData(imageData, dx, dy))
 
 /**
  * Sets the image data for the specified portion of the canvas.
@@ -914,12 +892,7 @@ export const putImageDataFull = (
   dirtyY: number,
   dirtyW: number,
   dirtyH: number
-) =>
-  withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.putImageData(data, dx, dy, dirtyX, dirtyY, dirtyW, dirtyH)
-    })
-  )
+) => useCanvas(ctx => ctx.putImageData(data, dx, dy, dirtyX, dirtyY, dirtyW, dirtyH))
 
 /**
  * Draws a quadratic Bézier curve.
@@ -928,11 +901,7 @@ export const putImageDataFull = (
  * @since 1.0.0
  */
 export const quadraticCurveTo = (cpx: number, cpy: number, x: number, y: number) =>
-  withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.quadraticCurveTo(cpx, cpy, x, y)
-    })
-  )
+  useCanvas(ctx => ctx.quadraticCurveTo(cpx, cpy, x, y))
 
 /**
  * Render a rectangle.
@@ -941,11 +910,7 @@ export const quadraticCurveTo = (cpx: number, cpy: number, x: number, y: number)
  * @since 1.0.0
  */
 export function rect(x: number, y: number, width: number, height: number) {
-  return withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.rect(x, y, width, height)
-    })
-  )
+  return useCanvas(ctx => ctx.rect(x, y, width, height))
 }
 /**
  * Restore the previous canvas context.
@@ -965,12 +930,7 @@ export const restore = withCanvas(ctx =>
  * @category transformations
  * @since 1.0.0
  */
-export const rotate = (angle: number) =>
-  withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.rotate(angle)
-    })
-  )
+export const rotate = (angle: number) => useCanvas(ctx => ctx.rotate(angle))
 
 /**
  * Save the current canvas context.
@@ -978,11 +938,7 @@ export const rotate = (angle: number) =>
  * @category state
  * @since 1.0.0
  */
-export const save = withCanvas(ctx =>
-  Effect.sync(() => {
-    ctx.save()
-  })
-)
+export const save = useCanvas(ctx => ctx.save())
 
 /**
  * Apply scale to the current canvas context transform.
@@ -990,12 +946,7 @@ export const save = withCanvas(ctx =>
  * @category transformations
  * @since 1.0.0
  */
-export const scale = (scaleX: number, scaleY: number) =>
-  withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.scale(scaleX, scaleY)
-    })
-  )
+export const scale = (scaleX: number, scaleY: number) => useCanvas(ctx => ctx.scale(scaleX, scaleY))
 
 /**
  * Sets the current line dash pattern used when stroking lines.
@@ -1004,11 +955,7 @@ export const scale = (scaleX: number, scaleY: number) =>
  * @since 1.0.0
  */
 export function setLineDash(segments: ReadonlyArray<number>) {
-  return withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.setLineDash(RA.copy(segments))
-    })
-  )
+  return useCanvas(ctx => ctx.setLineDash(RA.copy(segments)))
 }
 
 /**
@@ -1094,19 +1041,8 @@ export function strokeText(text: string, x: number, y: number, maxWidth?: number
  * @category transformations
  * @since 1.0.0
  */
-export const transform = (
-  m11: number,
-  m12: number,
-  m21: number,
-  m22: number,
-  m31: number,
-  m32: number
-) =>
-  withCanvas(ctx =>
-    Effect.sync(() => {
-      ctx.transform(m11, m12, m21, m22, m31, m32)
-    })
-  )
+export const transform = (m11: number, m12: number, m21: number, m22: number, m31: number, m32: number) =>
+  useCanvas(ctx => ctx.transform(m11, m12, m21, m22, m31, m32))
 
 /**
  * Translate the current canvas context transform.
@@ -1115,10 +1051,8 @@ export const transform = (
  * @since 1.0.0
  */
 export const translate = (x: number, y: number) =>
-  withCanvas(ctx =>
-    Effect.sync(() => {
+  useCanvas(ctx =>
       ctx.translate(x, y)
-    })
   )
 
 /**
@@ -1144,7 +1078,6 @@ export const addColorStop: (offset: number, color: string) => Gradient<CanvasGra
 export const fillPath = <R, E, A>(f: Render<A, E, R>): Render<A, E, R> =>
   beginPath.pipe(Effect.zipRight(f), Effect.zipLeft(fill()))
 
-
 /**
  * Convenience function for drawing a stroked path.
  *
@@ -1160,7 +1093,7 @@ export const strokePath = <R, E, A>(f: Render<A, E, R>) =>
  * @category utils
  * @since 2.0.0
  */
-export function use<A = void>(f: (canvas: CanvasRenderingContext2D) => A) {
+export function useCanvas<A = void>(f: (canvas: CanvasRenderingContext2D) => A) {
   return withCanvas(ctx => Effect.sync(() => f(ctx)))
 }
 
@@ -1186,6 +1119,8 @@ function withCanvas<R, E, A>(
 ): Effect<R | CanvasRenderingContext2D, E, A> {
   return Tag.pipe(Effect.flatMap(f))
 }
-function withGradient<R, E, A>(f: (gradient: CanvasGradient) => Effect<R, E, A>): Effect<R|CanvasGradient, E, A> {
+function withGradient<R, E, A>(
+  f: (gradient: CanvasGradient) => Effect<R, E, A>
+): Effect<R | CanvasGradient, E, A> {
   return GradientTag.pipe(Effect.flatMap(f))
 }
