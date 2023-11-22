@@ -1,5 +1,14 @@
-import { Chunk, Stream, Context, Layer, Duration, Effect as IO, pipe, Option as O } from 'effect'
-const { millis } = Duration
+import {
+  Chunk,
+  Stream,
+  Context,
+  Layer,
+  Duration,
+  Effect as IO,
+  pipe,
+  Option as O,
+  Console
+} from 'effect'
 import * as Turtle2d from '../src/Turtle2d'
 import * as DrawsTurtles from '../src/Drawable/Turtle2d'
 import * as C from '../src/Canvas'
@@ -7,7 +16,12 @@ import * as Shape from '../src/Shape'
 import * as D from '../src/Drawing'
 import * as Color from '../src/Color'
 
-import { toggleButton, RestartButton, liveRestartButton, loopCircle } from './utils'
+import {
+  toggleButton as toggleDisabled,
+  RestartButton,
+  liveRestartButton,
+  loopCircle
+} from './utils'
 
 export function main() {
   return IO.runPromise(primeSpiral(771))
@@ -26,7 +40,7 @@ export const spinIt = C.dimensions.pipe(
               IO.zipRight(C.translate(width / 2, height / 2)),
               IO.zipRight(C.rotate(-angle / 4)),
               IO.zipRight(D.render(drawing)),
-              IO.zipRight(IO.delay(IO.unit, millis(16)))
+              IO.zipRight(IO.delay(IO.unit, Duration.millis(16)))
             )
           )
         )
@@ -38,13 +52,15 @@ export const spinIt = C.dimensions.pipe(
 const initialize = pipe(
   IO.unit,
   IO.zipRight(C.dimensions),
-  IO.tap(({ width, height }) => pipe(
-    IO.unit,
-    IO.zipRight(C.clearRect(0, 0, width, height)),
-    IO.zipRight(C.translate(width / 2, height / 2)),
-  )),
+  IO.tap(({ width, height }) =>
+    pipe(
+      IO.unit,
+      IO.zipRight(C.clearRect(0, 0, width, height)),
+      IO.zipRight(C.translate(width / 2, height / 2))
+    )
+  ),
   IO.zipRight(C.scale(3.5, 3.5)),
-  IO.zipRight(RestartButton.pipe(IO.flatMap(toggleButton(main)))),
+  IO.zipRight(RestartButton.pipe(IO.flatMap(toggleDisabled(main)))),
   IO.as(null)
 )
 type CellParams = {
@@ -63,7 +79,7 @@ function spiralMaker(total: number) {
         num
       }
     ]),
-    Stream.tap(({ isPrime }) => (isPrime ? IO.delay(IO.unit, millis(16)) : IO.unit)),
+    Stream.tap(({ isPrime }) => (isPrime ? IO.delay(IO.unit, Duration.millis(16)) : IO.unit)),
     Stream.tap(updateText(total)),
     Stream.map(turtleDraw),
     Stream.mapEffect(fn => Turtle2d.Tag.pipe(IO.flatMap(fn))),
@@ -126,23 +142,24 @@ function updateText(total: number) {
     )
 }
 
-function fromId(id:string): IO.Effect<never, never, HTMLElement> {
+function fromId(id: string): IO.Effect<never, never, HTMLElement> {
   return pipe(
     IO.sync(() => O.fromNullable(document.getElementById(id))),
     IO.flatMap(_ => _),
-    IO.orDie,
+    IO.orDie
   )
 }
 
 function setText(text: string) {
-  return (el: HTMLElement) => IO.sync(() => {
-    el.innerText = text
-  })
+  return (el: HTMLElement) =>
+    IO.sync(() => {
+      el.innerText = text
+    })
 }
 
 const intsPlusPrimality = pipe(
   Stream.range(2, Number.MAX_SAFE_INTEGER),
-  Stream.mapAccum(Chunk.empty<number>(), sieveChunk),
+  Stream.mapAccum(Chunk.empty<number>(), sieveChunk)
 )
 function sieveChunk(primes: Chunk.Chunk<number>, candidate: number) {
   const isPrime = candidate > 1 && Chunk.every(primes, prime => candidate % prime !== 0)
@@ -164,17 +181,20 @@ const primeSpiral = (total: number) =>
     ),
     C.withContext,
     IO.timed,
-    IO.tap(([duration]) => IO.log(`duration: ${duration.value}ms `)),
-    IO.zipRight(IO.delay(spinIt, millis(3e3))),
-    IO.zipRight(RestartButton.pipe(IO.flatMap(toggleButton(main)))),
+    IO.tap(([duration]) => Console.log(`duration: ${Duration.toSeconds(duration).toFixed(3)}s`)),
+    IO.zipRight(IO.delay(spinIt, Duration.millis(3e3))),
+    IO.zipRight(RestartButton.pipe(IO.flatMap(toggleDisabled(main)))),
     IO.provide(Turtle2d.fromOrigin),
     IO.provide(DrawsTurtles.Live),
     IO.provide(liveLastPrime),
     IO.provide(liveLatest),
     IO.provide(liveFormatter),
     IO.provide(liveRestartButton),
+    IO.provideService(C.CanvasRenderingContext2DSettings, {
+      willReadFrequently: true
+    }),
     C.renderTo('canvas4')
   )
-function fillEnd({position: [x, y]}: Turtle2d.TurtleState) {
+function fillEnd({ position: [x, y] }: Turtle2d.TurtleState) {
   return D.fill(Shape.circle(x, y, 4), D.fillStyle(Color.hsla(0, 0.5, 0, 0.5)))
 }

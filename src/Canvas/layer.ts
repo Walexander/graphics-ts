@@ -1,7 +1,7 @@
 /**
  * @since 2.0.0
  */
-import { Effect as IO, Layer, Option, Either } from 'effect'
+import { Effect as IO, Context, Layer, Option, Either } from 'effect'
 import { CanvasError, Tag } from './definition'
 
 /**
@@ -18,6 +18,8 @@ import { CanvasError, Tag } from './definition'
  * @since 1.0.0
  * @category layer
  */
+
+export const CanvasRenderingContext2DSettings = Context.Tag<CanvasRenderingContext2DSettings>()
 export function renderTo(canvas: string | HTMLElement | CanvasRenderingContext2D) {
   const layer =
     typeof canvas == 'string'
@@ -69,9 +71,15 @@ export function elementById(id: string): IO.Effect<never, CanvasError, HTMLCanva
   )
 }
 function getContext(element: HTMLCanvasElement) {
-  return IO.sync(() => element.getContext('2d')).pipe(
-    IO.flatMap(Option.fromNullable),
-    IO.mapError((_) => new CanvasError(`${element.id} is not an instance of HTMLCanvasElement`))
+  return IO.serviceOption(CanvasRenderingContext2DSettings).pipe(
+    IO.flatMap(
+      Option.match({
+        onNone: () => IO.sync(() => element.getContext('2d')),
+        onSome: settings => IO.sync(() => element.getContext('2d', settings))
+      })
+    ),
+    IO.flatMap(IO.fromNullable),
+    IO.mapError(_ => new CanvasError(`Cannot get 2d rendering context from "${element.id}"`))
   )
 }
 
@@ -82,7 +90,6 @@ function getContext(element: HTMLCanvasElement) {
  */
 export const renderToCanvas =
   (canvas: CanvasRenderingContext2D) => renderTo(canvas)
-
 const isCanvas = (canvas: unknown): Either.Either<CanvasError, HTMLCanvasElement> =>  
   canvas instanceof HTMLCanvasElement ? Either.right(canvas) : Either.left(
     new CanvasError(`element is not an instance of HTMLCanvasElement`)
