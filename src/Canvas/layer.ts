@@ -18,8 +18,6 @@ import { CanvasError, Tag } from './definition'
  * @since 1.0.0
  * @category layer
  */
-
-export const CanvasRenderingContext2DSettings = Context.Tag<CanvasRenderingContext2DSettings>()
 export function renderTo(canvas: string | HTMLElement | CanvasRenderingContext2D) {
   const layer =
     typeof canvas == 'string'
@@ -29,7 +27,13 @@ export function renderTo(canvas: string | HTMLElement | CanvasRenderingContext2D
       : fromCanvas(canvas)
   return IO.provide(layer.pipe(Layer.tapError(() => IO.log(`i got an error for ${canvas}`))))
 }
-
+/**
+ * Optional canvas rendering context settings, including willReadFrequently
+ *
+ * @since 2.0.0
+ * @category layer
+ */
+export const CanvasRenderingContext2DSettings = Context.Tag<CanvasRenderingContext2DSettings>()
 /**
 * @category layer
 * @since 2.0.0

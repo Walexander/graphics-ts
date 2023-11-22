@@ -52,7 +52,7 @@
 import * as SG from '@effect/typeclass/Semigroup'
 import * as M from '@effect/typeclass/Monoid'
 import * as Option from '@effect/typeclass/data/Option'
-import { Effect as IO, Option as O, Match } from 'effect'
+import { Effect as IO, Option as O } from 'effect'
 import { dual } from 'effect/Function'
 import { ImageSource } from './Canvas/definition'
 import { drawShape } from './Drawable/Shape'
