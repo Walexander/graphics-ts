@@ -52,7 +52,8 @@
 import * as SG from '@effect/typeclass/Semigroup'
 import * as M from '@effect/typeclass/Monoid'
 import * as Option from '@effect/typeclass/data/Option'
-import { Effect as IO, Option as O } from 'effect'
+import { Effect as IO, Option as O, Match } from 'effect'
+import { dual } from 'effect/Function'
 import { ImageSource } from './Canvas/definition'
 import { drawShape } from './Drawable/Shape'
 import { drawsDrawing, renderDrawing} from './Drawable/Drawing'
@@ -393,11 +394,14 @@ export const clipped =
  * @category constructors
  * @since 1.0.0
  */
-export const fill: (shape: Shape, style: FillStyle) => Drawing = (shape, style) => ({
+export const fill: {
+  (shape: Shape, style: FillStyle): Drawing
+  (style: FillStyle): (shape: Shape) => Drawing
+} = dual(2, (shape, style) => ({
   _tag: 'Fill',
   shape,
   style
-})
+}))
 
 /**
  * Constructs a `FillStyle`.
@@ -413,11 +417,14 @@ export const fillStyle: (color: Color) => FillStyle = c => ({ color: O.some(c) }
  * @category constructors
  * @since 1.0.0
  */
-export const outline: (shape: Shape, style: OutlineStyle) => Drawing = (shape, style) => ({
+export const outline: {
+  (shape: Shape, style: OutlineStyle): Drawing
+  (style: OutlineStyle): (shape: Shape) => Drawing
+} = dual(2, (shape: Shape, style: OutlineStyle) => ({
   _tag: 'Outline',
   shape,
   style
-})
+}))
 
 /**
  * Constructs an `OutlineStyle` from a `Color`.
@@ -458,27 +465,30 @@ export const many: (drawings: ReadonlyArray<Drawing>) => Drawing = drawings => (
  * @category constructors
  * @since 1.0.0
  */
-export function rotate(angle: number): (drawing: Drawing) => Drawing {
-  return drawing => ({
+export const rotate: {
+  (drawing: Drawing, angle: number): Drawing
+  (angle: number): (drawing: Drawing) => Drawing
+} = dual(2, (drawing: Drawing, angle: number) =>  ({
     _tag: 'Rotate',
     angle,
     drawing
   })
-}
+)
 /**
  * Applies scale to the transform of a `Drawing`.
  *
  * @category constructors
  * @since 1.0.0
  */
-export function scale(scaleX: number, scaleY: number): (drawing: Drawing) => Drawing {
-  return drawing => ({
+export const scale: {
+  (drawing: Drawing, scaleX: number, scaleY: number): Drawing 
+  (scaleX: number, scaleY: number): (drawing: Drawing) => Drawing 
+} = dual(3, (drawing, scaleX, scaleY) => ({
     _tag: 'Scale',
     scaleX,
     scaleY,
     drawing
-  })
-}
+}))
 /**
  * Constructs a `Drawing` from `Text`.
  *
@@ -519,9 +529,13 @@ export const image = (image: ImageSource, source: Point, dest?: Point) => (<Draw
  * @category constructors
  * @since 1.0.0
  */
-export function translate(translateX: number, translateY: number): (drawing: Drawing) => Drawing {
-  return drawing => ({ _tag: 'Translate', translateX, translateY, drawing })
-}
+export const translate: {
+  (drawing: Drawing, translateX: number, translateY: number): Drawing 
+  (translateX: number, translateY: number): (drawing: Drawing) => Drawing
+
+} = dual(3, (drawing, translateX, translateY) => ({
+ _tag: 'Translate', translateX, translateY, drawing 
+}))
 
 /**
  * Applies `Shadow` to a `Drawing`.
@@ -529,13 +543,15 @@ export function translate(translateX: number, translateY: number): (drawing: Dra
  * @category constructors
  * @since 1.0.0
  */
-export function withShadow(shadow: Shadow): (drawing: Drawing) => Drawing {
-  return drawing => ({
+export const withShadow: {
+  (drawing: Drawing, shadow: Shadow): Drawing
+  (shadow: Shadow): (drawing: Drawing) => Drawing 
+} = dual(2, (drawing, shadow) => ({
     _tag: 'WithShadow',
     shadow,
     drawing
-  })
-}
+
+}))
 /**
  * Constructs a `Shadow` from a blur radius.
  *
@@ -619,7 +635,6 @@ export const monoidFillStyle: M.Monoid<FillStyle> = M.struct({
 /**
  * Gets a `Monoid` instance for `OutlineStyle`.
  *
- * @example
  * import * as D from 'graphics-ts/Drawing'
  * D.monoidOutlineStyle.combineAll([])
  *
@@ -650,15 +665,18 @@ export const monoidShadow: M.Monoid<Shadow> = M.struct({
  * @since 1.0.0
  */
 export const monoidDrawing: M.Monoid<Drawing> = M.fromSemigroup(
-  SG.make((x, y) =>
-    x._tag === 'Many' && y._tag === 'Many'
-      ? many(readonlyArrayMonoidDrawing.combineAll([x.drawings, y.drawings]))
-      : x._tag === 'Many'
-      ? many(readonlyArrayMonoidDrawing.combineAll([x.drawings, [y]]))
-      : y._tag === 'Many'
-      ? many(readonlyArrayMonoidDrawing.combineAll([[x], y.drawings]))
-      : many([x, y])
-  ),
+  SG.make((x, y) => {
+    const M = readonlyArrayMonoidDrawing
+    const drawings =
+      x._tag === 'Many' && y._tag === 'Many'
+        ? M.combineAll([x.drawings, y.drawings])
+        : x._tag === 'Many'
+        ? M.combineAll([x.drawings, [y]])
+        : y._tag === 'Many'
+        ? M.combineAll([[x], y.drawings])
+        : [x, y]
+    return many(drawings)
+  }),
   many(readonlyArrayMonoidDrawing.empty)
 )
 

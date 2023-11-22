@@ -3,10 +3,11 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   build: {
     target: 'es2020',
-    outDir: "../dist/example/",
+    outDir: "dist/",
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'example/index.html'),
+        cloud: resolve(__dirname, 'example/poisson-like.html'),
         spiral: resolve(__dirname, 'example/prime-spiral.html'),
         snowflake: resolve(__dirname, 'example/snowflake.html'),
       }

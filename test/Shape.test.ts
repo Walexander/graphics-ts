@@ -22,7 +22,6 @@ describe('Shape', () => {
   describe('radians', () => {
     it('should construct an angle in radians', () => {
       const radians = S.radians(Math.PI)
-
       assert.deepStrictEqual(radians, { _tag: 'Radians', radians: Math.PI })
     })
   })

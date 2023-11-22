@@ -1,7 +1,7 @@
 import { Foldable } from '@effect/typeclass/data/ReadonlyArray'
 import { pipe } from 'effect/Function'
 import { Effect as IO, Option as O, Equal } from 'effect'
-import { beforeEach, describe, it, assert } from 'vitest'
+import { beforeEach, expect, describe, it, assert } from 'vitest'
 
 import * as Color from '../src/Color'
 import * as D from '../src/Drawing'
@@ -12,6 +12,7 @@ import { testM, testDrawing, testCanvas } from './utils'
 
 describe('Drawing', () => {
   const getCanvas = IO.zipRight(C.Tag.pipe(IO.map((canvas) => canvas)))
+  const sampleDrawing = D.fill(S.rect(0, 0, 100, 100), D.outlineColor(Color.black))
   describe('fillStyle', () => {
     it('should construct a fill style', () => {
       const color = Color.hsla(140, 0.3, 0.5, 0.9)
@@ -21,6 +22,7 @@ describe('Drawing', () => {
       })
     })
   })
+
 
   describe('monoidFillStyle', () => {
     it('should combine fill styles', () => {
@@ -136,17 +138,17 @@ describe('Drawing', () => {
   })
 
   describe('fill', () => {
-    it('should construct a fill', () => {
-      const color = Color.hsla(150, 0.5, 0.5, 0.8)
-      const shape = S.rect(10, 20, 100, 200)
-      const style = D.fillStyle(color)
-
-      assert.deepStrictEqual(D.fill(shape, style), {
-        _tag: 'Fill',
-        shape,
-        style
-      })
-    })
+    const color = Color.hsla(150, 0.5, 0.5, 0.8)
+    const shape = S.rect(10, 20, 100, 200)
+    const style = D.fillStyle(color)
+    const expected = {
+      _tag: 'Fill', 
+      shape,
+      style
+    }
+    it('should construct a fill', () => assert.deepStrictEqual(D.fill(shape, style), expected))
+    it('should support data-last a fill', () =>
+      expect(D.fill(style)(shape)).to.deep.equal(expected))
   })
 
   describe('many', () => {
@@ -174,6 +176,18 @@ describe('Drawing', () => {
         style
       })
     })
+    describe('dual api', () => {
+      it('should support data-last', () =>
+        expect(
+          D.outline(S.rect(10, 10, 100, 100), D.outlineColor(Color.black))
+        ).to.be.ok
+      )
+      it('should support data-last', () =>
+        expect(
+          D.outline(D.outlineColor(Color.black))(S.rect(10, 10, 100, 100))
+        ).to.be.ok
+      )
+    })
   })
 
   describe('rotate', () => {
@@ -187,21 +201,30 @@ describe('Drawing', () => {
         drawing
       })
     })
+
+    it('should support data-first', () => 
+      expect(D.rotate(sampleDrawing, 90)).to.deep.equal({
+        _tag: 'Rotate',
+        angle: 90,
+        drawing: sampleDrawing,
+      })
+    )
   })
 
   describe('scale', () => {
-    it('should construct a scaled drawing', () => {
-      const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
-      const scale = D.scale(10, 20)(drawing)
-
-
-      assert.deepStrictEqual(scale, {
+    const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black)),
+      scaleX = 10,
+      scaleY = 20,
+      expected = {
         _tag: 'Scale',
-        scaleX: 10,
-        scaleY: 20,
+        scaleX,
+        scaleY,
         drawing
-      })
-    })
+      }
+    it('should construct a scaled drawing', () =>
+      assert.deepStrictEqual(D.scale(scaleX, scaleY)(drawing), expected))
+    it('should support data-lasta scaled drawing', () =>
+      assert.deepStrictEqual(D.scale(drawing, scaleX, scaleY), expected))
   })
 
   describe('text', () => {
@@ -221,33 +244,40 @@ describe('Drawing', () => {
   })
 
   describe('translate', () => {
-    it('should construct a translated drawing', () => {
-      const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
-      const translate = D.translate(10, 20)(drawing)
+    const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
+    const expected = {
+      _tag: 'Translate',
+      translateX: 10,
+      translateY: 20,
+      drawing
 
-      assert.deepStrictEqual(translate, {
-        _tag: 'Translate',
-        translateX: 10,
-        translateY: 20,
-        drawing
-      })
+    }
+
+    it('should construct a translated drawing', () => {
+      const translate = D.translate(10, 20)(drawing)
+      assert.deepStrictEqual(translate, expected)
     })
+    it('supports data first', () => expect(D.translate(drawing, 10, 20)).to.deep.equal(expected))
   })
 
   describe('withShadow', () => {
-    it('should construct a drawing with a shadow', () => {
-      const shadow = D.monoidShadow.combineAll([
-        D.shadowColor(Color.black),
-        D.shadowBlur(5),
-        D.shadowOffset(S.point(5, 5))
-      ])
-      const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
-      const withShadow = D.withShadow(shadow)(drawing)
-      assert.deepStrictEqual(withShadow, {
+    const drawing = D.outline(S.rect(10, 20, 100, 200), D.outlineColor(Color.black))
+    const shadow = D.monoidShadow.combineAll([
+      D.shadowColor(Color.black),
+      D.shadowBlur(5),
+      D.shadowOffset(S.point(5, 5))
+    ])
+    const expected = {
         _tag: 'WithShadow',
         shadow,
         drawing
-      })
+      }
+    it('should construct a drawing with a shadow', () => {
+      const withShadow = D.withShadow(shadow)(drawing)
+      assert.deepStrictEqual(withShadow, expected)
+    })
+    it('should support data-first', () => {
+      expect(D.withShadow(drawing, shadow)).to.deep.equal(expected)
     })
   })
 
@@ -284,6 +314,7 @@ describe('Drawing', () => {
     })
   })
 
+
   describe('destructors', () => {
     const CANVAS_ID = 'canvas'
     const TEST_CANVAS_ID = 'test-canvas'
@@ -308,7 +339,7 @@ height="${CANVAS_HEIGHT}"
       testCtx = testCanvas.getContext('2d') as CanvasRenderingContext2D
     })
 
-    describe('render())', () => {
+    describe('render()', () => {
       const shape = S.rect(50, 50, 100, 100)
       const drawing = D.outline(shape, D.outlineColor(Color.black))
       it('should provide live shape and draw layers', () => {

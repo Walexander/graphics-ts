@@ -280,6 +280,11 @@ export const angle = (angle: Angle): number => {
  */
 export const point = (x: number, y: number): Point => ({ x, y })
 
+/**
+ *
+ * @category combinator
+ * @since 2.0.0
+ */
 export function pointWithin (min: Point, max: Point) {
   return function (self: Point) {
     return self.x > min.x && self.y > min.y && self.x < max.y && self.y < max.y
