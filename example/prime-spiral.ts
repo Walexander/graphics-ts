@@ -190,10 +190,10 @@ const primeSpiral = (total: number) =>
     IO.provide(liveLatest),
     IO.provide(liveFormatter),
     IO.provide(liveRestartButton),
+    C.renderTo('canvas4'),
     IO.provideService(C.CanvasRenderingContext2DSettings, {
       willReadFrequently: true
     }),
-    C.renderTo('canvas4')
   )
 function fillEnd({ position: [x, y] }: Turtle2d.TurtleState) {
   return D.fill(Shape.circle(x, y, 4), D.fillStyle(Color.hsla(0, 0.5, 0, 0.5)))
